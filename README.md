@@ -83,7 +83,11 @@ at a reasonable price.
 
 VMThunder pushes the state of the art of largescale VM provisioning, 
 by integrating on-demand transferring, compute node (client-side) 
-caching, P2P transfering and prefetching. The protocol for data transferring is iSCSI, but technically compatible with other protocols like nbd, FCoE or AoE. Caching is realized with Facebook's flashcache module, but technically compatible with other block-level caching modules like bcache, dm-cache, etc.
+caching, P2P transfering and prefetching. The protocol for data 
+transferring is iSCSI, but technically compatible with other 
+protocols like nbd, FCoE or AoE. Caching is realized with Facebook's 
+flashcache module, but technically compatible with other block-level 
+caching modules like bcache, dm-cache, etc.
   
     
 

@@ -5,15 +5,15 @@ cloud can be quite time-consuming, because the virtual disk
 images need to be transferred to the compute nodes in prior to
 booting. 
 
-VMThunder addresses this problem by compute node caching, P2P
-transfering and prefetching, in addition to on-demand transfering
-(network storage). VMThunder is a scalable and cost-effective
+VMThunder addresses this problem by 3 improvements: compute node 
+caching, P2P transfering and prefetching, in addition to on-demand 
+transfering (network storage). VMThunder is a scalable and cost-effective
 accelerator for bulk povisioning of virtual machines. And it can
-be, if preferred, gracefully bypassed after the booting process is
+be, if preferred, gracefully turned off after the booting process is
 complete.
 
 Benchmarks show that VMThunder can boot 160 VMs (CentOS 6.2 with
-gnome desktop) on 160 compute nodes in less than 1 minutes, and
+gnome desktop) on 160 compute nodes with in a minute, and
 the average time consumption is 20 seconds. With prefetching, the
 complete and average time consumption can be respecttively reduced
 to 18 and 16 seconds. The network is Gigabit Ethernet for all
@@ -22,7 +22,8 @@ servers in the benchmark environment.
 Background
 ============
 The Infrastructure as a Service (IaaS) cloud has become
-increasingly important due to its flexible, pay-as-you-go business model. Over the IaaS cloud, customers
+increasingly important due to its flexible pay-as-you-go business 
+model. Over the IaaS cloud, customers
 can rent computing and storage resources
 according to their actual service requirement, and thus
 they can save a great deal of cost without the need to

@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://lihuiba.github.io/VMThunder/sitemap.xml 

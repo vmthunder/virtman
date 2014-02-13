@@ -1,0 +1,262 @@
+
+
+<!doctype html>
+  <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+  <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+  <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+  <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Background - VMThunder</title>
+    <meta name="author" content="lihuiba">
+    
+    <meta name="description" content="Background Feb 13th, 2014 doc The Infrastructure as a Service (IaaS) cloud has become
+increasingly important due to its flexible pay-as-you-go &hellip;">
+    
+    <meta name="viewport" content="width=device-width">
+    
+    <link rel="canonical" href="http://lihuiba.github.io/VMThunder/blog/2014/02/13/background">
+    <link href="/VMThunder/favicon.png" rel="icon">
+    <link href="/VMThunder/stylesheets/screen.css" media="screen, projection" rel="stylesheet">
+    <link href="/VMThunder//VMThunder/atom.xml" rel="alternate" title="VMThunder" type="application/atom+xml">
+  </head>
+
+
+  <body >
+
+    <header>
+      <div class="grid-wrapper">
+  <div class="grid">
+
+    <div class="grid__item two-fifths lap-four-sixths palm-one-whole">
+  <a href="/VMThunder/" class="site-title">VMThunder</a>
+</div>
+
+<div class="grid__item three-fifths lap-two-sixths palm-one-whole">
+  <nav>
+    <input type="checkbox" id="toggle">
+<label for="toggle" class="toggle" data-open="Main Menu" data-close="Close Menu"></label>
+<ul class="menu pull-right">
+  <li><a href="/VMThunder/">Home</a></li>
+  <li><a href="/VMThunder/blog/">Blog</a></li>
+</ul>
+  </nav>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+
+    <div class="grid-wrapper">
+      <div class="grid grid-center">
+        
+        <div class="grid__item two-thirds lap-one-whole palm-one-whole">
+        
+
+          <article class="post">
+  <header>
+  
+  <h1 class="title indent">Background</h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time class="pull-left" datetime="2014-02-13T11:51:53+08:00" pubdate data-updated="true"><i class="icon-calendar"></i> Feb 13<span>th</span>, 2014</time>
+    
+
+
+
+  
+  <div class="pull-left">
+    <i class="icon-tags"></i>
+    <ul class="tags unstyled">
+    
+      <li><a href="/VMThunder/blog/categories/doc/">doc</a></li>
+    
+    </ul>
+  </div>
+  
+
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p>The Infrastructure as a Service (IaaS) cloud has become
+increasingly important due to its flexible pay-as-you-go business
+model. Over the IaaS cloud, customers
+can rent computing and storage resources
+according to their actual service requirement, and thus
+they can save a great deal of cost without the need to
+invest on computing infrastructure. The convenience
+for customers, however, poses a challenging problem
+to IaaS cloud providers: how to accommodate dynamic
+computing requirements of customers, who may
+request a large quantity of virtual machines (VMs) in
+a short time period?</p>
+
+<p>It has been seen that in large-scale IaaS cloud
+like the National Supercomputing Center of China
+in Tianjin (NSCC-Tianjin), some users require
+resources (virtual CPU, memory, disk space) for
+compute-intensive applications, including, for example,
+animation, DNA sequence analysis, and weather
+forecast. In many cases, they may submit requests
+for hundreds of VMs and they need the cloud to
+respond to their requests quickly. Once their services
+finish, they normally release VMs to save cost. The
+similar phenomenon has been observed in other commercial
+IaaS cloud such as Amazon EC2.
+For an IaaS cloud service provider, a large delay in
+VM provisioning (e.g., hours) may turn its customers
+away to its competitors, and it is thus critical to
+support fast provisioning of a large amount of VMs
+to maintain its market competence.</p>
+
+<p>Substantial efforts have been devoted to fast provisioning
+of a large number of VMs. Nevertheless,
+existing solutions still have large room for further
+improvement. For example, the time for provisioning
+VMs over Amazon EC2 is still non trivial, taking from
+3 minutes up to 30 minutes to get a 1 GB compressed
+VM image ready to work. Wartel et al. use
+the peer-to-peer (P2P) technology to disseminate VM
+images, and it takes about 30 minutes to configure 400
+servers. Some work focuses on the problem
+of optimal image placement. Based on the analysis
+of empirical usage of VM images, they split
+the images into small strips over the distributed file
+system for efficient access and storage. This method,
+however, needs a long time to pre-process the image
+files. Another type of solutions uses the so-termed
+&ldquo;memory fork&rdquo; method (e.g., SnowFlock and Twinkle),
+which remotely clones VMs by duplicating
+the running states of the VM. Memory fork, however,
+may cause new problems such as data persistence.</p>
+
+<p>Though the transferring process can be eliminated by using network
+storage like NFS, cluster FS, distributed FS or SAN, this approach
+lacks scalability due to the limited number of replica for each piece
+of data. Booting a large number of virtual machines will direct a
+large number of servers to access the same set of data at the same
+time, which will generate great pressure on the storage servers.
+What&rsquo;s more, network storage tends to provide less I/O performance
+at a reasonable price.</p>
+
+<p>VMThunder pushes the state of the art of largescale VM provisioning,
+by integrating on-demand transferring, compute node (client-side)
+caching, P2P transfering and prefetching. The protocol for data
+transferring is iSCSI, but technically compatible with other
+protocols like nbd, FCoE or AoE. Caching is realized with Facebook&rsquo;s
+flashcache module, but technically compatible with other block-level
+caching modules like bcache, dm-cache, etc.</p>
+
+
+</article>
+
+
+        
+        </div>
+        
+        
+        <aside id="sidebar" class="grid__item one-third lap-one-whole palm-one-whole">
+          <div class="grid">
+
+  
+<section class="social aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">
+    Follow me!
+  </h1>
+  <ul class="unstyled">
+    
+    
+    <li><a class="github" href="//github.com/lihuiba/VMThunder"><i class="icon-github"></i> Github</a></li>
+    
+    
+    <li><a class="linkedin" href="//linkedin.com/in/lihuiba"><i class="icon-linkedin-sign"></i> LinkedIn</a></li>
+    
+    
+    
+    
+  </ul>
+</section>
+
+
+
+  <section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
+  <h1 class="title delta">Recent Posts</h1>
+  <ul class="divided">
+    
+      <li class="post">
+        <a href="/VMThunder/blog/2014/02/13/background/">Background</a>
+      </li>
+    
+      <li class="post">
+        <a href="/VMThunder/blog/2014/02/13/vmthunder/">VMThunder</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+</div>
+
+        </aside>
+        
+      </div>
+    </div>
+    
+    <footer>
+      <div class="grid-wrapper">
+  <div class="grid">
+    <div class="grid__item">
+      <p class="copyright">
+  All content by lihuiba and licenced under <a href="//creativecommons.org/licenses/by-nc-sa/3.0/ie/">Creative Commons</a>.<br>
+  Code under <a href="//github.com/coogie/oscailte/blob/master/README.md">MIT Licence</a>.
+</p>
+    </div>
+  </div>
+</div>
+
+    </footer>
+
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+    <![endif]-->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+<script defer src="/VMThunder/javascripts/octopress.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

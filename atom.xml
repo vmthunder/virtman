@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[VMThunder]]></title>
-  <link href="http://lihuiba.github.io/VMThunder/atom.xml" rel="self"/>
-  <link href="http://lihuiba.github.io/VMThunder/"/>
-  <updated>2014-02-13T16:42:55+08:00</updated>
-  <id>http://lihuiba.github.io/VMThunder/</id>
+  <link href="www.vmthunder.org/atom.xml" rel="self"/>
+  <link href="www.vmthunder.org/"/>
+  <updated>2014-02-13T16:45:37+08:00</updated>
+  <id>www.vmthunder.org/</id>
   <author>
     <name><![CDATA[lihuiba]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Background]]></title>
-    <link href="http://lihuiba.github.io/VMThunder/blog/2014/02/13/background/"/>
+    <link href="www.vmthunder.org/blog/2014/02/13/background/"/>
     <updated>2014-02-13T11:51:53+08:00</updated>
-    <id>http://lihuiba.github.io/VMThunder/blog/2014/02/13/background</id>
+    <id>www.vmthunder.org/blog/2014/02/13/background</id>
     <content type="html"><![CDATA[<p>The Infrastructure as a Service (IaaS) cloud has become
 increasingly important due to its flexible pay-as-you-go business
 model. Over the IaaS cloud, customers
@@ -91,9 +91,9 @@ caching modules like bcache, dm-cache, etc.</p>
   
   <entry>
     <title type="html"><![CDATA[VMThunder]]></title>
-    <link href="http://lihuiba.github.io/VMThunder/blog/2014/02/13/vmthunder/"/>
+    <link href="www.vmthunder.org/blog/2014/02/13/vmthunder/"/>
     <updated>2014-02-13T11:48:46+08:00</updated>
-    <id>http://lihuiba.github.io/VMThunder/blog/2014/02/13/vmthunder</id>
+    <id>www.vmthunder.org/blog/2014/02/13/vmthunder</id>
     <content type="html"><![CDATA[<p>Creating a large number of virtual machine instances in an IaaS
 cloud can be quite time-consuming, because the virtual disk
 images need to be transferred to the compute nodes in prior to

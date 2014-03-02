@@ -4,7 +4,7 @@
   <title><![CDATA[VMThunder]]></title>
   <link href="www.vmthunder.org/atom.xml" rel="self"/>
   <link href="www.vmthunder.org/"/>
-  <updated>2014-02-13T16:52:48+08:00</updated>
+  <updated>2014-03-02T19:35:15+08:00</updated>
   <id>www.vmthunder.org/</id>
   <author>
     <name><![CDATA[lihuiba]]></name>
@@ -12,6 +12,48 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Publication]]></title>
+    <link href="www.vmthunder.org/blog/2014/03/02/publication/"/>
+    <updated>2014-03-02T19:18:21+08:00</updated>
+    <id>www.vmthunder.org/blog/2014/03/02/publication</id>
+    <content type="html"><![CDATA[<p><img src="http://www.computer.org/plugins/images/digitalLibrary/magazines/tpds.gif" alt="Image" /></p>
+
+<h1>VMThunder: Fast Provisioning of Large-Scale Virtual Machine Clusters</h1>
+
+<p><strong>Zhaoning Zhang, Ziyang Li, Kui Wu, Dongsheng Li, Huiba Li, Yuxing Peng, Xicheng Lu</strong></p>
+
+<h2>Abstract</h2>
+
+<p>Infrastructure as a service (IaaS) allows users to rent
+resources from cloud to meet their various computing
+requirements. The pay-as-you-use model, however, poses a
+non-trivial technical challenge to the IaaS cloud service
+providers: how to fast provision a large number of virtual
+machines (VMs) to meet users&#8217; dynamic computing requests?
+We address this challenge with VMThunder, a new VM
+provisioning tool, which downloads data blocks on demand
+during the VM booting process and speeds up VM image
+streaming by strategically integrating peer-to-peer (P2P)
+streaming techniques with enhanced optimization schemes
+such as transfer on demand (ToD), cache on read (CoR),
+snapshot on local (SoL), and relay on cache (RoC). In
+particular, VMThunder stores the original images in a
+share storage and in the meantime it adopts a tree-based
+P2P streaming scheme so that common image blocks are
+cached and re-used across the nodes in the cluster. We
+implement VMThunder in CentOS Linux and thoroughly test
+its performance. Comprehensive experimental results show
+that VMThunder outperforms the state-of-the-art VM
+provisioning methods, with respect to scalability,
+latency, and VM runtime I/O performance.</p>
+
+<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385.pdf">Full Text (PDF)</a></p>
+
+<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385-abs.html">Publisher Site</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Background]]></title>

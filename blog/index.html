@@ -11,8 +11,7 @@
     <title>VMThunder</title>
     <meta name="author" content="lihuiba">
     
-    <meta name="description" content="Background Feb 13th, 2014 doc The Infrastructure as a Service (IaaS) cloud has become
-increasingly important due to its flexible pay-as-you-go &hellip;">
+    <meta name="description" content="Publication Mar 2nd, 2014 VMThunder: Fast Provisioning of Large-Scale Virtual Machine Clusters Zhaoning Zhang, Ziyang Li, Kui Wu, Dongsheng Li, &hellip;">
     
     <meta name="viewport" content="width=device-width">
     
@@ -58,6 +57,83 @@ increasingly important due to its flexible pay-as-you-go &hellip;">
 
           
 
+
+  
+  <article class="listing">
+    <header>
+  
+  <h1 class="beta">
+    <a href="/blog/2014/03/02/publication/">Publication</a>
+  </h1>
+  
+
+  
+  <div class="meta clearfix">
+    
+
+
+
+
+
+
+
+
+  
+
+
+<time class="pull-left" datetime="2014-03-02T19:18:21+08:00" pubdate data-updated="true"><i class="icon-calendar"></i> Mar 2<span>nd</span>, 2014</time>
+    
+
+
+
+  
+
+    
+  </div>
+  
+</header>
+
+
+
+
+  <p><img src="http://www.computer.org/plugins/images/digitalLibrary/magazines/tpds.gif" alt="Image" /></p>
+
+<h1>VMThunder: Fast Provisioning of Large-Scale Virtual Machine Clusters</h1>
+
+<p><strong>Zhaoning Zhang, Ziyang Li, Kui Wu, Dongsheng Li, Huiba Li, Yuxing Peng, Xicheng Lu</strong></p>
+
+<h2>Abstract</h2>
+
+<p>Infrastructure as a service (IaaS) allows users to rent
+resources from cloud to meet their various computing
+requirements. The pay-as-you-use model, however, poses a
+non-trivial technical challenge to the IaaS cloud service
+providers: how to fast provision a large number of virtual
+machines (VMs) to meet users&#8217; dynamic computing requests?
+We address this challenge with VMThunder, a new VM
+provisioning tool, which downloads data blocks on demand
+during the VM booting process and speeds up VM image
+streaming by strategically integrating peer-to-peer (P2P)
+streaming techniques with enhanced optimization schemes
+such as transfer on demand (ToD), cache on read (CoR),
+snapshot on local (SoL), and relay on cache (RoC). In
+particular, VMThunder stores the original images in a
+share storage and in the meantime it adopts a tree-based
+P2P streaming scheme so that common image blocks are
+cached and re-used across the nodes in the cluster. We
+implement VMThunder in CentOS Linux and thoroughly test
+its performance. Comprehensive experimental results show
+that VMThunder outperforms the state-of-the-art VM
+provisioning methods, with respect to scalability,
+latency, and VM runtime I/O performance.</p>
+
+<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385.pdf">Full Text (PDF)</a></p>
+
+<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385-abs.html">Publisher Site</a></p>
+
+
+  </article>
+  <hr>
 
   
   <article class="listing">
@@ -280,6 +356,10 @@ servers in the benchmark environment.</p>
   <section id="recent-posts" class="aside-module grid__item one-whole lap-one-half">
   <h1 class="title delta">Recent Posts</h1>
   <ul class="divided">
+    
+      <li class="post">
+        <a href="/blog/2014/03/02/publication/">Publication</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2014/02/13/background/">Background</a>

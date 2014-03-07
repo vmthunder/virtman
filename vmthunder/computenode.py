@@ -138,38 +138,30 @@ class ComputeNode():
         return cached_path
     
     def destroy(self, image_id, vm_name, connections, snapshot_dev):
-        mapdev_prefix = '/dev/mappper/'
+        mapdev_prefix = '/dev/mapper/'
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name(image_id)
         image_path = mapdev_prefix + multipath_name
-        cache_disk_name = fcg._cached_disk_name(image_path)
-        cached_path = mapdev_prefix+cache_disk_name
-        connection = connections[0]
-        iqn = connection['target_iqn']
         try:
             self.delete_snapshot(vm_name)
         except Exception, e:
             print e
             return
-        time.sleep(1) 
         try:
             self.delete_origin(image_id)
         except Exception, e:
             print e
             return
-        time.sleep(1)
         try:
             self.delete_target(image_id)
         except Exception, e:
             print e
             return
-        time.sleep(1)
         try:
             self.delete_cache(image_path)
         except Exception, e:
             print e
             return
-        time.sleep(1)
         try:
             self.delete_multipath(image_id)
         except Exception, e:

@@ -7,7 +7,21 @@ sys.path.append("..")
 from libfcg.fcg import FCG
 from vmthunder.computenode import ComputeNode
 from vmthunder.getconf import GetConf
+import eventlet
+from eventlet import wsgi
+#from wsgi import Server
 
+
+def hello_app(environ, start_response):
+    body = ['%s: %s' %(key, value) for key, value in sorted(environ.items())]
+    body = '\n'.join(body)
+    status = '200 OK'
+    headers = [('Content-Type', 'text/plain'),('Content-Length', str(len(body)))]
+    start_response(status, headers)
+    return ['Hello!!\n', body]
+
+def service():
+    wsgi.server(eventlet.listen( ('0.0.0.0', 8040) ), hello_app)
 
 def main():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')
@@ -21,4 +35,5 @@ def main():
     fcg.create_group(ssds, blocksize, pattern)
 
 if __name__ == '__main__':
-    main()   
+    #main()
+    service()   

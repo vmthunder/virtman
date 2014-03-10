@@ -13,7 +13,8 @@ class ComputeNode():
         self.fcg_name = fcg_name
         self.iscsi = ISCSIConnector('')
         self.tgt = TgtAdm('', '/etc/tgt/conf.d')
-    
+        self.dm = Dmsetup()
+
     def _origin_name(self, image_id):
         return 'origin_' + image_id
 
@@ -67,15 +68,13 @@ class ComputeNode():
             raise(Exception('delete target failed!'))
 
     def create_multipath(self, image_id, disks):
-        dm = Dmsetup()
         multipath_name = self._multipath_name(image_id)
-        multipath_path = dm.multipath(multipath_name, disks)
+        multipath_path = self.dm.multipath(multipath_name, disks)
         return multipath_path
    
     def delete_multipath(self, image_id):
-        dm = Dmsetup()
         multipath_name = self._multipath_name(image_id) 
-        dm.remove_table(multipath_name)
+        self.dm.remove_table(multipath_name)
 
     def logout_target(self, connection):
         """ parameter device_info is no be used """
@@ -91,26 +90,23 @@ class ComputeNode():
         fcg.rm_disk(image_path)
         
     def create_snapshot(self, image_id, vm_name, origin_dev, snapshot_dev):
-        dm = Dmsetup()
         origin_name = self._origin_name(image_id)
         origin_path = ''
-        if dm.is_exist(origin_name):
-            origin_path = dm.mapdev_prefix + origin_name
+        if self.dm.is_exist(origin_name):
+            origin_path = self.dm.mapdev_prefix + origin_name
         else:
-            origin_path = dm.origin(origin_name, origin_dev)
+            origin_path = self.dm.origin(origin_name, origin_dev)
         snapshot_name = self._snapshot_name(vm_name)
-        snapshot_path = dm.snapshot(origin_path, snapshot_name, snapshot_dev)
+        snapshot_path = self.dm.snapshot(origin_path, snapshot_name, snapshot_dev)
         return snapshot_path
 
     def delete_snapshot(self, vm_name):
-		dm = Dmsetup()
 		snapshot_name = self._snapshot_name(vm_name)
-		dm.remove_table(snapshot_name)
+		self.dm.remove_table(snapshot_name)
    
     def delete_origin(self, image_id):
-		dm = Dmsetup()
 		origin_name = self._origin_name(image_id)
-		dm.remove_table(origin_name)
+		self.dm.remove_table(origin_name)
     
     def launch_vms(self, image_id, vms):
         #TODO: Call 
@@ -138,10 +134,9 @@ class ComputeNode():
         return cached_path
     
     def destroy(self, image_id, vm_name, connections, snapshot_dev):
-        mapdev_prefix = '/dev/mapper/'
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name(image_id)
-        image_path = mapdev_prefix + multipath_name
+        image_path = self.dm.mapdev_prefix + multipath_name
         try:
             self.delete_snapshot(vm_name)
         except Exception, e:
@@ -167,13 +162,15 @@ class ComputeNode():
         except Exception, e:
             print e
             return
-        time.sleep(1)
         for connection in connections:
             try:
                 self.logout_target(connection)
             except Exception, e:
                 print e
- 
+    def adjust_structurt(self, image_id, delete_connections, add_connections):
+        multipath_name = self._multipath_name(image_id)
+        out = self.dm.get_table(multipath_name)
+         
     def fake_code(self, image_id, vm_name, connections, snapshot_dev):
         #For TEST purpose only !
         cached_path = self.deploy_image(image_id, connections)

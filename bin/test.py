@@ -1,16 +1,65 @@
-#!/usr/bin/env/ python
+#!/usr/bin/env python
 
-from wsgiref.simple_server import make_server
+import sys
+sys.path.append("..")
 
-def hello_world_app(environ, start_response):
-    status = '200 0K'
-    headers = [('Content-Type', 'text/plain')]
-    print environ
+#from oslo.config import cfg
+from libfcg.fcg import FCG
+from vmthunder.computenode import ComputeNode
+from vmthunder.getconf import GetConf
+import eventlet
+from eventlet import wsgi
+#from wsgi import Server
+
+
+def hello_app(environ, start_response):
+    body = ['%s: %s' %(key, value) for key, value in sorted(environ.items())]
+    body = '\n'.join(body)
+    status = '200 OK'
+    headers = [('Content-Type', 'text/plain'),('Content-Length', str(len(body)))]
     start_response(status, headers)
-    return ['hello world']
+    return ['Hello!!\n', body]
 
-httpd = make_server('', 8000, hello_world_app)
+def service():
+    wsgi.server(eventlet.listen( ('0.0.0.0', 8040) ), hello_app)
 
-print "Serving on port 8000..."
+def main():
+    gc = GetConf('../etc/vmthunder/vmthunder.conf')
+    name = gc.get_fcg_name()
+    ssds = gc.get_fcg_ssds()
+    blocksize = gc.get_fcg_blocksize()
+    pattern = gc.get_fcg_pattern()
+    #print name, ssds, blocksize, pattern
+    
+    fcg = FCG(name)
+    fcg.create_group(ssds, blocksize, pattern)
 
-httpd.serve_forever()
+
+class Manager(object):
+
+    def run_command(self, cmd, **kwargs)
+        f = self.get_command(cmd)
+        return f(**kwargs)
+
+    def get_command(self, cmd)
+        cmd = cmd.lower.replace('-', '_')
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    #main()
+    service()   

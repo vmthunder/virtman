@@ -15,5 +15,8 @@ if __name__ == '__main__':
     prop2['target_lun'] = 1
 
     cn = ComputeNode()
-    cn.fake_code('3', 'vm1', [prop1,prop2], '/dev/loop1')
+    #cn.fake_code('3', 'vm1', [prop1,prop2], '/dev/loop1')
+    multipath_name = cn._multipath_name('3')
+    out = cn.dm.get_table(multipath_name)
+    print out
     cn.destroy('3', 'vm1', [prop1,prop2], '/dev/loop1')

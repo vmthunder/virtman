@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 
 import sys
-sys.path.append("..")
+sys.path.append("../..")
 
 #from oslo.config import cfg
 from libfcg.fcg import FCG
@@ -18,10 +18,11 @@ def hello_app(environ, start_response):
     status = '200 OK'
     headers = [('Content-Type', 'text/plain'),('Content-Length', str(len(body)))]
     start_response(status, headers)
+    print 'Licyh----\n'
     return ['Hello!!\n', body]
 
 def service():
-    wsgi.server(eventlet.listen( ('0.0.0.0', 8040) ), hello_app)
+    wsgi.server(eventlet.listen( ('localhost', 8040) ), hello_app)
 
 def main():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')
@@ -33,32 +34,6 @@ def main():
     
     fcg = FCG(name)
     fcg.create_group(ssds, blocksize, pattern)
-
-
-class Manager(object):
-
-    def run_command(self, cmd, **kwargs)
-        f = self.get_command(cmd)
-        return f(**kwargs)
-
-    def get_command(self, cmd)
-        cmd = cmd.lower.replace('-', '_')
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     #main()

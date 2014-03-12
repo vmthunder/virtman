@@ -1,27 +1,19 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 
 import sys
 sys.path.append("..")
 
-#from oslo.config import cfg
 from libfcg.fcg import FCG
 from vmthunder.computenode import ComputeNode
 from vmthunder.getconf import GetConf
-import eventlet
-from eventlet import wsgi
-#from wsgi import Server
+from vmthunder.service import WSGIService
+from vmthunder.openstack.common.service import ProcessLauncher
 
-
-def hello_app(environ, start_response):
-    body = ['%s: %s' %(key, value) for key, value in sorted(environ.items())]
-    body = '\n'.join(body)
-    status = '200 OK'
-    headers = [('Content-Type', 'text/plain'),('Content-Length', str(len(body)))]
-    start_response(status, headers)
-    return ['Hello!!\n', body]
 
 def service():
-    wsgi.server(eventlet.listen( ('0.0.0.0', 8040) ), hello_app)
+    launcher = ProcessLauncher()
+    server = WSGIService('vmthunder', port=5920)
+    launcher.launch_service(server)
 
 def main():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')

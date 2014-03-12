@@ -23,7 +23,7 @@ class ComputeNode():
 
     def _multipath_name(self, image_id):
         return 'multipath_' + image_id
-    
+    '''  
     def connect_image_paths(self, image_id, connections):
         """Attach the paths of image
 
@@ -34,6 +34,29 @@ class ComputeNode():
         """
         image_path = ''
         connected_paths = []
+        for connection in connections:
+            device_info = self.iscsi.connect_volume(connection)
+            path = device_info['path']
+            path = os.path.realpath(path)
+            connected_paths.append(path)
+        path_count = len(connected_paths)
+        if path_count == 0:
+            #TODO: No available path, connect image storage server directly
+            raise(Exception('No available path, connect image storage server directly !')) 
+        else:
+            image_path = self.create_multipath(image_id, connected_paths)
+        return image_path
+    '''
+    def connect_image_paths(self, image_id, connections):
+         """Attach the paths of image
+
+        connection_properties for iSCSI must include:
+        target_portal - ip and optional port
+        target_iqn - iSCSI Qualified Name
+        target_lun - LUN id of the volume
+        """
+        image_path = ''
+        connected_path = []
         entries = self.iscsi._get_iscsi_devices()
         for connection in connections:
             flag = 1
@@ -123,21 +146,31 @@ class ComputeNode():
         #TODO: Get connection form master
         #TODO Check the connections here !
         return NotImplementedError()
-    
+    '''
+    def deploy_image(self, image_id, connections):
+        #TODO: Roll back if failed !
+        image_path = self.connect_image_paths(image_id, connections)
+        assert image_path != '', 'No image has been connected !'
+        cached_path = self.create_cache(image_path)
+        connection = connections[0]
+        iqn = connection['target_iqn']
+        self.create_target(iqn, cached_path)
+        return cached_path
+    '''
     def deploy_image(self, image_id, connections):
         #TODO: Roll back if failed !
         connected_path = self.connect_image_paths(image_id, connections)
         assert connected_path != '', 'No image has been connected !'
-        multipath_name = self._multipath_name(image_id)
-        multipath  = self.dm.mapdev_prefix + multipath_name
+        multipath_name = cn._multipath_name(image_id)
+        multipath  = cn.dm.mapdev_prefix + multipath_name
         if os.path.exists(multipath):
             fcg = FCG(self.fcg_name)
             cached_disk_name = fcg._cached_disk_name(multipath)
             cached_path = self.dm.mapdev_prefix + cached_disk_name
-            self.add_path(image_id, connected_path)
+            self.add_path(iamge_id, connected_path)
             return cached_path
         else:
-            image_path = self.create_multipath(image_id, connected_path)
+            image_path = self.create_multipath(image_id, connected_paths)
             cached_path = self.create_cache(image_path)
             connection = connections[0]
             iqn = connection['target_iqn']
@@ -148,13 +181,11 @@ class ComputeNode():
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name(image_id)
         image_path = self.dm.mapdev_prefix + multipath_name
-        
         try:
             self.delete_snapshot(vm_name)
         except Exception, e:
             print e
             return
-
         try:
             self.delete_origin(image_id)
         except Exception, e:
@@ -184,7 +215,7 @@ class ComputeNode():
     def add_path(self, image_id, connected_path)
         multipath_name = self._multipath_name(image_id)
         multipath_table = self.dm.get_table(multipath_name)
-        List = multipath_table.split()
+        List = multipath_table.split('')
         dict = {}
         new_multipath_table = ''
         for i in range(11):
@@ -198,21 +229,12 @@ class ComputeNode():
                 dict[path] = 1
         dict.clear()
     '''
-    def add_path(self, image_id, connected_path):
+    def add_path(self, image_id, connected_path)
         multipath_name = self._multipath_name(image_id)
         multipath_table = self.dm.get_table(multipath_name)
-        List = multipath_table.split()
-        multipath_table = ''
-        for i in range(9):
-            multipath_table += List[i]+' '
-        Len = int(List[9]) + len(connected_path)
-        multipath_table += str(Len)+' '
-        for i in range(10, len(List), 1):
-            multipath_table += List[i]+' '
         for path in connected_path:
             multipath_table += path+' 128 '
-        multipath_table += '\n'
-        print 'multipath_table = %s' % multipath_table
+        multipath_table += '/n'
         self.dm.reload_table(multipath_name, multipath_table)
     def adjust_structurt(self, image_id, delete_connections, add_connections):
         multipath_name = self._multipath_name(image_id)

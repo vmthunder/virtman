@@ -12,10 +12,10 @@ class Hello():
         status = '200 OK'
         response_headers = [('Content-type','text/plain')]
         start_response(status, response_headers)
-        return ['Hello World!\n']
+        return ['Hello World!\r\n']
     @classmethod
     def factory(cls, global_conf, **kwargs):
-        print 'in Hello.factory', global_conf, kwargs
+        print 'in Hello.factory\r\n', global_conf, '\r\n', kwargs
         return Hello()
 
 class ShowVersion():
@@ -23,10 +23,10 @@ class ShowVersion():
         pass
     def __call__(self, environ, start_response):
         start_response("200 OK",[("Content-type", "text/plain")])  
-        return ["Paste Deploy LAB: Version = 1.0.0",]  
+        return ["Paste Deploy LAB: Version = 1.0.0\r\n",]  
     @classmethod  
     def factory(cls, global_conf, **kwargs):  
-        print "in ShowVersion.factory", global_conf, kwargs  
+        print "in ShowVersion.factory\r\n", global_conf, '\r\n', kwargs  
         return ShowVersion()
  
 class Calculator():  
@@ -56,7 +56,7 @@ class Calculator():
         return res(environ, start_response)  
     @classmethod
     def factory(cls, global_conf, **kwargs):  
-        print "in Calculator.factory", global_conf, kwargs  
+        print "in Calculator.factory\r\n", global_conf, '\r\n', kwargs  
         return Calculator()  
 
 if __name__ == '__main__':

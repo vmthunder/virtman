@@ -6,13 +6,13 @@ sys.path.append("..")
 from libfcg.fcg import FCG
 from vmthunder.computenode import ComputeNode
 from vmthunder.getconf import GetConf
-from vmthunder.service import WSGIService
+from vmthunder.service import APIService
 from vmthunder.openstack.common.service import ProcessLauncher
 
 
 def service():
     launcher = ProcessLauncher()
-    server = WSGIService('vmthunder', port=5920)
+    server = APIService('vmthunder', port=5925)
     launcher.launch_service(server)
 
 def main():

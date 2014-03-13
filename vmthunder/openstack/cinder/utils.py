@@ -67,10 +67,10 @@ def find_config(config_path):
     """
     possible_locations = [
         config_path,
-        os.path.join(CONF.state_path, "etc", "cinder", config_path),
+        os.path.join(CONF.state_path, "etc", "vmthunder", config_path),
         os.path.join(CONF.state_path, "etc", config_path),
         os.path.join(CONF.state_path, config_path),
-        "/etc/cinder/%s" % config_path,
+        "/etc/vmthunder/%s" % config_path,
     ]
 
     for path in possible_locations:

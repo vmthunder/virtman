@@ -22,7 +22,7 @@ def hello_app(environ, start_response):
     return ['Hello!!\n', body]
 
 def service():
-    wsgi.server(eventlet.listen( ('localhost', 8040) ), hello_app)
+    wsgi.server(eventlet.listen( ('0.0.0.0', 8041) ), hello_app)
 
 def main():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')

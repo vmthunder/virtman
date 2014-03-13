@@ -38,12 +38,29 @@ def test1():
     print c.delete(url)
 
 def test2():
+    import webob
+    from webob import Response
     url1 = 'http://127.0.0.1:8080'
     url2 = 'http://127.0.0.1:8080/show'
     url3 = 'http://127.0.0.1:8080/calc?operator=plus&operand1=12&operand2=23'
     print requests.get(url1)
     print requests.get(url2)
     print requests.get(url3)
+    print requests.post(url1)
+    print requests.post(url2)
+    print requests.post(url3)
+
+    r = requests.get(url3)
+    print r.headers
+    #print r.text
+    print r.content
+
+    r = Response()
+    r = requests.get(url3)
+    print r
+
+
+
 
 if __name__ == '__main__' :
     #test1()

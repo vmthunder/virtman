@@ -6,6 +6,10 @@
 # Packages
 *.egg
 *.egg-info
+*.swp
+*.swo
+.*.swp
+.*.swo
 brick
 flashcachegroup
 dist

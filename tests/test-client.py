@@ -45,10 +45,10 @@ def test2():
     url3 = 'http://127.0.0.1:8080/calc?operator=plus&operand1=12&operand2=23'
     print requests.get(url1)
     print requests.get(url2)
-    print requests.get(url3)
+    print requests.get(url3).text
     print requests.post(url1)
     print requests.post(url2)
-    print requests.post(url3)
+    print requests.post(url3).text
 
     r = requests.get(url3)
     print r.headers

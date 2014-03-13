@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import os
 #from vmthunder.api import hello_wsgi
 from vmthunder import wsgi
 
-class APIService(object):
+
+class WSGIService(object):
     def __init__(self, name, host='0.0.0.0', port=8001, loader=None):
         self.name = name
-        self.loader = loader or wsgi.Loader('/root/VMThunder/vmthunder/api-paste.ini')
+        self.config_path = '/root/VMThunder/vmthunder/api-paste.ini'
+        self.loader = loader or wsgi.Loader(self.config_path)
         self.app = self.loader.load_app(name)
         self.host = host
         self.port = port

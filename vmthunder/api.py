@@ -62,9 +62,12 @@ class Calculator():
 if __name__ == '__main__':
     from paste.deploy import loadapp
     from wsgiref.simple_server import make_server
+    from eventlet import wsgi
+    import eventlet
     config_file = 'api-paste.ini'
     app_name = 'all'
     wsgi_app = loadapp('config:%s' %os.path.abspath(config_file), app_name)
-    server = make_server('localhost', 8080, wsgi_app)
-    server.serve_forever()
+    wsgi.server(eventlet.listen(('0.0.0.0', 8080)), wsgi_app)
+    #server = make_server('0.0.0.0', 8080, wsgi_app)
+    #server.serve_forever()
 

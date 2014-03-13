@@ -35,6 +35,7 @@ import routes.middleware
 import webob.dec
 import webob.exc
 
+
 class Server(object):
     """Server class to manage a WSGI server, serving a WSGI application."""
 
@@ -407,7 +408,7 @@ class Loader(object):
         :returns: None
 
         """
-        self.config_path = config_path 
+        self.config_path = utils.find_config(config_path)
 
     def load_app(self, name):
         """Return the paste URLMap wrapped WSGI application.

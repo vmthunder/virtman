@@ -12,7 +12,7 @@ from vmthunder.openstack.common.service import ProcessLauncher
 
 def service():
     launcher = ProcessLauncher()
-    server = APIService('vmthunder', port=5925)
+    server = APIService('app:main', port=5925)
     launcher.launch_service(server)
 
 def main():

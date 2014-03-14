@@ -65,9 +65,14 @@ if __name__ == '__main__':
     from eventlet import wsgi
     import eventlet
     config_file = 'api-paste.ini'
-    app_name = 'all'
+    app_name = 'vmthunder-api'
     wsgi_app = loadapp('config:%s' %os.path.abspath(config_file), app_name)
-    wsgi.server(eventlet.listen(('0.0.0.0', 8080)), wsgi_app)
+    #wsgi.server(eventlet.listen(('0.0.0.0', 8080)), wsgi_app)
+
+    pool = eventlet.GreenPool()
+    pool.spawn(wsgi.server(eventlet.listen(('0.0.0.0', 8080)), wsgi_app))
+
+
     #server = make_server('0.0.0.0', 8080, wsgi_app)
     #server.serve_forever()
 

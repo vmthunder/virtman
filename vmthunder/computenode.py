@@ -26,6 +26,6 @@ class ComputeNode():
         origin_path = session.deploy_image(image_id, vm_name, connections)
         self.instance.star_vm(image_id, vm_name, origin_path, snapshot_dev)
         
-    def adjust_structurt(self, image_id, delete_connections, add_connections):
+    def adjust_structure(self, image_id, delete_connections, add_connections):
         session = self.dict[image_id]
         session.adjust_structure(image_id, delete_connections, add_connections)

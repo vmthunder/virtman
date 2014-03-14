@@ -201,11 +201,11 @@ class Session():
         print 'multipath_table = %s' % multipath_table
         self.dm.reload_table(multipath_name, multipath_table)
         
-    def adjust_structurt(self, image_id, delete_connections, add_connections):
+    def adjust_structure(self, image_id, delete_connections, add_connections):
         for connection in delete_connections:
             self.logout_target(connection)
         self.login_target(add_connections)
-        add_path(image_id)
+        self.add_path(image_id)
                 
                 
                 

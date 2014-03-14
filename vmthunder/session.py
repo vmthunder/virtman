@@ -32,6 +32,11 @@ class Session():
         key = self.change_connection(connection)
         self.target_path_dict[key] = path
 
+    def delete_target_path_dict(self, connection):
+        key = self.change_connection(connection)
+        if(self.target_path_dict.has_key(key)):
+            del self.target_path_dict[key]
+
     def _origin_name(self, image_id):
         return 'origin_' + image_id
 
@@ -84,17 +89,10 @@ class Session():
     
     def logout_target(self, connection):
         """ parameter device_info is no be used """
-        self.iscsi.disconnect_volume(connection, '')
-        try:
+        if(self.connection_exits(connection)):
+            self.iscsi.disconnect_volume(connection, '')
             self.connections.remove(connection)
-        except Exception ,e:
-            print e
-        
-        key = self.change_connection(connection)
-        tri:
-            del self.target_path_dict[key]
-        except Exception ,e:
-            print e
+            self.delete_target_path_dict(connection)
 
     def connect_image(self, connection):
         """Connect image volume in cinder server
@@ -102,8 +100,11 @@ class Session():
         return NotImplementedError()
 
     def create_target(self, iqn, path):
-        self.tgt.create_iscsi_target(iqn, path)
-        self.target = 1
+        try:
+            self.tgt.create_iscsi_target(iqn, path)
+            self.target = 1
+        except Exception, e:
+            print e
         
     def delete_target(self, image_id):
         try:
@@ -202,8 +203,7 @@ class Session():
         
     def adjust_structurt(self, image_id, delete_connections, add_connections):
         for connection in delete_connections:
-            if(self.connection_exits(connection)):
-                self.logout_target(connection)
+            self.logout_target(connection)
         self.login_target(add_connections)
         add_path(image_id)
                 

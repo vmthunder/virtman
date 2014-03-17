@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Category: doc | VMThunder]]></title>
+  <title><![CDATA[Category: doc | Booting 1000 VMs in a minute!]]></title>
   <link href="www.vmthunder.org/blog/categories/doc/atom.xml" rel="self"/>
   <link href="www.vmthunder.org/"/>
-  <updated>2014-03-02T23:24:27+08:00</updated>
+  <updated>2014-03-17T21:03:07+08:00</updated>
   <id>www.vmthunder.org/</id>
   <author>
     <name><![CDATA[lihuiba]]></name>

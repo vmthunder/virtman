@@ -22,13 +22,13 @@ class InstanceSnapCache(Instance):
         return snapshot_path
 
     def _delete_snapshot(self, vm_name, snapshot_dev):
-	snapshot_name = self._snapshot_name(vm_name)
-	self.dm.remove_table(snapshot_name)
-	self._delete_cache(snapshot_dev)
+        snapshot_name = self._snapshot_name(vm_name)
+        self.dm.remove_table(snapshot_name)
+        self._delete_cache(snapshot_dev)
 
     def star_vm(self, vm_name, origin_path, snapshot_dev):
         self._create_snapshot(vm_name, origin_path, snapshot_dev)
 
     def del_vm(self, vm_name, snapshot_dev):
-        self.delete_snapshot(vm_name, snapshot_dev)
+        self._delete_snapshot(vm_name, snapshot_dev)
         

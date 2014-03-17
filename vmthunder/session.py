@@ -11,7 +11,7 @@ from brick.iscsi.iscsi import TgtAdm
 
 
 class Session():
-    def __init__(self, fcg_name ,image_id ):
+    def __init__(self, fcg_name , image_id):
         self.fcg_name = fcg_name
         self.iscsi = ISCSIConnector('')
         self.tgt = TgtAdm('', '/etc/tgt/conf.d')
@@ -54,7 +54,7 @@ class Session():
         return self.dm.mapdev_prefix + cached_disk_name
 
     def _origin_path(self):
-        origin_name = self._origin_name(self.image_id)
+        origin_name = self._origin_name()
         return self.dm.mapdev_prefix + origin_name
 
     def _connection_exits(self, connection):
@@ -74,13 +74,13 @@ class Session():
         
         for connection in connections:
             if(not self._connection_exits(connection)):
-                self.connections.append(connection)
                 try:
                     device_info = self.iscsi.connect_volume(connection)
                     path = device_info['path']
                     path = os.path.realpath(path)
                     self._add_target_path_dict(connection, path)
                     connected_paths.append(path)
+                    self.connections.append(connection)
                 except Exception, e:
                     print e
         return connected_paths
@@ -91,7 +91,7 @@ class Session():
             try:
                 self.iscsi.disconnect_volume(connection, '')
                 self.connections.remove(connection)
-                self.delete_target_path_dict(connection)
+                self._delete_target_path_dict(connection)
             except Exception, e:
                 print e
 
@@ -115,20 +115,20 @@ class Session():
             print e
   
     def create_multipath(self, disks):
-        multipath_name = self._multipath_name(self.image_id)
+        multipath_name = self._multipath_name()
         multipath_path = self.dm.multipath(multipath_name, disks)
-        self.hsa_multipath = True
+        self.has_multipath = True
         return multipath_path
    
     def delete_multipath(self):
-        multipath_name = self._multipath_name(self.image_id) 
+        multipath_name = self._multipath_name() 
         self.dm.remove_table(multipath_name)
         self.hsa_multipath = False
 
     def create_cache(self, multipath):
         fcg = FCG(self.fcg_name)
         cached_path = fcg.add_disk(multipath)
-        self.hsa_cache = True
+        self.has_cache = True
         return cached_path
 
     def delete_cache(self, multipath):
@@ -139,24 +139,24 @@ class Session():
     def create_origin(self, origin_dev):
         origin_name = self._origin_name()
         origin_path = ''
-        if self.has_origin
+        if self.has_origin:
             origin_path = self._origin_path()
         else:
             origin_path = self.dm.origin(origin_name, origin_dev)
             self.has_origin = True
         return origin_path
    
-    def delete_origin(self):
-	origin_name = self._origin_name(self.image_id)
-	self.dm.remove_table(origin_name)
+    def _delete_origin(self):
+        origin_name = self._origin_name()
+        self.dm.remove_table(origin_name)
         self.has_origin = False
     
     def deploy_image(self, vm_name, connections):
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
         connected_path = self.login_target(connections)
-        multipath_name = self._multipath_name(image_id)
-        multipath  = self._multipath(image_id)
+        multipath_name = self._multipath_name()
+        multipath  = self._multipath()
         cached_path = ''
         if  self.has_multipath:
             fcg = FCG(self.fcg_name)
@@ -176,15 +176,15 @@ class Session():
         self.vm.remove(vm_name)
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name()
-        image_path = self._image_path(image_id)
+        multipath = self._multipath()
         if(len(self.vm) == 0):
             self._delete_origin()
-        if(self.has_target)
+        if(self.has_target):
             self.delete_target()
         time.sleep(1)
         if(not self.has_origin and not self.has_target):
-            self.delete_cache(image_path)
-        if(not self.cache):
+            self.delete_cache(multipath)
+        if(not self.has_cache):
             self.delete_multipath()
         for connection in connections:
             self.logout_target(connection)
@@ -194,11 +194,11 @@ class Session():
         if(len(self.connections) == 0):
             return 
         multipath_name = self._multipath_name()
-        key = self.connection_to_string(self.connections[0])
+        key = self._connection_to_string(self.connections[0])
         size = utils.get_dev_sector_count(self.target_path_dict[key])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(self.connections))
         for connection in self.connections:
-            temp = self.connection_to_string(connection)
+            temp = self._connection_to_string(connection)
             multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'
         print 'multipath_table = %s' % multipath_table
@@ -208,7 +208,7 @@ class Session():
         for connection in delete_connections:
             self.logout_target(connection)
         self.login_target(add_connections)
-        self.add_path(self.image_id)
+        self.add_path()
                 
                 
                 

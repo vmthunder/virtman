@@ -3,6 +3,7 @@
 import time
 import os
 
+from pydm.common import utils
 from libfcg.fcg import FCG
 from pydm.dmsetup import Dmsetup
 from brick.initiator.connector import ISCSIConnector
@@ -25,11 +26,16 @@ class Session():
         self.vm = []
         
     def change_connection(self, connection):
-        return connection[target_portal] + connection[target_iqn]
+        return connection['target_portal'] + connection['target_iqn']
     
     def add_target_path_dict(self, connection, path):
         key = self.change_connection(connection)
         self.target_path_dict[key] = path
+
+    def delete_target_path_dict(self, connection):
+        key = self.change_connection(connection)
+        if(self.target_path_dict.has_key(key)):
+            del self.target_path_dict[key]
 
     def _origin_name(self, image_id):
         return 'origin_' + image_id
@@ -83,19 +89,22 @@ class Session():
     
     def logout_target(self, connection):
         """ parameter device_info is no be used """
-        self.iscsi.disconnect_volume(connection, '')
-        self.connections.remove(connection)
-        key = self.change_connection(connection)
-        del self.target_path_dict[key]
-    
+        if(self.connection_exits(connection)):
+            self.iscsi.disconnect_volume(connection, '')
+            self.connections.remove(connection)
+            self.delete_target_path_dict(connection)
+
     def connect_image(self, connection):
         """Connect image volume in cinder server
         """
         return NotImplementedError()
 
     def create_target(self, iqn, path):
-        self.tgt.create_iscsi_target(iqn, path)
-        self.target = 1
+        try:
+            self.tgt.create_iscsi_target(iqn, path)
+            self.target = 1
+        except Exception, e:
+            print e
         
     def delete_target(self, image_id):
         try:
@@ -145,7 +154,6 @@ class Session():
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
         connected_path = self.login_target(connections)
-        assert connected_path != '', 'No image has been connected !'
         multipath_name = self._multipath_name(image_id)
         multipath  = self._multipath(image_id)
         cached_path = ''
@@ -164,7 +172,7 @@ class Session():
         return origin_path
 
     def destroy(self, image_id, vm_name, connections):
-        vm.remove(vm_name)
+        self.vm.remove(vm_name)
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name(image_id)
         image_path = self._image_path(image_id)
@@ -177,26 +185,27 @@ class Session():
             self.delete_multipath(image_id)
         for connection in connections:
             self.logout_target(connection)
-        add_path(image_id)
+        self.add_path(image_id)
     
     def add_path(self, image_id):
         if(len(self.connections) == 0):
             return 
         multipath_name = self._multipath_name(image_id)
-        size = utils.get_dev_sector_count(self.target_path_dict[self.connections[0]])
+        temp = self.change_connection(self.connections[0])
+        size = utils.get_dev_sector_count(self.target_path_dict[temp])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(self.connections))
         for connection in self.connections:
-            multipath_table += self.target_path_dict[connection]+' 128 '
+            temp = self.change_connection(connection)
+            multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'
         print 'multipath_table = %s' % multipath_table
         self.dm.reload_table(multipath_name, multipath_table)
         
-    def adjust_structurt(self, image_id, delete_connections, add_connections):
+    def adjust_structure(self, image_id, delete_connections, add_connections):
         for connection in delete_connections:
-            if(self.connection_exits(connection)):
-                self.logout_target(connection)
+            self.logout_target(connection)
         self.login_target(add_connections)
-        add_path(image_id)
+        self.add_path(image_id)
                 
                 
                 

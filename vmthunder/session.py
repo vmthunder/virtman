@@ -64,7 +64,7 @@ class Session():
             return False
 
     #This method is to login target and return the connected_paths
-    def login_target(self, connections):
+    def _login_target(self, connections):
         """connection_properties for iSCSI must include:
         target_portal - ip and optional port
         target_iqn - iSCSI Qualified Name
@@ -85,7 +85,7 @@ class Session():
                     print e
         return connected_paths
     
-    def logout_target(self, connection):
+    def _logout_target(self, connection):
         """ parameter device_info is no be used """
         if(self._connection_exits(connection)):
             try:
@@ -100,43 +100,43 @@ class Session():
         """
         return NotImplementedError()
 
-    def create_target(self, iqn, path):
+    def _create_target(self, iqn, path):
         try:
             self.tgt.create_iscsi_target(iqn, path)
             self.has_target = True
         except Exception, e:
             print e
         
-    def delete_target(self):
+    def _delete_target(self):
         try:
             self.tgt.remove_iscsi_target(0, 0, self.image_id, self.image_id)
             self.has_target = False
         except  Exception, e:
             print e
   
-    def create_multipath(self, disks):
+    def _create_multipath(self, disks):
         multipath_name = self._multipath_name()
         multipath_path = self.dm.multipath(multipath_name, disks)
         self.has_multipath = True
         return multipath_path
    
-    def delete_multipath(self):
+    def _delete_multipath(self):
         multipath_name = self._multipath_name() 
         self.dm.remove_table(multipath_name)
         self.hsa_multipath = False
 
-    def create_cache(self, multipath):
+    def _create_cache(self, multipath):
         fcg = FCG(self.fcg_name)
         cached_path = fcg.add_disk(multipath)
         self.has_cache = True
         return cached_path
 
-    def delete_cache(self, multipath):
+    def _delete_cache(self, multipath):
         fcg = FCG(self.fcg_name)
         fcg.rm_disk(multipath)
         self.has_cache = False
         
-    def create_origin(self, origin_dev):
+    def _create_origin(self, origin_dev):
         origin_name = self._origin_name()
         origin_path = ''
         if self.has_origin:
@@ -154,7 +154,7 @@ class Session():
     def deploy_image(self, vm_name, connections):
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
-        connected_path = self.login_target(connections)
+        connected_path = self._login_target(connections)
         multipath_name = self._multipath_name()
         multipath  = self._multipath()
         cached_path = ''
@@ -162,14 +162,14 @@ class Session():
             fcg = FCG(self.fcg_name)
             cached_disk_name = fcg._cached_disk_name(multipath)
             cached_path = self.dm.mapdev_prefix + cached_disk_name
-            self.add_path()
+            self._add_path()
         else:
-            multi_path = self.create_multipath(connected_path)
-            cached_path = self.create_cache(multi_path)
+            multi_path = self._create_multipath(connected_path)
+            cached_path = self._create_cache(multi_path)
             connection = connections[0]
             iqn = connection['target_iqn']
-            self.create_target(iqn, cached_path)
-        origin_path = self.create_origin(cached_path)
+            self._create_target(iqn, cached_path)
+        origin_path = self._create_origin(cached_path)
         return origin_path
 
     def destroy(self, vm_name, connections):
@@ -180,17 +180,17 @@ class Session():
         if(len(self.vm) == 0):
             self._delete_origin()
         if(self.has_target):
-            self.delete_target()
+            self._delete_target()
         time.sleep(1)
         if(not self.has_origin and not self.has_target):
-            self.delete_cache(multipath)
+            self._delete_cache(multipath)
         if(not self.has_cache):
-            self.delete_multipath()
+            self._delete_multipath()
         for connection in connections:
-            self.logout_target(connection)
-        self.add_path()
+            self._logout_target(connection)
+        self._add_path()
     
-    def add_path(self):
+    def _add_path(self):
         if(len(self.connections) == 0):
             return 
         multipath_name = self._multipath_name()
@@ -206,9 +206,9 @@ class Session():
         
     def adjust_structure(self, delete_connections, add_connections):
         for connection in delete_connections:
-            self.logout_target(connection)
-        self.login_target(add_connections)
-        self.add_path()
+            self._logout_target(connection)
+        self._login_target(add_connections)
+        self._add_path()
                 
                 
                 

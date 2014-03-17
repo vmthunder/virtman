@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 
-import time
-import os
-
-from libfcg.fcg import FCG
 from pydm.dmsetup import Dmsetup
-from brick.initiator.connector import ISCSIConnector
-from brick.iscsi.iscsi import TgtAdm
-from vmthunder.instance import Instance
 from vmthunder.session import Session
+from vmthunder.instance1 import InstanceCommon
+from vmthunder.instance2 import InstanceSnapCache
+
 class ComputeNode():
+    
     def __init__(self):
         self.dict = {}
-        self.instance = Instance()
+        self.instance = Instance1('fcg')
     
     def delete_vm(self, image_id, vm_name, connections, snapshot_dev):
         session = self.dict[image_id]
-        self.instance.delete_snapshot(vm_name)
+        self.instance.del_vm(vm_name, snapshot_dev)
         session.destroy(image_id, vm_name, connections)
 
     def star_vm(self, image_id, vm_name, connections, snapshot_dev):

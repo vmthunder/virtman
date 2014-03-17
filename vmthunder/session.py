@@ -116,40 +116,58 @@ class Session():
   
     def _create_multipath(self, disks):
         multipath_name = self._multipath_name()
-        multipath_path = self.dm.multipath(multipath_name, disks)
-        self.has_multipath = True
+        try:
+            multipath_path = self.dm.multipath(multipath_name, disks)
+            self.has_multipath = True
+        except Exception, e:
+            print e
         return multipath_path
    
     def _delete_multipath(self):
-        multipath_name = self._multipath_name() 
-        self.dm.remove_table(multipath_name)
-        self.hsa_multipath = False
-
+        multipath_name = self._multipath_name()
+        try:
+            self.dm.remove_table(multipath_name)
+            self.hsa_multipath = False
+        except Exception, e:
+            print e
+    
     def _create_cache(self, multipath):
         fcg = FCG(self.fcg_name)
-        cached_path = fcg.add_disk(multipath)
-        self.has_cache = True
+        try:
+            cached_path = fcg.add_disk(multipath)
+            self.has_cache = True
+        except Exception, e:
+            print e
         return cached_path
 
     def _delete_cache(self, multipath):
         fcg = FCG(self.fcg_name)
-        fcg.rm_disk(multipath)
-        self.has_cache = False
-        
+        try:
+            fcg.rm_disk(multipath)
+            self.has_cache = False
+        except Exception, e:
+            print e
+    
     def _create_origin(self, origin_dev):
         origin_name = self._origin_name()
         origin_path = ''
         if self.has_origin:
             origin_path = self._origin_path()
         else:
-            origin_path = self.dm.origin(origin_name, origin_dev)
-            self.has_origin = True
+            try:
+                origin_path = self.dm.origin(origin_name, origin_dev)
+                self.has_origin = True
+            except Exception, e:
+                print e
         return origin_path
    
     def _delete_origin(self):
         origin_name = self._origin_name()
-        self.dm.remove_table(origin_name)
-        self.has_origin = False
+        try:
+            self.dm.remove_table(origin_name)
+            self.has_origin = False
+        except Exception, e:
+                print e
     
     def deploy_image(self, vm_name, connections):
         #TODO: Roll back if failed !

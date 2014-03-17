@@ -17,7 +17,7 @@ class APIService(object):
         self.config_path = config_path
         self.app = deploy.loadapp('config:%s' %os.path.abspath(self.config_path), self.name)
         self.pool = eventlet.GreenPool()
-        self._server = None
+        self.server = None
 
     def _start(self):
         eventlet.wsgi.server( eventlet.listen((self.host, self.port)), self.app,
@@ -25,23 +25,22 @@ class APIService(object):
         #eventlet.wsgi.server( eventlet.listen((self.host, self.port)), self.app )
 
     def start(self):
-        self._server = eventlet.spawn( self._start() )
-        #self._server = self.pool.spawn( self._start() )
+        self.server = eventlet.spawn( self._start() )
+        #self.server = self.pool.spawn( self._start() )
 
     def stop(self):
-        if self._server is not None:
-            self._pool.resize(0)
-            self._server.kill()
+        if self.server is not None:
+            self.pool.resize(0)
+            self.server.kill()
 
     def wait(self):
-        if self._server is not None:
-            self._server.wait()
+        if self.server is not None:
+            self.server.wait()
 
 def process_launcher():
     return launcher.ProcessLauncher()
 
 
 if __name__ == '__main__' :
-    a = APIService()
-    a.start()
+    pass
 

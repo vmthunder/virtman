@@ -26,7 +26,7 @@ class InstanceSnapCache(Instance):
         self.dm.remove_table(snapshot_name)
         self._delete_cache()
 
-    def star_vm(self, origin_path):
+    def start_vm(self, origin_path):
         self._create_snapshot(origin_path)
 
     def del_vm(self):

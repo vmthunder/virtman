@@ -14,7 +14,7 @@ class InstanceCommon(Instance):
     	snapshot_name = self._snapshot_name()
         self.dm.remove_table(snapshot_name)
 
-    def star_vm(self, origin_path):
+    def start_vm(self, origin_path):
         self._create_snapshot(origin_path)
 
     def del_vm(self):

@@ -7,7 +7,11 @@ from vmthunder.instancesnapcache import InstanceSnapCache
 
 class ComputeNode():
     
+    
+    #TODO realize singleton pattern
+
     def __init__(self):
+        #TODO initial fcg
         self.session_dict = {}
         self.instance_dict = {}
         

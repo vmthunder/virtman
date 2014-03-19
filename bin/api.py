@@ -59,15 +59,38 @@ class Calculator():
         print "in Calculator.factory\r\n", global_conf, '\r\n', kwargs  
         return Calculator()  
 
+
+def th(server):
+    server.serve_forever()
+
+def _thread_done(gt, *args, **kwargs):
+    """Callback function to be passed to GreenThread.link() when we spawn()
+    Calls the :class:`ThreadGroup` to notify if.
+
+    """
+    kwargs['group'].thread_done(kwargs['thread'])
+
 if __name__ == '__main__':
     from paste.deploy import loadapp
     from wsgiref.simple_server import make_server
     from eventlet import wsgi
     import eventlet
-    config_file = 'api-paste.ini'
-    app_name = 'all'
-    wsgi_app = loadapp('config:%s' %os.path.abspath(config_file), app_name)
-    wsgi.server(eventlet.listen(('0.0.0.0', 8080)), wsgi_app)
-    #server = make_server('0.0.0.0', 8080, wsgi_app)
-    #server.serve_forever()
+    import threading
+    from multiprocessing import Process
 
+    config_file = 'api-paste.ini'
+    app_name = 'vmthunder-api'
+    wsgi_app = loadapp('config:%s' %os.path.abspath(config_file), app_name)
+    #wsgi.server(eventlet.listen(('0.0.0.0', 8001)), wsgi_app)
+    #pool = eventlet.GreenPool()
+    #thread = pool.spawn(wsgi.server(eventlet.listen(('0.0.0.0', 8001)), wsgi_app))
+    #thread.link(_thread_done, thread)
+    server = make_server('0.0.0.0', 8001, wsgi_app)
+
+    p = threading.Thread(target=th, args=(server,))
+    p.run()
+    #p.daemon = True
+    #p.start()
+    #import time
+    #time.sleep(5)   
+ 

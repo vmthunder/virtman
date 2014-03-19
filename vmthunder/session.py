@@ -87,10 +87,10 @@ class Session():
     
     def _logout_target(self, connection):
         """ parameter device_info is no be used """
-        if(self._connection_exits(connection)):
+        tmp_string = self._connection_to_string(connection)
+        if(self.target_path_dict.has_key(tmp_string)):
             try:
                 self.iscsi.disconnect_volume(connection, '')
-                self.connections.remove(connection)
                 self._delete_target_path_dict(connection)
             except Exception, e:
                 print e
@@ -200,9 +200,9 @@ class Session():
         if(self.has_target):
             self._delete_target()
         time.sleep(1)
-        if(not self.has_origin and not self.has_target):
+        if(self.has_origin is False and self.has_target is False):
             self._delete_cache(multipath)
-        if(not self.has_cache):
+        if(self.has_cache is False):
             self._delete_multipath()
         for connection in connections:
             self._logout_target(connection)
@@ -216,18 +216,21 @@ class Session():
         size = utils.get_dev_sector_count(self.target_path_dict[key])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(self.connections))
         for connection in self.connections:
-            temp = self._connection_to_string(connection)
-            multipath_table += self.target_path_dict[temp]+' 128 '
+            
+                temp = self._connection_to_string(connection)
+                multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'
         print 'multipath_table = %s' % multipath_table
         self.dm.reload_table(multipath_name, multipath_table)
         
     def adjust_structure(self, delete_connections, add_connections):
+        self._login_target(add_connections)
+        for connection in delete_connections:
+            if(self._connection_exits(connection)):
+                self.connections.remove(connection)
+        self._add_path()
         for connection in delete_connections:
             self._logout_target(connection)
-        self._login_target(add_connections)
-        self._add_path()
-                
                 
                 
         

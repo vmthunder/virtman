@@ -41,20 +41,6 @@ def make_daemon(func, *args, **kwargs):
     #start the daemon main loop
     func(*args, **kwargs)
 
-def ss():
-    p = current_process()
-    print p.pid, p.name
-    server = service.APIService()
-    server.start()
-
-def daemon_serve():
-    p = Process( name = 'Ai..', target=ss )
-    p.daemon = True
-    p.start()
-    print 'ss'
-    import time
-    time.sleep(5)
-
 def serve():
     launcher = service.process_launcher()
     server = service.APIService()
@@ -72,19 +58,7 @@ def main():
     fcg = FCG(name)
     fcg.create_group(ssds, blocksize, pattern)
 
-
-def test_service():
-    import time
-    a = service.APIService()
-    a.start()
-    time.sleep(3)
-    a.stop()  #can't be tested
-
-
 if __name__ == '__main__':
     #main()
-    #serve()
-    #test_service()
-    #daemon_serve()  
-    #ss() 
+    #serve()`
     make_daemon(wsgi_service)

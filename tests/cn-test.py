@@ -4,7 +4,7 @@ sys.path.append("..")
 import os
 from vmthunder.computenode import ComputeNode
 from testsuit import try_exec
-
+from vmthunder.singleton import get_instance
 if __name__ == '__main__':
     prop1 = {}
     prop1['target_portal'] = '10.107.14.162:3260'
@@ -15,11 +15,11 @@ if __name__ == '__main__':
     prop2['target_iqn'] = 'iqn.2010-10.org.openstack:4'
     prop2['target_lun'] = 1
 
-    cn = ComputeNode()
+    cn = get_instance(ComputeNode, 'fcg')
     print id(cn)
     cn.start_vm('4', 'vm1', [prop1], '/dev/loop1')
     cn.start_vm('4', 'vm2', [prop2], '/dev/loop2')
-    cn1 = ComputeNode()
+    cn1 = get_instance(ComputeNode, 'fcg')
     print id(cn1)
     print cn1 == cn
     print cn.session_dict.has_key('4')

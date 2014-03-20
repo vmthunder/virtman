@@ -6,13 +6,10 @@ from vmthunder.instancecommon import InstanceCommon
 from vmthunder.instancesnapcache import InstanceSnapCache
 from vmthunder.singleton import SingleTon
 class ComputeNode(SingleTon):
-    existed = False    
     def __init__(self, fcg_name = 'fcg'):
-        if not self.existed:
-            self.existed = True
-            self.session_dict = {}
-            self.instance_dict = {}
-            self.fcg_name = fcg_name
+        self.session_dict = {}
+        self.instance_dict = {}
+        self.fcg_name = fcg_name
     
     def delete_vm(self, vm_name, connections):
         instance = self.instance_dict[vm_name]

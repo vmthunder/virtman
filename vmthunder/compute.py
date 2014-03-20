@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import libfcg.fcg
+from libfcg.fcg import FCG
 from vmthunder.session import Session
 from vmthunder.instancecommon import InstanceCommon
 from vmthunder.instancesnapcache import InstanceSnapCache

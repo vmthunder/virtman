@@ -66,11 +66,11 @@ def test2():
 def test3():
     url2 = 'http://127.0.0.1:8001/show'
     r2 = requests.get(url2)
-    print r2.headers, '\n', r2.text
+    print r2.headers, '\n', r2.content
 
     url3 = 'http://127.0.0.1:8001/calc?operator=plus&operand1=12&operand2=23'
     r3 = requests.get(url3)
-    print r3.headers, '\n', r3.text
+    print r3.headers, '\n', r3.content
 '''
     url = 'http://127.0.0.1:8001/start?image_id=image-100&vm_name=vm-200&connections=ss'
     r = requests.get(url)

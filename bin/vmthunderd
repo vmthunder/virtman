@@ -4,12 +4,16 @@ import sys
 sys.path.append("..")
 
 from vmthunder.getconf import GetConf
-from vmthunder import service
+#TODO change GetConf to oslo.config
 from vmthunder import compute
+from vmthunder.common import wsgi
+from vmthunder.common import version
+from vmthunder.openstack.common import log as logging
 
-def wsgi_service():
-    server = service.APIService()
+def _start_wsgi_service():
+    server = wsgi.Server('vmthunder-api')
     server.start()
+    server.wait()
 
 def start():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')
@@ -18,8 +22,9 @@ def start():
     block_size = gc.get_fcg_blocksize()
     pattern = gc.get_fcg_pattern()
 
-    cn = compute.get_instance(fcg_name, ssds, block_size, pattern)
-    wsgi_service()
+    cn = compute.get_compute(fcg_name, ssds, block_size, pattern)
 
 if __name__ == '__main__':
+    #logging.setup('vmthunder')
     start()
+    _start_wsgi_service()

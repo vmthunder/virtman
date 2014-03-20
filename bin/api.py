@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 
 import os
-import webob
+import sys
+
 from webob import Request
 from webob import Response
+from vmthunder.singleton import get_instance
 
-import sys
 sys.path.append("..")
-from vmthunder.computenode import ComputeNode
+from vmthunder import compute
 
+class ComputeApplication:
+    compute_ins = compute.get_instance()
+    def __call__(self, *args, **kwargs):
+        return NotImplementedError()
+    @classmethod
+    def factory(cls, global_conf, **kwargs):
+        return NotImplementedError()
 
-cn = ComputeNode()
-
-class Start():
-    def __init__(self):
-        pass
+class start_vm(ComputeApplication):
     def __call__(self, environ, start_response):
         req = Request(environ)
         res = Response()
@@ -30,7 +34,7 @@ class Start():
         return res(environ, start_response)
     @classmethod
     def factory(cls, global_conf, **kwargs):
-        return Start()
+        return start_vm()
 
 class Hello():
     def __init__(self):
@@ -104,10 +108,7 @@ def _thread_done(gt, *args, **kwargs):
 if __name__ == '__main__':
     from paste.deploy import loadapp
     from wsgiref.simple_server import make_server
-    from eventlet import wsgi
-    import eventlet
     import threading
-    from multiprocessing import Process
 
     config_file = 'api-paste.ini'
     app_name = 'vmthunder-api'

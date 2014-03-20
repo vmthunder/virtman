@@ -10,6 +10,7 @@
 *.swo
 .*.swp
 .*.swo
+.idea
 brick
 flashcachegroup
 dist

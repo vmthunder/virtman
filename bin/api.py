@@ -18,7 +18,7 @@ class ComputeApplication:
     def factory(cls, global_conf, **kwargs):
         return NotImplementedError()
 
-class start_vm(ComputeApplication):
+class StartVM(ComputeApplication):
     def __call__(self, environ, start_response):
         req = Request(environ)
         res = Response()

@@ -16,8 +16,14 @@ if __name__ == '__main__':
     prop2['target_lun'] = 1
 
     cn = ComputeNode()
+    print id(cn)
     cn.start_vm('4', 'vm1', [prop1], '/dev/loop1')
     cn.start_vm('4', 'vm2', [prop2], '/dev/loop2')
-    cn.adjust_structure('4', [prop1, prop2], '')
-    cn.delete_vm('vm1', [prop1,prop2])
-    cn.delete_vm('vm2', [prop1,prop2])
+    cn1 = ComputeNode()
+    print id(cn1)
+    print cn1 == cn
+    print cn.session_dict.has_key('4')
+    print cn1.session_dict.has_key('4')
+    cn1.adjust_structure('4', [prop1, prop2], '')
+    cn1.delete_vm('vm1', [prop1,prop2])
+    cn1.delete_vm('vm2', [prop1,prop2])

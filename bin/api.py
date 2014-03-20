@@ -5,6 +5,33 @@ import webob
 from webob import Request
 from webob import Response
 
+import sys
+sys.path.append("..")
+from vmthunder.computenode import ComputeNode
+
+
+cn = ComputeNode()
+
+class Start():
+    def __init__(self):
+        pass
+    def __call__(self, environ, start_response):
+        req = Request(environ)
+        res = Response()
+        res.status = "200 OK"
+        res.content_type = "text/plain"
+        res.body = "%s had already started." % ('VM')
+        
+        image_id = req.GET.get("image_id", None)
+        vm_name = req.GET.get("vm_name", None)
+        connections = req.GET.get("connections", None)
+        cn.start_vm(image_id, vm_name, connections)
+
+        return res(environ, start_response)
+    @classmethod
+    def factory(cls, global_conf, **kwargs):
+        return Start()
+
 class Hello():
     def __init__(self):
         pass
@@ -22,6 +49,8 @@ class ShowVersion():
     def __init__(self):
         pass
     def __call__(self, environ, start_response):
+        print 'environ=', environ
+        print 'start_response=', start_response 
         start_response("200 OK",[("Content-type", "text/plain")])  
         return ["Paste Deploy LAB: Version = 1.0.0\r\n",]  
     @classmethod  
@@ -33,6 +62,8 @@ class Calculator():
     def __init__(self):  
         pass  
     def __call__(self, environ, start_response):  
+        print 'environ=', environ
+        print 'start_response=', start_response
         req = Request(environ)
         res = Response()
         # get operands  

@@ -9,14 +9,10 @@ from vmthunder.singleton import get_instance
 
 sys.path.append("..")
 from vmthunder import compute
+from vmthunder.common.wsgi import Application
 
-class ComputeApplication:
+class ComputeApplication(Application):
     compute_ins = compute.get_compute()
-    def __call__(self, *args, **kwargs):
-        return NotImplementedError()
-    @classmethod
-    def factory(cls, global_conf, **kwargs):
-        return NotImplementedError()
 
 class StartVM(ComputeApplication):
     def __call__(self, environ, start_response):
@@ -49,18 +45,12 @@ class Hello():
         print 'in Hello.factory\r\n', global_conf, '\r\n', kwargs
         return Hello()
 
-class ShowVersion():
-    def __init__(self):
-        pass
+class ShowVersion(Application):
     def __call__(self, environ, start_response):
         print 'environ=', environ
         print 'start_response=', start_response 
         start_response("200 OK",[("Content-type", "text/plain")])  
-        return ["Paste Deploy LAB: Version = 1.0.0\r\n",]  
-    @classmethod  
-    def factory(cls, global_conf, **kwargs):  
-        print "in ShowVersion.factory\r\n", global_conf, '\r\n', kwargs  
-        return ShowVersion()
+        return ["Paste Deploy LAB: Version = 1.0.0\r\n",]
  
 class Calculator():  
     def __init__(self):  

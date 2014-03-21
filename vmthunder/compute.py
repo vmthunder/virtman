@@ -2,7 +2,6 @@
 
 from libfcg.fcg import FCG
 from vmthunder.session import Session
-from vmthunder.instancecommon import InstanceCommon
 from vmthunder.instancesnapcache import InstanceSnapCache
 from vmthunder.singleton import get_instance
 from vmthunder.singleton import SingleTon
@@ -15,14 +14,14 @@ class Compute(SingleTon):
         fcg = FCG(fcg_name)
         fcg.create_group(ssds, blocksize, pattern)
     
-    def delete_vm(self, vm_name, connections):
+    def destroy(self, vm_name, connections):
         instance = self.instance_dict[vm_name]
         session = self.session_dict[instance.image_id]
         instance.del_vm()
         session.destroy(vm_name, connections)
         del self.instance_dict[vm_name]
 
-    def start_vm(self, image_id, vm_name, connections, snapshot_dev):
+    def create(self, image_id, vm_name, connections, snapshot_dev):
         if(not self.session_dict.has_key(image_id)):
             self.session_dict[image_id] = Session('fcg', image_id)
         session = self.session_dict[image_id]
@@ -36,3 +35,6 @@ class Compute(SingleTon):
 
 def get_compute(*args, **kv):
         return get_instance(Compute, *args, **kv)
+
+def create_resource():
+    return NotImplementedError()

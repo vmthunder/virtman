@@ -31,8 +31,16 @@ class ComputeAPI(object):
         except exception.Forbidden:
             raise HTTPForbidden()
 
-    def create(self, req):
-        return NotImplementedError()
+    def create(self, req, image_id, vm_name, connections, snapshot_dev):
+        #TODO：use policy.enforce
+        print 'in compute create'
+        try:
+            print image_id, vm_name, connections, snapshot_dev
+            #self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
+        except:
+            raise 'Failed to create %s' % vm_name
+        else:
+            return Response(body='', status=200)
 
     def destroy(self, req):
         return NotImplementedError()
@@ -44,7 +52,6 @@ class ComputeAPI(object):
         instances = self.compute_instance.list()
         print instances
         res_body = jsonutils.dumps(instances)
-        print res_body
         return Response(body=res_body, status=200)
 
 def create_resource():

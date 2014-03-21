@@ -30,6 +30,16 @@ class Client(object):
     def delete(self, url, **kwargs):
         return self.requests(url, 'DELETE', **kwargs)
 
+def test4():
+    url4 = 'http://127.0.0.1:8001/list'
+    r4 = requests.get(url4)
+    print r4.headers, '\n', r4.content
+
+    url5 = 'http://127.0.0.1:8001/create'
+
+    r5 = requests.post(url5)
+    print r5.headers, '\n', r5.content
+
 def test1():
     c = Client()
     url = 'http://10.107.14.50:8041'
@@ -80,10 +90,7 @@ def test3():
     print r.text
 '''
 
-def test4():
-    url4 = 'http://127.0.0.1:8001/list'
-    r4 = requests.get(url4)
-    print r4.headers, '\n', r4.content
+
 if __name__ == '__main__' :
     #test1()
     #test2()

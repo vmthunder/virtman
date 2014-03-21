@@ -12,11 +12,11 @@ class ComputeRouter(wsgi.Router):
                        controller=compute_resource,
                        action='list',
                        conditions={'method':['GET']})
-        mapper.connect("/create/{instance_name}",
+        mapper.connect("/create",
                        controller=compute_resource,
                        action='create',
                        conditions={'method':['POST']})
-        mapper.connect("/destroy/{instance_name}",
+        mapper.connect("/destroy",
                        controller=compute_resource,
                        action='destroy',
                        conditions={'method':['POST']})

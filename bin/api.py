@@ -29,12 +29,12 @@ class StartVM(ComputeApplication):
         image_id = req.GET.get("image_id", None)
         vm_name = req.GET.get("vm_name", None)
         connections = req.GET.get("connections", None)
-        cn.start_vm(image_id, vm_name, connections)
+        self.compute_ins.start_vm(image_id, vm_name, connections)
 
         return res(environ, start_response)
     @classmethod
     def factory(cls, global_conf, **kwargs):
-        return start_vm()
+        return StartVM()
 
 class Hello():
     def __init__(self):

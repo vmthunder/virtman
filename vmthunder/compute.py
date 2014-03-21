@@ -15,7 +15,14 @@ class Compute(SingleTon):
         #fcg.create_group(ssds, blocksize, pattern)
 
     def list(self):
-        return 'hello compute'
+        def build_list_object(instances):
+            instance_list = []
+            for instance in instances.keys():
+                instance_list.append({
+                    'vm_name':instances[instance],
+                    })
+            return { 'instances': instance_list}
+        return build_list_object(self.instance_dict)
     
     def destroy(self, vm_name, connections):
         instance = self.instance_dict[vm_name]

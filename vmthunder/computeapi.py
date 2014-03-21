@@ -10,6 +10,7 @@ from vmthunder.common import policy
 from vmthunder.common import exception
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
+from vmthunder.openstack.common import jsonutils
 from vmthunder import compute
 
 LOG = logging.getLogger(__name__)
@@ -37,15 +38,14 @@ class ComputeAPI(object):
         return NotImplementedError()
 
     def list(self, req):
-        print req
-        print 'in compute list'
         #self._enforce(req, 'list')
-        try:
-            instances = self.compute_instance.list()
-        except exception.Invalid as e:
-            raise HTTPBadRequest(explanation="%s" % e)
-        print 'out compute list'
-        return Response(body=instances, status=200)
+        #TODO：use policy.enforce
+        print 'in compute list'
+        instances = self.compute_instance.list()
+        print instances
+        res_body = jsonutils.dumps(instances)
+        print res_body
+        return Response(body=res_body, status=200)
 
 def create_resource():
     return wsgi.Resource(ComputeAPI())

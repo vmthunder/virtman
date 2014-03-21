@@ -77,10 +77,16 @@ def test3():
     print r.headers
     print r.text
 '''
+
+def test4():
+    url4 = 'http://127.0.0.1:8001/list'
+    r4 = requests.get(url4)
+    print r4.headers, '\n', r4.content
 if __name__ == '__main__' :
     #test1()
     #test2()
-    test3()
+    #test3()
+    test4()
 
 
 

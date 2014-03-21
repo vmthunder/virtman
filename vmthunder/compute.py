@@ -11,8 +11,11 @@ class Compute(SingleTon):
         self.session_dict = {}
         self.instance_dict = {}
         self.fcg_name = fcg_name
-        fcg = FCG(fcg_name)
-        fcg.create_group(ssds, blocksize, pattern)
+        #fcg = FCG(fcg_name)
+        #fcg.create_group(ssds, blocksize, pattern)
+
+    def list(self):
+        return 'hello compute'
     
     def destroy(self, vm_name, connections):
         instance = self.instance_dict[vm_name]
@@ -35,6 +38,3 @@ class Compute(SingleTon):
 
 def get_compute(*args, **kv):
         return get_instance(Compute, *args, **kv)
-
-def create_resource():
-    return NotImplementedError()

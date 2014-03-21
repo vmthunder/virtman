@@ -18,10 +18,10 @@
 
 from oslo.config import cfg
 
-from vmthunder import exception
+from vmthunder.common import exception
 from vmthunder.openstack.common.gettextutils import _
 from vmthunder.openstack.common import policy
-from vmthunder import utils
+from vmthunder.common import utils
 
 
 policy_opts = [

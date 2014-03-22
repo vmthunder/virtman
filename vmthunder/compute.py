@@ -11,8 +11,8 @@ class Compute(SingleTon):
         self.session_dict = {}
         self.instance_dict = {}
         self.fcg_name = fcg_name
-        #fcg = FCG(fcg_name)
-        #fcg.create_group(ssds, blocksize, pattern)
+        fcg = FCG(fcg_name)
+        fcg.create_group(ssds, blocksize, pattern)
 
     def list(self):
         def build_list_object(instances):

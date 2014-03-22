@@ -55,7 +55,14 @@ class ComputeAPI(object):
             return Response(body='', status=200)
 
     def destroy(self, req):
-        return NotImplementedError()
+        instance = self._get_body(req)
+        vm_name = instance['vm_name']
+        try:
+            print vm_name
+        except:
+             raise 'Failed to destroy %s' % vm_name
+        else:
+            return Response(body='', status=200)
 
     def list(self, req):
         #self._enforce(req, 'list')

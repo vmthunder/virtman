@@ -48,10 +48,23 @@ def test4():
     kwargs['headers']['Accept'] = 'application/json'
     kwargs['headers']['Content-Type'] = 'application/json'
     kwargs['body'] = jsonutils.dumps(body)
-    print kwargs
 
     r5 = requests.request('POST', url5, kwargs)
     print r5.headers, '\n', r5.content
+
+    url6 = 'http://127.0.0.1:8001/destroy'
+
+    body = {
+        'vm_name': 'vm6'
+    }
+    kwargs = {}
+    kwargs.setdefault('headers', kwargs.get('headers', {}))
+    kwargs['headers']['Accept'] = 'application/json'
+    kwargs['headers']['Content-Type'] = 'application/json'
+    kwargs['body'] = jsonutils.dumps(body)
+    r6 = requests.request('POST', url6, kwargs)
+    print r6.headers, '\n', r6.content
+
 
 def test1():
     c = Client()

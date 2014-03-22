@@ -32,16 +32,18 @@ class ComputeAPI(object):
         except exception.Forbidden:
             raise HTTPForbidden()
 
+    def _get_body(selfself, req):
+        body = jsonutils.loads(req.GET.get('body'))
+        return body
+
     def create(self, req):
         #TODO：use policy.enforce
         print 'in compute create'
         print 'header=', req.headers
         print 'url=',req.url
-        req_cls = Request.blank(req.url)
-        print req_cls
-        print dir(req_cls)
-        #body = jsonutils.loads(req_cls['body'])
-        #print body
+        body = self._get_body(req)
+        print type(body)
+        print body
 
         try:
             print image_id, vm_name, connections, snapshot_dev

@@ -7,7 +7,7 @@ from vmthunder.singleton import get_instance
 from vmthunder.singleton import SingleTon
 
 class Compute(SingleTon):
-    def __init__(self, fcg_name, ssds, blocksize, pattern):
+    def __init__(self, fcg_name='fcg', ssds="ssds", blocksize="blo", pattern="pat"):
         self.session_dict = {}
         self.instance_dict = {}
         self.fcg_name = fcg_name
@@ -24,11 +24,11 @@ class Compute(SingleTon):
             return { 'instances': instance_list}
         return build_list_object(self.instance_dict)
     
-    def destroy(self, vm_name, connections):
+    def destroy(self, vm_name):
         instance = self.instance_dict[vm_name]
         session = self.session_dict[instance.image_id]
         instance.del_vm()
-        session.destroy(vm_name, connections)
+        session.destroy(vm_name)
         del self.instance_dict[vm_name]
 
     def create(self, image_id, vm_name, connections, snapshot_dev):

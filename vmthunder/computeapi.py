@@ -38,8 +38,6 @@ class ComputeAPI(object):
 
     def create(self, req):
         #TODO：use policy.enforce
-        print 'in compute create'
-
         instance = self._get_body(req)
         image_id = instance['image_id']
         vm_name = instance['vm_name']
@@ -47,8 +45,7 @@ class ComputeAPI(object):
         snapshot_dev = instance['snapshot_dev']
 
         try:
-            print image_id, vm_name, connections, snapshot_dev
-            #self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
+            self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
         except:
             raise 'Failed to create %s' % vm_name
         else:
@@ -58,7 +55,7 @@ class ComputeAPI(object):
         instance = self._get_body(req)
         vm_name = instance['vm_name']
         try:
-            print vm_name
+            self.compute_instance.destroy(vm_name)
         except:
              raise 'Failed to destroy %s' % vm_name
         else:

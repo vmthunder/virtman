@@ -97,7 +97,7 @@ class Server(object):
         # Allow operators to customize http requests max header line size.
         eventlet.wsgi.MAX_HEADER_LINE = CONF.max_header_line
         self.name = name
-        self.loader = loader or  Loader('/root/develop/VMThunder/bin/api-paste.ini')
+        self.loader = loader or  Loader('/root/VMThunder/bin/api-paste.ini')
         self.app = self.loader.load_app(self.name)
         self._host = host or "0.0.0.0"
         self._port = port or 8001

@@ -37,13 +37,11 @@ def test4():
 
     url5 = 'http://127.0.0.1:8001/create'
 
-    body = {'instance':
-                {
-                    'image_id':'123456',
-                    'vm_name':'vm6',
-                    'connections':[],
-                    'snapshot_dev':'/dev/loop8'
-                }
+    body = {
+        'image_id':'123456',
+        'vm_name':'vm6',
+        'connections':[],
+        'snapshot_dev':'/dev/loop8'
     }
     kwargs = {}
     kwargs.setdefault('headers', kwargs.get('headers', {}))

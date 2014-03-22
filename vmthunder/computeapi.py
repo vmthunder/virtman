@@ -33,7 +33,7 @@ class ComputeAPI(object):
             raise HTTPForbidden()
 
     def _get_body(self, req):
-        body = jsonutils.loads(req.GET.get('body'))
+        body = jsonutils.loads(req.GET.get('data'))
         return body
 
     def create(self, req):

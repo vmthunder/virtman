@@ -127,7 +127,7 @@ class Session():
         multipath_name = self._multipath_name()
         try:
             self.dm.remove_table(multipath_name)
-            self.hsa_multipath = False
+            self.has_multipath = False
         except Exception, e:
             print e
     
@@ -190,7 +190,7 @@ class Session():
         origin_path = self._create_origin(cached_path)
         return origin_path
 
-    def destroy(self, vm_name, connections):
+    def destroy(self, vm_name):
         self.vm.remove(vm_name)
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name()
@@ -204,9 +204,9 @@ class Session():
             self._delete_cache(multipath)
         if(self.has_cache is False):
             self._delete_multipath()
-        for connection in connections:
-            self._logout_target(connection)
-        self._add_path()
+        if self.has_multipath is False:
+            for connection in self.connections:
+                self._logout_target(connection)
     
     def _add_path(self):
         if(len(self.connections) == 0):

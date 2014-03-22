@@ -25,6 +25,7 @@ class Compute(SingleTon):
         return build_list_object(self.instance_dict)
     
     def destroy(self, vm_name):
+        print 'in compute destroy', vm_name
         instance = self.instance_dict[vm_name]
         session = self.session_dict[instance.image_id]
         instance.del_vm()

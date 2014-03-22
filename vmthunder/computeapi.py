@@ -33,7 +33,7 @@ class ComputeAPI(object):
             raise HTTPForbidden()
 
     def _get_body(self, req):
-        body = jsonutils.loads(req.GET.get('data'))
+        body = jsonutils.loads(req.GET.get('body'))
         return body
 
     def create(self, req):
@@ -56,7 +56,7 @@ class ComputeAPI(object):
         instance = self._get_body(req)
         vm_name = instance['vm_name']
         try:
-            print vm_name
+            print 'in compute api destroy', vm_name
             self.compute_instance.destroy(vm_name)
         except:
              raise 'Failed to destroy %s' % vm_name

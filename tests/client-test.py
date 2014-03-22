@@ -37,7 +37,22 @@ def test4():
 
     url5 = 'http://127.0.0.1:8001/create'
 
-    r5 = requests.post(url5)
+    body = {'instance':
+                {
+                    'image_id':'123456',
+                    'vm_name':'vm6',
+                    'connections':[],
+                    'snapshot_dev':'/dev/loop8'
+                }
+    }
+    kwargs = {}
+    kwargs.setdefault('headers', kwargs.get('headers', {}))
+    kwargs['headers']['Accept'] = 'application/json'
+    kwargs['headers']['Content-Type'] = 'application/json'
+    kwargs['body'] = jsonutils.dumps(body)
+    print kwargs
+
+    r5 = requests.request('POST', url5, kwargs)
     print r5.headers, '\n', r5.content
 
 def test1():

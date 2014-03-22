@@ -4,6 +4,7 @@ from webob.exc import HTTPForbidden
 from webob.exc import HTTPConflict
 from webob.exc import HTTPNotFound
 from webob import Response
+from webob import Request
 import eventlet
 
 from vmthunder.common import policy
@@ -31,9 +32,17 @@ class ComputeAPI(object):
         except exception.Forbidden:
             raise HTTPForbidden()
 
-    def create(self, req, image_id, vm_name, connections, snapshot_dev):
+    def create(self, req):
         #TODO：use policy.enforce
         print 'in compute create'
+        print 'header=', req.headers
+        print 'url=',req.url
+        req_cls = Request.blank(req.url)
+        print req_cls
+        print dir(req_cls)
+        #body = jsonutils.loads(req_cls['body'])
+        #print body
+
         try:
             print image_id, vm_name, connections, snapshot_dev
             #self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)

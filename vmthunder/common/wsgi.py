@@ -82,7 +82,7 @@ class Server(object):
 
     default_pool_size = 1000
 
-    def __init__(self, name, loader=None, host=None, port=None, pool_size=None,
+    def __init__(self, name, path='', host=None, port=None, pool_size=None,
                  protocol=eventlet.wsgi.HttpProtocol, backlog=128):
         """Initialize, but do not start, a WSGI server.
 
@@ -97,7 +97,7 @@ class Server(object):
         # Allow operators to customize http requests max header line size.
         eventlet.wsgi.MAX_HEADER_LINE = CONF.max_header_line
         self.name = name
-        self.loader = loader or  Loader('/root/develop/VMThunder/bin/api-paste.ini')
+        self.loader = Loader(path)
         self.app = self.loader.load_app(self.name)
         self._host = host or "0.0.0.0"
         self._port = port or 8001

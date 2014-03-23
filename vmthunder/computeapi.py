@@ -68,7 +68,6 @@ class ComputeAPI(object):
         #TODO：use policy.enforce
         print 'in compute list'
         instances = self.compute_instance.list()
-        print instances
         res_body = jsonutils.dumps(instances)
         return Response(body=res_body, status=200)
 

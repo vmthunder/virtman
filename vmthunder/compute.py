@@ -19,7 +19,7 @@ class Compute(SingleTon):
             instance_list = []
             for instance in instances.keys():
                 instance_list.append({
-                    'vm_name':instances[instance],
+                    'vm_name':instances[instance].vm_name,
                     })
             return { 'instances': instance_list}
         return build_list_object(self.instance_dict)

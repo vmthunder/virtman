@@ -45,6 +45,7 @@ class ComputeAPI(object):
         snapshot_dev = instance['snapshot_dev']
 
         try:
+            print image_id, vm_name, connections, snapshot_dev
             self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
         except:
             raise 'Failed to create %s' % vm_name
@@ -55,6 +56,7 @@ class ComputeAPI(object):
         instance = self._get_body(req)
         vm_name = instance['vm_name']
         try:
+            print 'in compute api destroy', vm_name
             self.compute_instance.destroy(vm_name)
         except:
              raise 'Failed to destroy %s' % vm_name
@@ -66,7 +68,6 @@ class ComputeAPI(object):
         #TODO：use policy.enforce
         print 'in compute list'
         instances = self.compute_instance.list()
-        print instances
         res_body = jsonutils.dumps(instances)
         return Response(body=res_body, status=200)
 

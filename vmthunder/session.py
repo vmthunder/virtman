@@ -73,7 +73,7 @@ class Session():
         connected_paths = []
         
         for connection in connections:
-            if(not self._connection_exits(connection)):
+            if(self._connection_exits(connection) is False):
                 try:
                     device_info = self.iscsi.connect_volume(connection)
                     path = device_info['path']
@@ -92,6 +92,8 @@ class Session():
             try:
                 self.iscsi.disconnect_volume(connection, '')
                 self._delete_target_path_dict(connection)
+                if self._connection_exits(connection):
+                    self.connections.remove(connection)
             except Exception, e:
                 print e
 
@@ -171,7 +173,8 @@ class Session():
     
     def deploy_image(self, vm_name, connections):
         #TODO: Roll back if failed !
-        self.vm.append(vm_name)
+        if vm_name not in self.vm:
+            self.vm.append(vm_name)
         connected_path = self._login_target(connections)
         multipath_name = self._multipath_name()
         multipath  = self._multipath()
@@ -191,6 +194,7 @@ class Session():
         return origin_path
 
     def destroy(self, vm_name):
+
         self.vm.remove(vm_name)
         fcg = FCG(self.fcg_name)
         multipath_name = self._multipath_name()
@@ -216,7 +220,6 @@ class Session():
         size = utils.get_dev_sector_count(self.target_path_dict[key])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(self.connections))
         for connection in self.connections:
-            
                 temp = self._connection_to_string(connection)
                 multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'

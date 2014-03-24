@@ -25,18 +25,20 @@ class Compute(SingleTon):
         return build_list_object(self.instance_dict)
     
     def destroy(self, vm_name):
-        instance = self.instance_dict[vm_name]
-        session = self.session_dict[instance.image_id]
-        instance.del_vm()
-        session.destroy(vm_name)
-        del self.instance_dict[vm_name]
+        if self.instance_dict.has_key(vm_name):
+            instance = self.instance_dict[vm_name]
+            session = self.session_dict[instance.image_id]
+            instance.del_vm()
+            session.destroy(vm_name)
+            del self.instance_dict[vm_name]
 
     def create(self, image_id, vm_name, connections, snapshot_dev):
         if(not self.session_dict.has_key(image_id)):
             self.session_dict[image_id] = Session('fcg', image_id)
         session = self.session_dict[image_id]
         origin_path = session.deploy_image(vm_name, connections)
-        self.instance_dict[vm_name] = InstanceSnapCache('fcg', image_id, vm_name, snapshot_dev)
+        if self.instance_dict.has_key(vm_name) is False:
+            self.instance_dict[vm_name] = InstanceSnapCache('fcg', image_id, vm_name, snapshot_dev)
         self.instance_dict[vm_name].start_vm(origin_path)
         
     def adjust_structure(self, image_id, delete_connections, add_connections):

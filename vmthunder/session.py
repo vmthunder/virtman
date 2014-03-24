@@ -71,10 +71,13 @@ class Session():
         target_lun - LUN id of the volume
         """ 
         connected_paths = []
-        
+        print "path to login_target"        
+        print self.connections
+
         for connection in connections:
             if(self._connection_exits(connection) is False):
                 try:
+                    print "------ iscsi connect volume"
                     device_info = self.iscsi.connect_volume(connection)
                     path = device_info['path']
                     path = os.path.realpath(path)
@@ -176,6 +179,7 @@ class Session():
         if vm_name not in self.vm:
             self.vm.append(vm_name)
         connected_path = self._login_target(connections)
+        print "end"
         multipath_name = self._multipath_name()
         multipath  = self._multipath()
         cached_path = ''

@@ -33,12 +33,17 @@ class Compute(SingleTon):
             del self.instance_dict[vm_name]
 
     def create(self, image_id, vm_name, connections, snapshot_dev):
+        print "------- create a example "
         if(not self.session_dict.has_key(image_id)):
+            print '----------- exist' 
             self.session_dict[image_id] = Session('fcg', image_id)
+        
         session = self.session_dict[image_id]
+        print "hello_world" 
         origin_path = session.deploy_image(vm_name, connections)
         if self.instance_dict.has_key(vm_name) is False:
             self.instance_dict[vm_name] = InstanceSnapCache('fcg', image_id, vm_name, snapshot_dev)
+        print '--------- ' + origin_path
         self.instance_dict[vm_name].start_vm(origin_path)
         
     def adjust_structure(self, image_id, delete_connections, add_connections):

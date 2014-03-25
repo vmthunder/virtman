@@ -13,6 +13,7 @@ from brick.iscsi.iscsi import TgtAdm
 class Session():
     def __init__(self, fcg_name , image_id):
         self.fcg_name = fcg_name
+        self.fcg = FCG(fcg_name)
         self.iscsi = ISCSIConnector('')
         self.tgt = TgtAdm('', '/etc/tgt/conf.d')
         self.dm = Dmsetup()
@@ -49,8 +50,7 @@ class Session():
         return multipath
     
     def _cached_path(self, image_path):
-        fcg = FCG(self.fcg_name)
-        cached_disk_name = fcg._cached_disk_name(image_path)
+        cached_disk_name = self.fcg._cached_disk_name(image_path)
         return self.dm.mapdev_prefix + cached_disk_name
 
     def _origin_path(self):
@@ -95,8 +95,6 @@ class Session():
             try:
                 self.iscsi.disconnect_volume(connection, '')
                 self._delete_target_path_dict(connection)
-                if self._connection_exits(connection):
-                    self.connections.remove(connection)
             except Exception, e:
                 print e
 
@@ -137,18 +135,16 @@ class Session():
             print e
     
     def _create_cache(self, multipath):
-        fcg = FCG(self.fcg_name)
         try:
-            cached_path = fcg.add_disk(multipath)
+            cached_path = self.fcg.add_disk(multipath)
             self.has_cache = True
         except Exception, e:
             print e
         return cached_path
 
     def _delete_cache(self, multipath):
-        fcg = FCG(self.fcg_name)
         try:
-            fcg.rm_disk(multipath)
+            self.fcg.rm_disk(multipath)
             self.has_cache = False
         except Exception, e:
             print e
@@ -184,8 +180,7 @@ class Session():
         multipath  = self._multipath()
         cached_path = ''
         if  self.has_multipath:
-            fcg = FCG(self.fcg_name)
-            cached_disk_name = fcg._cached_disk_name(multipath)
+            cached_disk_name = self.fcg._cached_disk_name(multipath)
             cached_path = self.dm.mapdev_prefix + cached_disk_name
             self._add_path()
         else:
@@ -196,12 +191,10 @@ class Session():
             self._create_target(iqn, cached_path)
         origin_path = self._create_origin(cached_path)
         return origin_path
-
     def destroy(self, vm_name):
-
         self.vm.remove(vm_name)
-        fcg = FCG(self.fcg_name)
-        multipath_name = self._multipath_name()
+
+    def Destroy_for_adjust_structure(self):
         multipath = self._multipath()
         if(len(self.vm) == 0):
             self._delete_origin()
@@ -212,9 +205,6 @@ class Session():
             self._delete_cache(multipath)
         if(self.has_cache is False):
             self._delete_multipath()
-        if self.has_multipath is False:
-            for connection in self.connections:
-                self._logout_target(connection)
     
     def _add_path(self):
         if(len(self.connections) == 0):
@@ -238,6 +228,7 @@ class Session():
         self._add_path()
         for connection in delete_connections:
             self._logout_target(connection)
+        self.Destroy_for_adjust_structure()
                 
                 
         

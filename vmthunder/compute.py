@@ -47,8 +47,10 @@ class Compute(SingleTon):
         self.instance_dict[vm_name].start_vm(origin_path)
         
     def adjust_structure(self, image_id, delete_connections, add_connections):
-        session = self.session_dict[image_id]
-        session.adjust_structure(delete_connections, add_connections)
+        if self.session_dict.has_key(image_id):
+            session = self.session_dict[image_id]
+            session.adjust_structure(delete_connections, add_connections)
+    
 
 def get_compute(*args, **kv):
         return get_instance(Compute, *args, **kv)

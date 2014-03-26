@@ -45,12 +45,11 @@ class Compute(SingleTon):
             self.instance_dict[vm_name] = InstanceSnapCache('fcg', volume_name, vm_name, snapshot_dev)
         print '--------- ' + origin_path
         self.instance_dict[vm_name].start_vm(origin_path)
-        
+
     def adjust_structure(self, volume_name, delete_connections, add_connections):
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
-
 
 def get_compute(*args, **kv):
         return get_instance(Compute, *args, **kv)

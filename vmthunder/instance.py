@@ -7,12 +7,12 @@ from libfcg.fcg import FCG
 from pydm.dmsetup import Dmsetup
 
 class Instance():
-    def __init__(self, fcg_name, image_id, vm_name, snapshot_dev):
+    def __init__(self, fcg_name, volume_name, vm_name, snapshot_dev):
         self.dm = Dmsetup()
         self.fcg_name = fcg_name
         self.vm_name = vm_name
         self.snapshot_dev = snapshot_dev
-        self.image_id = image_id
+        self.volume_name = volume_name
     
     def _snapshot_name(self):
         return 'snapshot_' + self.vm_name

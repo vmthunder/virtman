@@ -11,13 +11,13 @@ from brick.iscsi.iscsi import TgtAdm
 
 
 class Session():
-    def __init__(self, fcg_name , image_id):
+    def __init__(self, fcg_name , volume_name):
         self.fcg_name = fcg_name
         self.fcg = FCG(fcg_name)
         self.iscsi = ISCSIConnector('')
         self.tgt = TgtAdm('', '/etc/tgt/conf.d')
         self.dm = Dmsetup()
-        self.image_id = image_id
+        self.volume_name = volume_name
         self.connections = []
         self.target_path_dict = {}
         self.has_multipath = False
@@ -39,10 +39,10 @@ class Session():
             del self.target_path_dict[key]
 
     def _origin_name(self):
-        return 'origin_' + self.image_id
+        return 'origin_' + self.volume_name
 
     def _multipath_name(self):
-        return 'multipath_' + self.image_id
+        return 'multipath_' + self.volume_name
 
     def _multipath(self):
         multipath_name = self._multipath_name()
@@ -68,7 +68,7 @@ class Session():
         """connection_properties for iSCSI must include:
         target_portal - ip and optional port
         target_iqn - iSCSI Qualified Name
-        target_lun - LUN id of the volume
+        target_lun - LUN id of the volume_name
         """ 
         connected_paths = []
         print "path to login_target"        
@@ -77,7 +77,7 @@ class Session():
         for connection in connections:
             if(self._connection_exits(connection) is False):
                 try:
-                    print "------ iscsi connect volume"
+                    print "------ iscsi connect volume_name"
                     device_info = self.iscsi.connect_volume(connection)
                     path = device_info['path']
                     path = os.path.realpath(path)
@@ -99,7 +99,7 @@ class Session():
                 print e
 
     def connect_image(self, connection):
-        """Connect image volume in cinder server
+        """Connect image volume_name in cinder server
         """
         return NotImplementedError()
 
@@ -112,7 +112,7 @@ class Session():
         
     def _delete_target(self):
         try:
-            self.tgt.remove_iscsi_target(0, 0, self.image_id, self.image_id)
+            self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
             self.has_target = False
         except  Exception, e:
             print e

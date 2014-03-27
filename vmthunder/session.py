@@ -175,8 +175,6 @@ class Session():
         if vm_name not in self.vm:
             self.vm.append(vm_name)
         connected_path = self._login_target(connections)
-        print "end"
-        multipath_name = self._multipath_name()
         multipath  = self._multipath()
         cached_path = ''
         if  self.has_multipath:
@@ -184,13 +182,20 @@ class Session():
             cached_path = self.dm.mapdev_prefix + cached_disk_name
             self._add_path()
         else:
+            if len(connected_path) == 0:
+                #TODO:hanging target from cinder
+                pass
             multi_path = self._create_multipath(connected_path)
-            cached_path = self._create_cache(multi_path)
+            if self.has_multipath:
+                cached_path = self._create_cache(multi_path)
             connection = connections[0]
             iqn = connection['target_iqn']
-            self._create_target(iqn, cached_path)
-        origin_path = self._create_origin(cached_path)
-        return origin_path
+            if self.has_cache:
+                self._create_target(iqn, cached_path)
+                origin_path = self._create_origin(cached_path)
+                return origin_path
+            else:
+                raise "create vm failed"
     def destroy(self, vm_name):
         self.vm.remove(vm_name)
 
@@ -208,6 +213,7 @@ class Session():
     
     def _add_path(self):
         if(len(self.connections) == 0):
+            #TODO:hanging target from cinder
             return 
         multipath_name = self._multipath_name()
         key = self._connection_to_string(self.connections[0])

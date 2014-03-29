@@ -3,10 +3,10 @@
 from libfcg.fcg import FCG
 from vmthunder.session import Session
 from vmthunder.instancesnapcache import InstanceSnapCache
-from vmthunder.singleton import get_instance
 from vmthunder.singleton import SingleTon
 
-class Compute(SingleTon):
+@SingleTon
+class Compute():
     def __init__(self, fcg_name='fcg', ssds="ssds", blocksize="blo", pattern="pat"):
         self.session_dict = {}
         self.instance_dict = {}

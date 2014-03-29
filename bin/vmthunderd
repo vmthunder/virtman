@@ -16,7 +16,7 @@ def start():
     block_size = gc.get_fcg_blocksize()
     pattern = gc.get_fcg_pattern()
 
-    cn = compute.get_compute(fcg_name, ssds, block_size, pattern)
+    cn = compute.Compute(fcg_name, ssds, block_size, pattern)
 
     server = wsgi.Server('vmthunder-api', '/root/VMThunder/bin/api-paste.ini')
     server.start()

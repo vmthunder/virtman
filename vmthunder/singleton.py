@@ -1,14 +1,11 @@
+#!/usr/bin/env python
 
-def get_instance(cls, *args, **kv):
-    if cls in cls.objs:
-        return cls.objs[cls]
-    else:
-        return cls(*args, **kv)
+def SingleTon(cls):
+    instances = {}
 
-class SingleTon(object):
-    objs  = {}
-    def __new__(cls, *args, **kv):
-        if cls not in cls.objs:
-            cls.objs[cls] = object.__new__(cls)
-        return cls.objs[cls]
+    def _singleton(*args, **kw):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kw)
+        return instances[cls]
+    return _singleton
 

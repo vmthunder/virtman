@@ -33,23 +33,18 @@ class Compute():
             del self.instance_dict[vm_name]
 
     def create(self, volume_name, vm_name, connections, snapshot_dev):
-        print "------- create a example "
-        if(not self.session_dict.has_key(volume_name)):
-            print '----------- exist' 
-            self.session_dict[volume_name] = Session('fcg', volume_name)
-        
-        session = self.session_dict[volume_name]
-        print "hello_world" 
-        origin_path = session.deploy_image(vm_name, connections)
-        if self.instance_dict.has_key(vm_name) is False:
+        if not self.instance_dict.has_key(vm_name):
+            print "------- create a example "
+            if(not self.session_dict.has_key(volume_name)):
+                self.session_dict[volume_name] = Session('fcg', volume_name)
+            session = self.session_dict[volume_name]
+            origin_path = session.deploy_image(vm_name, connections)
             self.instance_dict[vm_name] = InstanceSnapCache('fcg', volume_name, vm_name, snapshot_dev)
-        print '--------- ' + origin_path
-        self.instance_dict[vm_name].start_vm(origin_path)
+            print '--------- ' + origin_path
+            self.instance_dict[vm_name].start_vm(origin_path)
 
     def adjust_structure(self, volume_name, delete_connections, add_connections):
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
 
-def get_compute(*args, **kv):
-        return get_instance(Compute, *args, **kv)

@@ -2,12 +2,17 @@
 
 import time
 import os
+import socket
+import fcntl
+import struct
 
 from pydm.common import utils
 from libfcg.fcg import FCG
 from pydm.dmsetup import Dmsetup
 from brick.initiator.connector import ISCSIConnector
 from brick.iscsi.iscsi import TgtAdm
+from voltclient.v1 import client
+
 
 
 class Session():
@@ -25,7 +30,17 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.vm = []
-        
+        self.vclient = client.Client('http://10.107.14.170:7447')
+        self.peer_id = ''
+
+    def _get_ip_address(self, ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+            s.fileno(),
+            0x8915,
+            struct.pack('256s', ifname[:15])
+            )[20:24])
+
     def _connection_to_string(self, connection):
         return connection['target_portal'] + connection['target_iqn']
     
@@ -64,6 +79,14 @@ class Session():
             return False
 
     #This method is to login target and return the connected_paths
+    def change_connection_mode(self, connection):
+        new_connection = {}
+        new_connection = {'target_portal' : connection.host + ':' + connection.port,
+                          'target_iqn' : connection.iqn,
+                          'target_lun' : connection.lun,
+                          }
+        return new_connection
+
     def _login_target(self, connections):
         """connection_properties for iSCSI must include:
         target_portal - ip and optional port
@@ -75,6 +98,8 @@ class Session():
         print self.connections
 
         for connection in connections:
+            connection = self.change_connection_mode(connection)
+            print connection
             if(self._connection_exits(connection) is False):
                 try:
                     print "------ iscsi connect volume_name"
@@ -107,6 +132,15 @@ class Session():
         try:
             self.tgt.create_iscsi_target(iqn, path)
             self.has_target = True
+            #don't dynamic gain host_id and host_port
+            host_ip = self._get_ip_address('eth0')
+            self.peer_id= self.vclient.volumes.login(session_name = self.volume_name,
+                                                                   peer_id = self.peer_id,
+                                                                   host = host_ip,
+                                                                   port = '3260',
+                                                                   iqn = iqn,
+                                                                   lun = '1')
+
         except Exception, e:
             print e
         
@@ -169,33 +203,39 @@ class Session():
             self.has_origin = False
         except Exception, e:
                 print e
-    
+    def _get_parent(self):
+        host_ip = self._get_ip_address('eth0')
+        while(True):
+            self.peer_id, parent_list = self.vclient.volumes.get(session_name=self.volume_name, host=host_ip)
+            bo = True
+            for son in parent_list:
+                if son.status == "pending":
+                    son = False
+                    break
+            if bo :
+                return parent_list
+            time.sleep(1)
+
     def deploy_image(self, vm_name, connections):
         #TODO: Roll back if failed !
-        if vm_name not in self.vm:
-            self.vm.append(vm_name)
-        connected_path = self._login_target(connections)
-        multipath  = self._multipath()
-        cached_path = ''
-        if  self.has_multipath:
-            cached_disk_name = self.fcg._cached_disk_name(multipath)
-            cached_path = self.dm.mapdev_prefix + cached_disk_name
-            self._add_path()
+        self.vm.append(vm_name)
+        parent_list = self._get_parent()
+        print parent_list
+        if(len(parent_list) == 0):
+            #TODO:hanging target from cinder
+            pass
         else:
-            if len(connected_path) == 0:
-                #TODO:hanging target from cinder
-                pass
-            multi_path = self._create_multipath(connected_path)
-            if self.has_multipath:
-                cached_path = self._create_cache(multi_path)
-            connection = connections[0]
-            iqn = connection['target_iqn']
-            if self.has_cache:
-                self._create_target(iqn, cached_path)
-                origin_path = self._create_origin(cached_path)
-                return origin_path
+            connected_path = self._login_target(parent_list)
+            if  self.has_multipath:
+                self._add_path()
             else:
-                raise "create vm failed"
+                multi_path = self._create_multipath(connected_path)
+                cached_path = self._create_cache(multi_path)
+                connection = connections[0]
+                iqn = connection['target_iqn']
+                self._create_target(iqn, cached_path)
+                self._create_origin(cached_path)
+        return self._origin_path()
     def destroy(self, vm_name):
         self.vm.remove(vm_name)
 

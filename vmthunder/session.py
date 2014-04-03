@@ -268,9 +268,11 @@ class Session():
     def destroy(self, vm_name):
         logging.debug("destroy a vm %s ",vm_name)
         self.vm.remove(vm_name)
-        if (self._is_connected() is False) and len(self.vm) == 0:
-            self.Destroy_for_adjust_structure()
+        if len(self.vm)== 0:
             self.vclient.volumes.logout(self.volume_name, self.peer_id)
+            while self._is_connected() :
+                time.sleep(1)
+            self.Destroy_for_adjust_structure()
 
     def Destroy_for_adjust_structure(self):
         multipath = self._multipath()

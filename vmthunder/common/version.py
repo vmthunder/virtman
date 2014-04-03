@@ -14,9 +14,9 @@
 
 from pbr import version as pbr_version
 
-vmthunder_VENDOR = "OpenStack Foundation"
-vmthunder_PRODUCT = "OpenStack vmthunder"
-vmthunder_PACKAGE = None  # OS distro package version suffix
+VMTHUNDER_VENDOR = "OpenStack Foundation"
+VMTHUNDER_PRODUCT = "OpenStack vmthunder"
+VMTHUNDER_PACKAGE = None  # OS distro package version suffix
 
 loaded = False
 version_info = pbr_version.VersionInfo('vmthunder')

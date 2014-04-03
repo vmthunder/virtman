@@ -73,3 +73,10 @@ x-openstack-request-id: req-e13ecbb6-77f4-42dc-9c0e-1a5b2e3a1bfc
 
 {"peer_id": "05598f43dfb4a8ae145e9486edbf9b4a", "parents": []}
 
+compute.py [2014-04-04 00:57:24 AM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-04 00:57:24 AM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+wsgi.py [2014-04-04 00:57:24 AM] [INFO] Started vmthunder-api on 0.0.0.0:8001
+log.py [2014-04-04 00:57:24 AM] [INFO] (21275) wsgi starting up on http://0.0.0.0:8001/
+
+compute.py [2014-04-04 01:50:14 AM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-04 01:50:14 AM] [DEBUG] Initialized with method overriding = True, and path info altering = True

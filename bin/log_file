@@ -1,0 +1,10 @@
+compute.py [2014-04-02 19:08:55 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-02 19:08:55 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+wsgi.py [2014-04-02 19:08:55 PM] [INFO] Started vmthunder-api on 0.0.0.0:8001
+log.py [2014-04-02 19:08:55 PM] [INFO] (4824) wsgi starting up on http://0.0.0.0:8001/
+
+compute.py [2014-04-03 16:18:02 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-03 16:18:02 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+wsgi.py [2014-04-03 16:18:02 PM] [INFO] Started vmthunder-api on 0.0.0.0:8001
+log.py [2014-04-03 16:18:02 PM] [INFO] (5510) wsgi starting up on http://0.0.0.0:8001/
+

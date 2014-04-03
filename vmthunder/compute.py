@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 
 from libfcg.fcg import FCG
 from vmthunder.session import Session
@@ -13,6 +14,11 @@ class Compute():
         self.fcg_name = fcg_name
         fcg = FCG(fcg_name)
         fcg.create_group(ssds, blocksize, pattern)
+        self.log_filename = "log_file"
+        self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
+        logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
+        logging.debug("creating a Compute_node of name ")
+
 
     def list(self):
         def build_list_object(instances):
@@ -23,7 +29,7 @@ class Compute():
                     })
             return { 'instances': instance_list}
         return build_list_object(self.instance_dict)
-    
+
     def destroy(self, vm_name):
         if self.instance_dict.has_key(vm_name):
             instance = self.instance_dict[vm_name]

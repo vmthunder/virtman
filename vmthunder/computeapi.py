@@ -20,7 +20,7 @@ class ComputeAPI(object):
     """
 
     """
-    compute_instance = compute.get_compute()
+    compute_instance = compute.Compute()
     def __init__(self):
         #self.policy = policy.Enforcer()
         self.pool = eventlet.GreenPool(size=1024)

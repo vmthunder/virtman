@@ -5,7 +5,6 @@ import os
 import socket
 import fcntl
 import struct
-import logging
 
 from pydm.common import utils
 from libfcg.fcg import FCG
@@ -13,8 +12,12 @@ from pydm.dmsetup import Dmsetup
 from brick.initiator.connector import ISCSIConnector
 from brick.iscsi.iscsi import TgtAdm
 from voltclient.v1 import client
+from brick.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 class Session():
+
     def __init__(self, fcg_name , volume_name):
         self.fcg_name = fcg_name
         self.fcg = FCG(fcg_name)
@@ -32,10 +35,10 @@ class Session():
         self.vclient = client.Client('http://10.107.14.170:7447')
         self.peer_id = ''
         self.target_id = 0
-        self.log_filename = "log_file"
-        self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
-        logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
-        logging.debug("creating a session of name %s ",self.volume_name)
+        #self.log_filename = "log_file"
+        #self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
+        #logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
+        LOG.debug("creating a session of name %s ",self.volume_name)
 
 
     def _get_ip_address(self, ifname):
@@ -83,18 +86,19 @@ class Session():
         else:
             return False
 
+    #This method is to judge whether a target is hanging by other VMs
     def _is_connected(self):
-        logging.debug("execute a command of tgtadm to judge a target whether is hanging")
+        LOG.debug("execute a command of tgtadm to judge a target whether is hanging")
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
         if(len(tmp) == 0):
             return False
         return True
 
-    #This method is to login target and return the connected_paths
+
     def change_connection_mode(self, connection):
-        logging.debug("change type volume to connection ")
-        logging.debug(connection)
+        LOG.debug("change type volume to connection ")
+        LOG.debug(connection)
         new_connection = {}
         new_connection = {'target_portal' : connection.host + ':' + connection.port,
                           'target_iqn' : connection.iqn,
@@ -102,6 +106,7 @@ class Session():
                           }
         return new_connection
 
+    #This method is to login target and return the connected_paths
     def _login_target(self, connections):
         """connection_properties for iSCSI must include:
         target_portal - ip and optional port
@@ -109,15 +114,15 @@ class Session():
         target_lun - LUN id of the volume_name
         """ 
         connected_paths = []
-        logging.disable( "path to login_target")
-        logging.debug(connections)
+        LOG.debug( "path to login_target")
+        LOG.debug(connections)
 
         for connection in connections:
             if(self._connection_exits(connection) is False):
                 try:
                     print "------ iscsi connect volume_name"
                     device_info = self.iscsi.connect_volume(connection)
-                    logging.debug(device_info)
+                    LOG.debug(device_info)
                     path = device_info['path']
                     path = os.path.realpath(path)
                     self._add_target_path_dict(connection, path)
@@ -133,7 +138,7 @@ class Session():
         if(self.target_path_dict.has_key(tmp_string)):
             try:
                 self.iscsi.disconnect_volume(connection, '')
-                logging.debug(connection)
+                LOG.debug(connection)
                 self._delete_target_path_dict(connection)
             except Exception, e:
                 print e
@@ -149,14 +154,14 @@ class Session():
             self.has_target = True
             #don't dynamic gain host_id and host_port
             host_ip = self._get_ip_address('eth0')
-            self.peer_id= self.vclient.volumes.login(session_name = self.volume_name,
-                                                                   peer_id = self.peer_id,
-                                                                   host = host_ip,
-                                                                   port = '3260',
-                                                                   iqn = iqn,
-                                                                   lun = '1')
+            info = self.vclient.volumes.login(session_name = self.volume_name,
+                                                    peer_id = self.peer_id,
+                                                    host = host_ip,
+                                                    port = '3260',
+                                                    iqn = iqn,
+                                                    lun = '1')
 
-            logging.debug(self.peer_id)
+            LOG.debug(self.peer_id)
         except Exception, e:
             print e
         
@@ -164,7 +169,7 @@ class Session():
         try:
             self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
             self.has_target = False
-            logging.debug("successful remove target")
+            LOG.debug("successful remove target")
         except  Exception, e:
             print e
   
@@ -173,7 +178,7 @@ class Session():
         try:
             multipath_path = self.dm.multipath(multipath_name, disks)
             self.has_multipath = True
-            logging.debug("successful create multipath")
+            LOG.debug("successful create multipath")
         except Exception, e:
             print e
         return multipath_path
@@ -183,7 +188,7 @@ class Session():
         try:
             self.dm.remove_table(multipath_name)
             self.has_multipath = False
-            logging.debug("successful delete multipath")
+            LOG.debug("successful delete multipath")
         except Exception, e:
             print e
     
@@ -191,7 +196,7 @@ class Session():
         try:
             cached_path = self.fcg.add_disk(multipath)
             self.has_cache = True
-            logging.debug("successful create cache")
+            LOG.debug("successful create cache")
         except Exception, e:
             print e
         return cached_path
@@ -200,7 +205,7 @@ class Session():
         try:
             self.fcg.rm_disk(multipath)
             self.has_cache = False
-            logging.debug("successful delete cache")
+            LOG.debug("successful delete cache")
         except Exception, e:
             print e
     
@@ -224,23 +229,25 @@ class Session():
             self.has_origin = False
         except Exception, e:
                 print e
+
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')
-        logging.debug("come to _get_parent")
+        LOG.debug("come to _get_parent")
         while(True):
             self.peer_id, parent_list = self.vclient.volumes.get(session_name=self.volume_name, host=host_ip)
             bo = True
             for son in parent_list:
                 if son.status == "pending":
-                    son = False
+                    bo = False
                     break
             if bo :
                 return parent_list
-                logging.debug("withdraw from _get_parent")
+                LOG.debug(self.peer_id)
+                LOG.debug("withdraw from _get_parent")
             time.sleep(1)
 
     def deploy_image(self, vm_name, connections):
-        logging.debug("come to deploy_image")
+        LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
         parent_list = self._get_parent()
@@ -266,10 +273,10 @@ class Session():
         return self._origin_path()
 
     def destroy(self, vm_name):
-        logging.debug("destroy a vm %s ",vm_name)
+        LOG.debug("destroy a vm %s ",vm_name)
         self.vm.remove(vm_name)
         if len(self.vm)== 0:
-            self.vclient.volumes.logout(self.volume_name, self.peer_id)
+            self.vclient.volumes.logout(self.volume_name, peer_id = self.peer_id)
             while self._is_connected() :
                 time.sleep(1)
             self.Destroy_for_adjust_structure()
@@ -301,7 +308,7 @@ class Session():
                 temp = self._connection_to_string(connection)
                 multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'
-        print 'multipath_table = %s' % multipath_table
+        LOG.debug('multipath_table is ', multipath_table)
         self.dm.reload_table(multipath_name, multipath_table)
         
     def adjust_structure(self, delete_connections, add_connections):

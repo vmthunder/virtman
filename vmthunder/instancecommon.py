@@ -2,6 +2,9 @@
 
 from pydm.dmsetup import Dmsetup
 from vmthunder.instance import Instance
+from brick.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
 
 class InstanceCommon(Instance):
     
@@ -15,6 +18,7 @@ class InstanceCommon(Instance):
         self.dm.remove_table(snapshot_name)
 
     def start_vm(self, origin_path):
+        LOG.debug("instanceCommon start vm")
         self._create_snapshot(origin_path)
 
     def del_vm(self):

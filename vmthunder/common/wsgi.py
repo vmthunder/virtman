@@ -43,6 +43,9 @@ from vmthunder.openstack.common.gettextutils import _
 
 
 socket_opts = [
+    cfg.StrOpt('api_paste_config',
+               default="api-paste.ini", #just need a name not a path
+               help='File name for the paste.deploy config for vmthunder-api'),
     cfg.IntOpt('tcp_keepidle',
                default=600,
                help="Sets the value of TCP_KEEPIDLE in seconds for each "
@@ -82,7 +85,7 @@ class Server(object):
 
     default_pool_size = 1000
 
-    def __init__(self, name, path='', host=None, port=None, pool_size=None,
+    def __init__(self, name, path=None, host=None, port=None, pool_size=None,
                  protocol=eventlet.wsgi.HttpProtocol, backlog=128):
         """Initialize, but do not start, a WSGI server.
 
@@ -651,17 +654,17 @@ class Loader(object):
     """Used to load WSGI applications from paste configurations."""
 
     def __init__(self, config_path=None):
-        """Initialize the loader, and attempt to find the config.
-
+        """Initialize the loader, and attempt to find the config
         :param config_path: Full or relative path to the paste config.
         :returns: None
-
         """
-        config_path = config_path or CONF.api_paste_config
+        config_path = config_path or CONF.api_paste_config #when we made path=None, we get CONF.api_paste_config = api-paste.ini
+
         if os.path.exists(config_path):
             self.config_path = config_path
         else:
-            self.config_path = utils.find_config(config_path)
+            self.config_path = CONF.find_file(config_path) #oslo.config.cfg.find_file(name:"api-paste.ini"), name is just a name not a path
+
         if not self.config_path:
             raise exception.ConfigNotFound(path=config_path)
 

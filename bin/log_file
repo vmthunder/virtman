@@ -80,3 +80,21 @@ log.py [2014-04-04 00:57:24 AM] [INFO] (21275) wsgi starting up on http://0.0.0.
 
 compute.py [2014-04-04 01:50:14 AM] [DEBUG] creating a Compute_node of name 
 middleware.py [2014-04-04 01:50:14 AM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 20:31:05 PM] [DEBUG] creating a Compute_node of name 
+compute.py [2014-04-06 23:17:07 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:17:07 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:18:41 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:18:41 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:20:20 PM] [DEBUG] creating a Compute_node of name 
+compute.py [2014-04-06 23:22:45 PM] [DEBUG] creating a Compute_node of name 
+compute.py [2014-04-06 23:24:10 PM] [DEBUG] creating a Compute_node of name 
+compute.py [2014-04-06 23:40:13 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:40:13 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:43:54 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:43:54 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:50:37 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:50:37 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:52:08 PM] [DEBUG] creating a Compute_node of name 
+middleware.py [2014-04-06 23:52:09 PM] [DEBUG] Initialized with method overriding = True, and path info altering = True
+compute.py [2014-04-06 23:53:04 PM] [DEBUG] creating a Compute_node of name 
+compute.py [2014-04-07 00:14:48 AM] [DEBUG] creating a Compute_node of name 

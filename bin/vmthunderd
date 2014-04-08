@@ -3,11 +3,24 @@
 import sys
 #sys.path.append("..")
 
+from oslo.config import cfg
 from vmthunder.getconf import GetConf
 #TODO change GetConf to oslo.config
 from vmthunder import compute
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
+
+CONF = cfg.CONF
+
+def cmd_parsers(subparsers):
+    list_action = subparsers.add_parser('list')
+    list_action.add_argument('--id')
+
+    start_action = subparsers.add_parser('start')
+    start_action.add_argument('--id')
+
+def list():
+    print "in list"
 
 def start():
     gc = GetConf('../etc/vmthunder/vmthunder.conf')
@@ -25,4 +38,21 @@ def start():
 
 if __name__ == '__main__':
     #logging.setup('vmthunder')
-    start()
+    #start()
+
+    group = cfg.OptGroup(name = 'fcg')
+    opts = [
+        cfg.IntOpt('id', default = 11),
+    ]
+    CONF.register_cli_opt(cfg.SubCommandOpt('action', handler=cmd_parsers))
+    CONF.register_group(group)
+    CONF.register_opts(opts, group = group)
+    config_names = ['test.conf']
+    CONF(default_config_files = config_names)
+    print CONF.fcg.id
+    CONF(sys.argv[1:], project='vmthunder')
+
+    if CONF.action.name == 'list':
+        list()
+
+    print  CONF.action.name, CONF.action.id

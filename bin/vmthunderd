@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-<<<<<<< HEAD
-
 
 import sys
 from oslo.config import cfg
@@ -57,14 +55,14 @@ CONF.register_opts(master_opts, group = master_group)
 CONF.register_opts(cinder_opts, group = cinder_group)
 
 def start():
-    CONF(sys.argv[1:], project='vmthunder',
-         default_config_files = ['../etc/vmthunder.conf'])
-    print CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern
     cn = compute.Compute(CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern)
     server = wsgi.Server('vmthunder-api') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()
 
 if __name__ == '__main__':
+    CONF(sys.argv[1:], project='vmthunder',
+         default_config_files = ['../etc/vmthunder.conf'])
+    print CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern
     logging.setup('vmthunder')
     start()

@@ -1,55 +1,66 @@
 #!/usr/bin/env python
-
 import sys
-#sys.path.append("..")
 
 from oslo.config import cfg
-from vmthunder.getconf import GetConf
-#TODO change GetConf to oslo.config
 from vmthunder import compute
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 
+fcg_group = cfg.OptGroup(name = 'fcg')
+fcg_opts = [
+    cfg.StrOpt('name',
+               default = 'fcg',
+               help = 'The name of the Flashcache Group'),
+    cfg.ListOpt('ssds',
+                default = ['/dev/loop1'],
+                help = 'The devices of SSDs to use to create the FCG, '
+                       'the parameter of \'ssds\' can fill in one '
+                       'or more, splited by \',\''),
+    cfg.StrOpt('blocksize',
+               default = '4k',
+               help = 'The block size of the FCG'),
+    cfg.StrOpt('pattern',
+               default = 'back',
+               help = 'The cache mode for the FCG'),
+]
+
+master_group = cfg.OptGroup(name = 'master')
+master_opts = [
+    cfg.StrOpt('host',
+               default = None,
+               help = 'Master\'s host to provide Voltclient service'),
+    cfg.StrOpt('port',
+               default = None,
+               help = 'Master\'s port to provide Voltclient service'),
+]
+
+cinder_group = cfg.OptGroup(name = 'cinder')
+cinder_opts = [
+    cfg.StrOpt('host',
+               default = None,
+               help = 'Cinder\'s host to provide Volume service'),
+    cfg.StrOpt('port',
+               default = None,
+               help = 'Cinder\'s port to provide Volume service'),
+]
+
 CONF = cfg.CONF
-
-def cmd_parsers(subparsers):
-    start_action = subparsers.add_parser('start')
-    start_action.add_argument('--fcg-name')
-
-def list():
-    print "in list"
+CONF.register_group(fcg_group)
+CONF.register_group(master_group)
+CONF.register_group(cinder_group)
+CONF.register_opts(fcg_opts, group = fcg_group)
+CONF.register_opts(master_opts, group = master_group)
+CONF.register_opts(cinder_opts, group = cinder_group)
 
 def start():
-    gc = GetConf('../etc/vmthunder/vmthunder.conf')
-    fcg_name = gc.get_fcg_name()
-    ssds = gc.get_fcg_ssds()
-    block_size = gc.get_fcg_blocksize()
-    pattern = gc.get_fcg_pattern()
-
-    cn = compute.Compute(fcg_name, ssds, block_size, pattern)
-
-    server = wsgi.Server('vmthunder-api', '/root/VMThunder/bin/api-paste.ini')
+    CONF(sys.argv[1:], project='vmthunder',
+         default_config_files = ['../etc/vmthunder.conf'])
+    print CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern
+    cn = compute.Compute(CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern)
+    server = wsgi.Server('vmthunder-api') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()
 
-
 if __name__ == '__main__':
     #logging.setup('vmthunder')
-    #start()
-
-    group = cfg.OptGroup(name = 'fcg')
-    opts = [
-        cfg.IntOpt('id', default = 11),
-    ]
-    CONF.register_cli_opt(cfg.SubCommandOpt('action', handler=cmd_parsers))
-    CONF.register_group(group)
-    CONF.register_opts(opts, group = group)
-    config_names = ['test.conf']
-    CONF(default_config_files = config_names)
-    print CONF.fcg.id
-    CONF(sys.argv[1:], project='vmthunder')
-
-    if CONF.action.name == 'list':
-        list()
-
-    print  CONF.action.name, CONF.action.id
+    start()

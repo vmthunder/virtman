@@ -13,11 +13,8 @@ from vmthunder.openstack.common import log as logging
 CONF = cfg.CONF
 
 def cmd_parsers(subparsers):
-    list_action = subparsers.add_parser('list')
-    list_action.add_argument('--id')
-
     start_action = subparsers.add_parser('start')
-    start_action.add_argument('--id')
+    start_action.add_argument('--fcg-name')
 
 def list():
     print "in list"

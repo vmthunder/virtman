@@ -5,7 +5,7 @@ from libfcg.fcg import FCG
 from vmthunder.session import Session
 from vmthunder.instancesnapcache import InstanceSnapCache
 from vmthunder.singleton import SingleTon
-from brick.openstack.common import log as logging
+from vmthunder.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 

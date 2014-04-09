@@ -137,9 +137,13 @@ class Session():
         tmp_string = self._connection_to_string(connection)
         if(self.target_path_dict.has_key(tmp_string)):
             try:
-                self.iscsi.disconnect_volume(connection, '')
+                #self.iscsi.disconnect_volume(connection, '')
+                Str = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
+                os.popen(Str)
                 LOG.debug(connection)
                 self._delete_target_path_dict(connection)
+                if(self._connection_exits(connection)):
+                    self.connections.remove(connection)
             except Exception, e:
                 print e
 

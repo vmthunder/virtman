@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = vmthunder
+omit = vmthunder/tests/*,vmthunder/openstack/*
+
+[report]
+ignore-errors = True

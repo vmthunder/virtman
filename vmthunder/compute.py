@@ -21,7 +21,7 @@ class Compute():
         #self.log_filename = "log_file"
         #self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
         #logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
-        LOG.debug("creating a Compute_node of name ")
+        LOG.debug("creating a Compute_node")
 
 
     def list(self):

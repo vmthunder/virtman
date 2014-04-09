@@ -32,4 +32,4 @@ cd develop/VMThunder/tests
 cd ../
 python setup.py install
 cd bin
-python vmthunderd
+python vmthunderd --debug

@@ -56,7 +56,7 @@ CONF.register_opts(cinder_opts, group = cinder_group)
 
 def start():
     cn = compute.Compute(CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern)
-    server = wsgi.Server('vmthunder-api') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
+    server = wsgi.Server('vmthunder-api', path='/root/develop/VMThunder/etc/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()
 

@@ -21,7 +21,7 @@ class Instance():
         #self.log_filename = "log_file"
         #self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
         #logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
-        LOG.debug("creating a instance of name %s ",self.vm_name)
+        LOG.debug("creating a instance of name  ",self.vm_name)
     
     def _snapshot_name(self):
         return 'snapshot_' + self.vm_name

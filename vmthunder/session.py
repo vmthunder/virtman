@@ -35,11 +35,11 @@ class Session():
         self.vclient = client.Client('http://10.107.14.170:7447')
         self.peer_id = ''
         self.target_id = 0
-        LOG.debug("create a session of volume_name  ", self.volume_name)
+        LOG.debug("create a session of volume_name %s" % self.volume_name)
 
 
     def _get_ip_address(self, ifname):
-        LOG.debug("aquire ip address of ", ifname)
+        LOG.debug("aquire ip address of %s" % ifname)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(
             s.fileno(),
@@ -86,7 +86,7 @@ class Session():
 
     #This method is to judge whether a target is hanging by other VMs
     def _is_connected(self):
-        LOG.debug("execute a command of tgtadm to judge a target_id %d whether is hanging" % self.target_id)
+        LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
         if(len(tmp) == 0):
@@ -95,13 +95,16 @@ class Session():
 
 
     def change_connection_mode(self, connection):
-        LOG.debug("old connection is ",connection)
+        LOG.debug("old connection is :")
+        LOG.debug(connection)
         new_connection = {}
         new_connection = {'target_portal' : connection.host + ':' + connection.port,
                           'target_iqn' : connection.iqn,
                           'target_lun' : connection.lun,
                           }
-        LOG.debug("new connection is ",new_connection)
+        LOG.debug("new connection is :")
+        LOG.debug(new_connection)
+
         return new_connection
 
     #This method is to login target and return the connected_paths
@@ -115,8 +118,8 @@ class Session():
         for connection in connections:
             if(self._connection_exits(connection) is False):
                 try:
-                    print "------ iscsi connect volume_name"
-                    LOG.debug("iscsi login target according the connection ",connection)
+                    LOG.debug("iscsi login target according the connection :")
+                    LOG.debug(connection)
                     device_info = self.iscsi.connect_volume(connection)
                     path = device_info['path']
                     path = os.path.realpath(path)
@@ -135,7 +138,8 @@ class Session():
                 #self.iscsi.disconnect_volume(connection, '')
                 Str = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
                 os.popen(Str)
-                LOG.debug("iscsi logout target according the connection ",connection)
+                LOG.debug("iscsi logout target according the connection :")
+                LOG.debug(connection)
                 self._delete_target_path_dict(connection)
                 if(self._connection_exits(connection)):
                     self.connections.remove(connection)
@@ -150,7 +154,7 @@ class Session():
     def _create_target(self, iqn, path):
         try:
             self.target_id = self.tgt.create_iscsi_target(iqn, path)
-            LOG.debug("create a target and it's id is ",self.target_id)
+            LOG.debug("create a target and it's id is %s" % self.target_id)
             self.has_target = True
             #don't dynamic gain host_id and host_port
             host_ip = self._get_ip_address('eth0')
@@ -168,7 +172,7 @@ class Session():
         try:
             self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
             self.has_target = False
-            LOG.debug("successful remove target ",self.target_id)
+            LOG.debug("successful remove target %s " % self.target_id)
         except  Exception, e:
             print e
   
@@ -177,7 +181,8 @@ class Session():
         try:
             multipath_path = self.dm.multipath(multipath_name, disks)
             self.has_multipath = True
-            LOG.debug("create multipath according table ",disks)
+            LOG.debug("create multipath according connection :")
+            LOG.debug(disks)
         except Exception, e:
             print e
         return multipath_path
@@ -187,7 +192,7 @@ class Session():
         try:
             self.dm.remove_table(multipath_name)
             self.has_multipath = False
-            LOG.debug("delete multipath of ",multipath_name)
+            LOG.debug("delete multipath of %s" % multipath_name)
         except Exception, e:
             print e
     
@@ -195,7 +200,7 @@ class Session():
         try:
             cached_path = self.fcg.add_disk(multipath)
             self.has_cache = True
-            LOG.debug("create cache according to multipath ",multipath)
+            LOG.debug("create cache according to multipath %s" % multipath)
         except Exception, e:
             print e
         return cached_path
@@ -204,7 +209,7 @@ class Session():
         try:
             self.fcg.rm_disk(multipath)
             self.has_cache = False
-            LOG.debug("create cache according to multipath ",multipath)
+            LOG.debug("delete cache according to multipath %s " % multipath)
         except Exception, e:
             print e
     
@@ -216,7 +221,7 @@ class Session():
         else:
             try:
                 origin_path = self.dm.origin(origin_name, origin_dev)
-                LOG.debug("create origin on ",origin_dev)
+                LOG.debug("create origin on %s" % origin_dev)
                 self.has_origin = True
             except Exception, e:
                 print e
@@ -226,7 +231,7 @@ class Session():
         origin_name = self._origin_name()
         try:
             self.dm.remove_table(origin_name)
-            LOG.debug("remove origin ",origin_name)
+            LOG.debug("remove origin %s " % origin_name)
             self.has_origin = False
         except Exception, e:
                 print e
@@ -235,7 +240,8 @@ class Session():
         host_ip = self._get_ip_address('eth0')
         while(True):
             self.peer_id, parent_list = self.vclient.volumes.get(session_name=self.volume_name, host=host_ip)
-            LOG.debug("in get_parent function to get parent_list ",parent_list)
+            LOG.debug("in get_parent function to get parent_list :")
+            LOG.debug(parent_list)
             bo = True
             for son in parent_list:
                 if son.status == "pending":
@@ -271,13 +277,14 @@ class Session():
         return self._origin_path()
 
     def destroy(self, vm_name):
-        LOG.debug("destroy a vm ",vm_name)
+        LOG.debug("destroy a vm %s" % vm_name)
         self.vm.remove(vm_name)
         if len(self.vm)== 0:
             self.vclient.volumes.logout(self.volume_name, peer_id = self.peer_id)
             while self._is_connected() :
                 time.sleep(1)
             self.Destroy_for_adjust_structure()
+        return self.volume_name
 
     def Destroy_for_adjust_structure(self):
         multipath = self._multipath()
@@ -306,7 +313,8 @@ class Session():
                 temp = self._connection_to_string(connection)
                 multipath_table += self.target_path_dict[temp]+' 128 '
         multipath_table += '\n'
-        LOG.debug('multipath_table is ', multipath_table)
+        LOG.debug('multipath_table is :' )
+        LOG.debug(multipath_table)
         self.dm.reload_table(multipath_name, multipath_table)
         
     def adjust_structure(self, delete_connections, add_connections):

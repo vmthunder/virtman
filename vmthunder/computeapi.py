@@ -54,12 +54,12 @@ class ComputeAPI(object):
     def destroy(self, req):
         instance = self._get_body(req)
         vm_name = instance['vm_name']
-        try:
-            self.compute_instance.destroy(vm_name)
-        except:
-             raise 'Failed to destroy %s' % vm_name
-        else:
-            return Response(body='', status=200)
+        #try:
+        self.compute_instance.destroy(vm_name)
+        #except:
+        #     raise Exception('Failed to destroy %s' % vm_name)
+        #else:
+        return Response(body='', status=200)
 
     def list(self, req):
         #self._enforce(req, 'list')

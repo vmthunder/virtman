@@ -30,9 +30,11 @@ class InstanceSnapCache(Instance):
         self._delete_cache()
 
     def start_vm(self, origin_path):
-        LOG.debug("instanceSnapCache start vm")
+        LOG.debug("instanceSnapCache start vm according origin_path %s" % origin_path)
         self._create_snapshot(origin_path)
+        return self.vm_name
 
     def del_vm(self):
+        LOG.debug("come to instanceSnapCache to delete vm %s" % self.vm_name)
         self._delete_snapshot()
-        
+        return self.vm_name

@@ -2,7 +2,7 @@ pbr
 babel
 eventlet
 greenlet
-oslo.config
+#oslo.config
 Paste
 PasteDeploy
 Routes

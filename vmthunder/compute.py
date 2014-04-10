@@ -1,17 +1,18 @@
 #!/usr/bin/env python
-
+import threading
 
 from libfcg.fcg import FCG
 from vmthunder.session import Session
 from vmthunder.instancesnapcache import InstanceSnapCache
 from vmthunder.singleton import SingleTon
 from vmthunder.openstack.common import log as logging
-
+from voltclient.v1 import client
 LOG = logging.getLogger(__name__)
 
 
 @SingleTon
 class Compute():
+
     def __init__(self, fcg_name='fcg', ssds="ssds", blocksize="blo", pattern="pat"):
         self.session_dict = {}
         self.instance_dict = {}
@@ -50,11 +51,12 @@ class Compute():
             session = self.session_dict[volume_name]
             origin_path = session.deploy_image(vm_name, connections)
             self.instance_dict[vm_name] = InstanceSnapCache('fcg', volume_name, vm_name, snapshot_dev)
-            LOG.debug("origin is ",origin_path)
+            LOG.debug("origin is %s" % origin_path)
             self.instance_dict[vm_name].start_vm(origin_path)
 
     def adjust_structure(self, volume_name, delete_connections, add_connections):
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
+
 

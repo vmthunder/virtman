@@ -18,8 +18,11 @@ class InstanceCommon(Instance):
         self.dm.remove_table(snapshot_name)
 
     def start_vm(self, origin_path):
-        LOG.debug("instanceCommon start vm")
+        LOG.debug("instanceCommon start vm according origin_path %s" % origin_path)
         self._create_snapshot(origin_path)
+        return self.vm_name
 
     def del_vm(self):
+        LOG.debug("come to instanceSnapCache to delete vm %s" % self.vm_name)
         self._delete_snapshot()
+        return self.vm_name

@@ -17,6 +17,7 @@ class Instance():
         self.vm_name = vm_name
         self.snapshot_dev = snapshot_dev
         self.volume_name = volume_name
+        self.snapshot_path = ''
 
         #self.log_filename = "log_file"
         #self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'

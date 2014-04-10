@@ -45,11 +45,13 @@ class ComputeAPI(object):
         snapshot_dev = instance['snapshot_dev']
 
         try:
-            self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
+            snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
         except:
             raise 'Failed to create %s' % vm_name
         else:
-            return Response(body='', status=200)
+            res_body = jsonutils.dumps(snapshot_path)
+            LOG.debug(res_body)
+            return Response(body=res_body, status=200)
 
     def destroy(self, req):
         instance = self._get_body(req)
@@ -66,7 +68,19 @@ class ComputeAPI(object):
         #TODO：use policy.enforce
         instances = self.compute_instance.list()
         res_body = jsonutils.dumps(instances)
-        return Response(body=res_body, status=200)
+        return Response(body='', status=200)
+
+    '''
+    def list(self):
+        def build_list_object(instances):
+            instance_list = []
+            for instance in instances.keys():
+                instance_list.append({
+                    'vm_name':instances[instance].vm_name,
+                    })
+            return { 'instances': instance_list}
+        return build_list_object(self.instance_dict)
+    '''
 
 def create_resource():
     return wsgi.Resource(ComputeAPI())

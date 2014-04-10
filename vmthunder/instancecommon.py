@@ -11,6 +11,7 @@ class InstanceCommon(Instance):
     def _create_snapshot(self, origin_path):
         snapshot_name = self._snapshot_name()
         snapshot_path = self.dm.snapshot(origin_path, snapshot_name, self.snapshot_dev)
+        self.snapshot_path = snapshot_path
         return snapshot_path
 
     def _delete_snapshot(self):

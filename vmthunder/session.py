@@ -117,34 +117,28 @@ class Session():
         connected_paths = []
         for connection in connections:
             if(self._connection_exits(connection) is False):
-                try:
-                    LOG.debug("iscsi login target according the connection :")
-                    LOG.debug(connection)
-                    device_info = self.iscsi.connect_volume(connection)
-                    path = device_info['path']
-                    path = os.path.realpath(path)
-                    self._add_target_path_dict(connection, path)
-                    connected_paths.append(path)
-                    self.connections.append(connection)
-                except Exception, e:
-                    print e
+                LOG.debug("iscsi login target according the connection :")
+                LOG.debug(connection)
+                device_info = self.iscsi.connect_volume(connection)
+                path = device_info['path']
+                path = os.path.realpath(path)
+                self._add_target_path_dict(connection, path)
+                connected_paths.append(path)
+                self.connections.append(connection)
         return connected_paths
     
     def _logout_target(self, connection):
         """ parameter device_info is no be used """
         tmp_string = self._connection_to_string(connection)
         if(self.target_path_dict.has_key(tmp_string)):
-            try:
-                #self.iscsi.disconnect_volume(connection, '')
-                Str = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
-                os.popen(Str)
-                LOG.debug("iscsi logout target according the connection :")
-                LOG.debug(connection)
-                self._delete_target_path_dict(connection)
-                if(self._connection_exits(connection)):
-                    self.connections.remove(connection)
-            except Exception, e:
-                print e
+            #self.iscsi.disconnect_volume(connection, '')
+            Str = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
+            os.popen(Str)
+            LOG.debug("iscsi logout target according the connection :")
+            LOG.debug(connection)
+            self._delete_target_path_dict(connection)
+            if(self._connection_exits(connection)):
+                self.connections.remove(connection)
 
     def connect_image(self, connection):
         """Connect image volume_name in cinder server
@@ -152,66 +146,48 @@ class Session():
         return NotImplementedError()
 
     def _create_target(self, iqn, path):
-        try:
-            self.target_id = self.tgt.create_iscsi_target(iqn, path)
-            LOG.debug("create a target and it's id is %s" % self.target_id)
-            self.has_target = True
-            #don't dynamic gain host_id and host_port
-            host_ip = self._get_ip_address('eth0')
-            LOG.debug("logon to master server")
-            info = self.vclient.volumes.login(session_name = self.volume_name,
-                                                    peer_id = self.peer_id,
-                                                    host = host_ip,
-                                                    port = '3260',
-                                                    iqn = iqn,
-                                                    lun = '1')
-        except Exception, e:
-            print e
+        self.target_id = self.tgt.create_iscsi_target(iqn, path)
+        LOG.debug("create a target and it's id is %s" % self.target_id)
+        self.has_target = True
+        #don't dynamic gain host_id and host_port
+        host_ip = self._get_ip_address('eth0')
+        LOG.debug("logon to master server")
+        info = self.vclient.volumes.login(session_name = self.volume_name,
+                                                peer_id = self.peer_id,
+                                                host = host_ip,
+                                                port = '3260',
+                                                iqn = iqn,
+                                                lun = '1')
         
     def _delete_target(self):
-        try:
-            self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
-            self.has_target = False
-            LOG.debug("successful remove target %s " % self.target_id)
-        except  Exception, e:
-            print e
+        self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
+        self.has_target = False
+        LOG.debug("successful remove target %s " % self.target_id)
   
     def _create_multipath(self, disks):
         multipath_name = self._multipath_name()
-        try:
-            multipath_path = self.dm.multipath(multipath_name, disks)
-            self.has_multipath = True
-            LOG.debug("create multipath according connection :")
-            LOG.debug(disks)
-        except Exception, e:
-            print e
+        multipath_path = self.dm.multipath(multipath_name, disks)
+        self.has_multipath = True
+        LOG.debug("create multipath according connection :")
+        LOG.debug(disks)
         return multipath_path
    
     def _delete_multipath(self):
         multipath_name = self._multipath_name()
-        try:
-            self.dm.remove_table(multipath_name)
-            self.has_multipath = False
-            LOG.debug("delete multipath of %s" % multipath_name)
-        except Exception, e:
-            print e
+        self.dm.remove_table(multipath_name)
+        self.has_multipath = False
+        LOG.debug("delete multipath of %s" % multipath_name)
     
     def _create_cache(self, multipath):
-        try:
-            cached_path = self.fcg.add_disk(multipath)
-            self.has_cache = True
-            LOG.debug("create cache according to multipath %s" % multipath)
-        except Exception, e:
-            print e
+        cached_path = self.fcg.add_disk(multipath)
+        self.has_cache = True
+        LOG.debug("create cache according to multipath %s" % multipath)
         return cached_path
 
     def _delete_cache(self, multipath):
-        try:
-            self.fcg.rm_disk(multipath)
-            self.has_cache = False
-            LOG.debug("delete cache according to multipath %s " % multipath)
-        except Exception, e:
-            print e
+        self.fcg.rm_disk(multipath)
+        self.has_cache = False
+        LOG.debug("delete cache according to multipath %s " % multipath)
     
     def _create_origin(self, origin_dev):
         origin_name = self._origin_name()
@@ -219,22 +195,16 @@ class Session():
         if self.has_origin:
             origin_path = self._origin_path()
         else:
-            try:
-                origin_path = self.dm.origin(origin_name, origin_dev)
-                LOG.debug("create origin on %s" % origin_dev)
-                self.has_origin = True
-            except Exception, e:
-                print e
+            origin_path = self.dm.origin(origin_name, origin_dev)
+            LOG.debug("create origin on %s" % origin_dev)
+            self.has_origin = True
         return origin_path
    
     def _delete_origin(self):
         origin_name = self._origin_name()
-        try:
-            self.dm.remove_table(origin_name)
-            LOG.debug("remove origin %s " % origin_name)
-            self.has_origin = False
-        except Exception, e:
-                print e
+        self.dm.remove_table(origin_name)
+        LOG.debug("remove origin %s " % origin_name)
+        self.has_origin = False
 
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')

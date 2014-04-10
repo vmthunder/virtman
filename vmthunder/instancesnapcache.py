@@ -22,6 +22,7 @@ class InstanceSnapCache(Instance):
         cached_path = self._create_cache()
         snapshot_name = self._snapshot_name()
         snapshot_path = self.dm.snapshot(origin_path, snapshot_name, cached_path)
+        self.snapshot_path = snapshot_path
         return snapshot_path
 
     def _delete_snapshot(self):

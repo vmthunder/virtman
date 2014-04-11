@@ -37,10 +37,10 @@ master_opts = [
 host_opts = [
     cfg.StrOpt('host_ip',
                default='10.107.14.170',
-               help='Cinder\'s host to provide Volume service'),
+               help='localhost ip provide VMThunder service'),
     cfg.StrOpt('host_port',
                default='8001',
-               help='Cinder\'s port to provide Volume service'),
+               help='localhost port to provide VMThunder service'),
 ]
 
 CONF = cfg.CONF

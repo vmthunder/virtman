@@ -6,8 +6,8 @@ from vmthunder.drivers import dmsetup
 
 LOG = logging.getLogger(__name__)
 
+
 class InstanceCommon(Instance):
-    
     def _create_snapshot(self, origin_path):
         snapshot_name = self._snapshot_name()
         snapshot_path = dmsetup.snapshot(origin_path, snapshot_name, self.snapshot_dev)
@@ -15,7 +15,7 @@ class InstanceCommon(Instance):
         return snapshot_path
 
     def _delete_snapshot(self):
-    	snapshot_name = self._snapshot_name()
+        snapshot_name = self._snapshot_name()
         dmsetup.remove_table(snapshot_name)
 
     def start_vm(self, origin_path):

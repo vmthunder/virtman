@@ -35,7 +35,8 @@ class Session():
         LOG.debug("create a session of volume_name %s" % self.volume_name)
 
 
-    def _get_ip_address(self, ifname):
+    @staticmethod
+    def _get_ip_address(ifname):
         LOG.debug("aquire ip address of %s" % ifname)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(
@@ -81,8 +82,8 @@ class Session():
         else:
             return False
 
-    #This method is to judge whether a target is hanging by other VMs
     def _is_connected(self):
+        """This method is to judge whether a target is hanging by other VMs"""
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
@@ -104,9 +105,9 @@ class Session():
 
         return new_connection
 
-    #This method is to login target and return the connected_paths
     def _login_target(self, connections):
-        """connection_properties for iSCSI must include:
+        """This method is to login target and return the connected_paths
+        connection_properties for iSCSI must include:
         target_portal - ip and optional port
         target_iqn - iSCSI Qualified Name
         target_lun - LUN id of the volume_name
@@ -222,7 +223,7 @@ class Session():
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
-        parent_list = self._get_parent()
+        parent_list = self._get_parent
         new_connections = []
         if(len(parent_list) == 0):
             #TODO:hanging target from cinder
@@ -232,7 +233,7 @@ class Session():
                 new_connections.append(self.change_connection_mode(son))
 
         connected_path = self._login_target(new_connections)
-        if  self.has_multipath:
+        if self.has_multipath:
             self._add_path()
         else:
             multi_path = self._create_multipath(connected_path)
@@ -269,7 +270,7 @@ class Session():
 
     
     def _add_path(self):
-        if(len(self.connections) == 0):
+        if len(self.connections) == 0:
             #TODO:hanging target from cinder
             return 
         multipath_name = self._multipath_name()

@@ -1,0 +1,28 @@
+2014-04-10 00:27:03.472 18332 INFO vmthunder.compute [-] Compute node initialing ...
+2014-04-10 00:27:04.500 18332 INFO vmthunder.compute [-] Compute node initialization finished ...
+2014-04-10 00:27:04.519 18332 DEBUG routes.middleware [-] Initialized with method overriding = True, and path info altering = True __init__ /usr/lib/python2.7/dist-packages/routes/middleware.py:41
+2014-04-10 00:27:04.520 18332 INFO vmthunder.common.wsgi [-] Started vmthunder-api on 0.0.0.0:8001
+2014-04-10 00:27:04.521 18332 INFO vmthunder.common.wsgi [-] (18332) wsgi starting up on http://0.0.0.0:8001/
+
+2014-04-10 00:27:08.242 18332 DEBUG routes.middleware [-] Matched GET /list __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:100
+2014-04-10 00:27:08.243 18332 DEBUG routes.middleware [-] Route path: '/list', defaults: {'action': u'list', 'controller': <vmthunder.common.wsgi.Resource object at 0x3641c90>} __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:102
+2014-04-10 00:27:08.244 18332 DEBUG routes.middleware [-] Match dict: {'action': u'list', 'controller': <vmthunder.common.wsgi.Resource object at 0x3641c90>} __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:103
+2014-04-10 00:27:08.245 18332 INFO vmthunder.compute [-] get instance list from compute
+2014-04-10 00:27:08.246 18332 INFO vmthunder.common.wsgi [-] 127.0.0.1 - - [10/Apr/2014 00:27:08] "GET /list HTTP/1.1" 200 133 0.006233
+
+2014-04-10 00:27:08.249 18332 DEBUG routes.middleware [-] Matched POST /create __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:100
+2014-04-10 00:27:08.249 18332 DEBUG routes.middleware [-] Route path: '/create', defaults: {'action': u'create', 'controller': <vmthunder.common.wsgi.Resource object at 0x3641c90>} __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:102
+2014-04-10 00:27:08.250 18332 DEBUG routes.middleware [-] Match dict: {'action': u'create', 'controller': <vmthunder.common.wsgi.Resource object at 0x3641c90>} __call__ /usr/lib/python2.7/dist-packages/routes/middleware.py:103
+2014-04-10 00:27:08.252 18332 DEBUG root [-] creating a session of name 123456  __init__ /usr/local/lib/python2.7/dist-packages/vmthunder/session.py:38
+2014-04-10 00:27:08.252 18332 DEBUG root [-] come to deploy_image deploy_image /usr/local/lib/python2.7/dist-packages/vmthunder/session.py:243
+2014-04-10 00:27:08.253 18332 DEBUG root [-] come to _get_parent _get_parent /usr/local/lib/python2.7/dist-packages/vmthunder/session.py:229
+2014-04-10 00:27:08.254 18332 DEBUG voltclient.common.http [-] curl -i -X GET -H 'Content-Type: application/json' -H 'User-Agent: python-glanceclient' -d '{"host": "10.107.14.163"}' http://10.107.14.170:7447/v1/volumes/query/123456 log_curl_request /usr/local/lib/python2.7/dist-packages/voltclient/common/http.py:142
+2014-04-10 00:27:08.278 18332 DEBUG voltclient.common.http [-] 
+HTTP/1.1 200 OK
+date: Wed, 09 Apr 2014 16:27:08 GMT
+content-length: 62
+content-type: application/json; charset=UTF-8
+x-openstack-request-id: req-7ea5df4b-19c7-4cfd-b8a3-e63fa9cfd46d
+
+{"peer_id": "2ce1cb44eb30c74e0c8d592a5914a0dd", "parents": []}
+ log_http_response /usr/local/lib/python2.7/dist-packages/voltclient/common/http.py:152

@@ -6,14 +6,17 @@ import socket
 import fcntl
 import struct
 
+from oslo.config import cfg
+
 from pydm.common import utils
 from libfcg.fcg import FCG
 from pydm.dmsetup import Dmsetup
 from brick.initiator.connector import ISCSIConnector
 from brick.iscsi.iscsi import TgtAdm
 from voltclient.v1 import client
-from brick.openstack.common import log as logging
+from vmthunder.openstack.common import log as logging
 
+CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 class Session():
@@ -32,7 +35,7 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.vm = []
-        self.vclient = client.Client('http://10.107.14.170:7447')
+        self.vclient = client.Client('http://%s:%s' % (CONF.host_ip, CONF.host_port))
         self.peer_id = ''
         self.target_id = 0
         LOG.debug("create a session of volume_name %s" % self.volume_name)

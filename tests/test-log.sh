@@ -7,4 +7,4 @@ pwd
 cd /root/develop/VMThunder/
 python setup.py install
 cd /root/develop/VMThunder/bin/
-python vmthunderd --debug
+python vmthunderd --debug --log-file vmthunder.log

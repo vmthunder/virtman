@@ -26,26 +26,27 @@ fcg_opts = [
 
 master_opts = [
     cfg.StrOpt('master_host',
-               default=None,
+               default='10.107.14.170',
                help='Master\'s host to provide Voltclient service'),
     cfg.StrOpt('master_port',
-               default=None,
+               default='7447',
                help='Master\'s port to provide Voltclient service'),
 ]
 
-cinder_opts = [
-    cfg.StrOpt('cinder_host',
-               default=None,
+#TODO: Auto determine host ip if not filled in conf file
+host_opts = [
+    cfg.StrOpt('host_ip',
+               default='10.107.14.170',
                help='Cinder\'s host to provide Volume service'),
-    cfg.StrOpt('cinder_port',
-               default=None,
+    cfg.StrOpt('host_port',
+               default='8001',
                help='Cinder\'s port to provide Volume service'),
 ]
 
 CONF = cfg.CONF
 CONF.register_opts(fcg_opts)
 CONF.register_opts(master_opts)
-CONF.register_opts(cinder_opts)
+CONF.register_opts(host_opts)
 
 def start():
     cn = compute.Compute(CONF.fcg.name, CONF.fcg.ssds, CONF.fcg.blocksize, CONF.fcg.pattern)

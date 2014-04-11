@@ -11,8 +11,7 @@ LOG = logging.getLogger(__name__)
 
 @SingleTon
 class Compute():
-
-    def __init__(self, fcg_name='fcg', ssds="ssds", blocksize="blo", pattern="pat"):
+    def __init__(self, fcg_name, ssds, blocksize, pattern):
         self.session_dict = {}
         self.instance_dict = {}
         self.fcg_name = fcg_name
@@ -32,13 +31,14 @@ class Compute():
             instance_list = []
             for instance in instances.keys():
                 instance_list.append({
-                    'vm_name':instances[instance].vm_name,
-                    })
+                    'vm_name': instances[instance].vm_name,
+                })
             return dict(instances=instance_list)
+
         return build_list_object(self.instance_dict)
 
     def create(self, volume_name, vm_name, connections, snapshot_dev):
-        if not self.instance_dict.has_key(vm_name):
+        if vm_name not in self.instance_dict.keys():
             LOG.debug("in compute to execute the method create")
             if not self.session_dict.has_key(volume_name):
                 self.session_dict[volume_name] = Session(volume_name)
@@ -53,5 +53,3 @@ class Compute():
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
-
-

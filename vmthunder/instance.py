@@ -58,9 +58,3 @@ class Instance():
     def _snapshot_path(self):
         snapshot_name = self._snapshot_name()
         return dmsetup.prefix + snapshot_name
-
-
-    
-    
-	
-	

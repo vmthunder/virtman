@@ -1,5 +1,6 @@
 from libfcg.fcg import FCG
 from oslo.config import cfg
+
 from vmthunder.singleton import SingleTon
 
 CONF = cfg.CONF

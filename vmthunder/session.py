@@ -9,24 +9,21 @@ import struct
 from oslo.config import cfg
 
 from pydm.common import utils
-from libfcg.fcg import FCG
-from pydm.dmsetup import Dmsetup
 from brick.initiator.connector import ISCSIConnector
 from brick.iscsi.iscsi import TgtAdm
 from voltclient.v1 import client
 from vmthunder.openstack.common import log as logging
+from vmthunder.drivers import fcg
+from vmthunder.drivers import dmsetup
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 class Session():
 
-    def __init__(self, fcg_name , volume_name):
-        self.fcg_name = fcg_name
-        self.fcg = FCG(fcg_name)
+    def __init__(self, volume_name):
         self.iscsi = ISCSIConnector('')
         self.tgt = TgtAdm('', '/etc/tgt/conf.d')
-        self.dm = Dmsetup()
         self.volume_name = volume_name
         self.connections = []
         self.target_path_dict = {}
@@ -70,16 +67,16 @@ class Session():
 
     def _multipath(self):
         multipath_name = self._multipath_name()
-        multipath = self.dm.mapdev_prefix + multipath_name
+        multipath = dmsetup.prefix + multipath_name
         return multipath
     
     def _cached_path(self, image_path):
-        cached_disk_name = self.fcg._cached_disk_name(image_path)
-        return self.dm.mapdev_prefix + cached_disk_name
+        cached_disk_name = fcg._cached_disk_name(image_path)
+        return dmsetup.prefix + cached_disk_name
 
     def _origin_path(self):
         origin_name = self._origin_name()
-        return self.dm.mapdev_prefix + origin_name
+        return dmsetup.prefix + origin_name
 
     def _connection_exits(self, connection):
         if connection in self.connections:
@@ -169,7 +166,7 @@ class Session():
   
     def _create_multipath(self, disks):
         multipath_name = self._multipath_name()
-        multipath_path = self.dm.multipath(multipath_name, disks)
+        multipath_path = dmsetup.multipath(multipath_name, disks)
         self.has_multipath = True
         LOG.debug("create multipath according connection :")
         LOG.debug(disks)
@@ -177,12 +174,12 @@ class Session():
    
     def _delete_multipath(self):
         multipath_name = self._multipath_name()
-        self.dm.remove_table(multipath_name)
+        dmsetup.remove_table(multipath_name)
         self.has_multipath = False
         LOG.debug("delete multipath of %s" % multipath_name)
     
     def _create_cache(self, multipath):
-        cached_path = self.fcg.add_disk(multipath)
+        cached_path = fcg.add_disk(multipath)
         self.has_cache = True
         LOG.debug("create cache according to multipath %s" % multipath)
         return cached_path
@@ -198,14 +195,14 @@ class Session():
         if self.has_origin:
             origin_path = self._origin_path()
         else:
-            origin_path = self.dm.origin(origin_name, origin_dev)
+            origin_path = dmsetup.origin(origin_name, origin_dev)
             LOG.debug("create origin on %s" % origin_dev)
             self.has_origin = True
         return origin_path
    
     def _delete_origin(self):
         origin_name = self._origin_name()
-        self.dm.remove_table(origin_name)
+        dmsetup.remove_table(origin_name)
         LOG.debug("remove origin %s " % origin_name)
         self.has_origin = False
 
@@ -288,7 +285,7 @@ class Session():
         multipath_table += '\n'
         LOG.debug('multipath_table is :' )
         LOG.debug(multipath_table)
-        self.dm.reload_table(multipath_name, multipath_table)
+        dmsetup.reload_table(multipath_name, multipath_table)
         
     def adjust_structure(self, delete_connections, add_connections):
         self._login_target(add_connections)

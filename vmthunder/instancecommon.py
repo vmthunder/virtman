@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-from pydm.dmsetup import Dmsetup
 from vmthunder.instance import Instance
-from brick.openstack.common import log as logging
+from vmthunder.openstack.common import log as logging
+from vmthunder.drivers import dmsetup
 
 LOG = logging.getLogger(__name__)
 
@@ -10,13 +10,13 @@ class InstanceCommon(Instance):
     
     def _create_snapshot(self, origin_path):
         snapshot_name = self._snapshot_name()
-        snapshot_path = self.dm.snapshot(origin_path, snapshot_name, self.snapshot_dev)
+        snapshot_path = dmsetup.snapshot(origin_path, snapshot_name, self.snapshot_dev)
         self.snapshot_path = snapshot_path
         return snapshot_path
 
     def _delete_snapshot(self):
     	snapshot_name = self._snapshot_name()
-        self.dm.remove_table(snapshot_name)
+        dmsetup.remove_table(snapshot_name)
 
     def start_vm(self, origin_path):
         LOG.debug("instanceCommon start vm according origin_path %s" % origin_path)

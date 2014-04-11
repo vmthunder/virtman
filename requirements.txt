@@ -10,6 +10,11 @@ six
 WebOb
 wsgiref
 
+#/vmthunder/openstack/common/db/sqlalchemy/session.py required
+#sqlalchemy>=0.8
+#/vmthunder/openstack/common/rpc/impl_kombu.py required
+#kombu>=3.0.0
+
 #pbr>=0.6
 #Babel>=0.9.6
 #eventlet>=0.13.0

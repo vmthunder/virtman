@@ -25,9 +25,9 @@ fcg_opts = [
 ]
 
 master_opts = [
-    cfg.StrOpt('master_host',
+    cfg.StrOpt('master_ip',
                default='10.107.14.170',
-               help='Master\'s host to provide Voltclient service'),
+               help='Master\'s ip to provide Voltclient service'),
     cfg.StrOpt('master_port',
                default='7447',
                help='Master\'s port to provide Voltclient service'),

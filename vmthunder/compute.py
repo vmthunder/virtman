@@ -16,7 +16,7 @@ class Compute():
         self.session_dict = {}
         self.instance_dict = {}
         self.fcg_name = fcg_name
-        fcg.create_group(ssds, blocksize, pattern)
+        self.cache_group = fcg.create_group(ssds, blocksize, pattern)
         LOG.debug("creating a Compute_node")
 
     def destroy(self, vm_name):

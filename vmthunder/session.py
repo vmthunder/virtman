@@ -9,12 +9,12 @@ import struct
 from oslo.config import cfg
 
 from pydm.common import utils
-from brick.initiator.connector import ISCSIConnector
-from brick.iscsi.iscsi import TgtAdm
 from voltclient.v1 import client
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
+from vmthunder.drivers import iscsi
+from vmthunder.drivers import connector
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -22,8 +22,6 @@ LOG = logging.getLogger(__name__)
 class Session():
 
     def __init__(self, volume_name):
-        self.iscsi = ISCSIConnector('')
-        self.tgt = TgtAdm('', '/etc/tgt/conf.d')
         self.volume_name = volume_name
         self.connections = []
         self.target_path_dict = {}
@@ -119,7 +117,7 @@ class Session():
             if(self._connection_exits(connection) is False):
                 LOG.debug("iscsi login target according the connection :")
                 LOG.debug(connection)
-                device_info = self.iscsi.connect_volume(connection)
+                device_info = connector.connect_volume(connection)
                 path = device_info['path']
                 path = os.path.realpath(path)
                 self._add_target_path_dict(connection, path)
@@ -130,10 +128,8 @@ class Session():
     def _logout_target(self, connection):
         """ parameter device_info is no be used """
         tmp_string = self._connection_to_string(connection)
-        if(self.target_path_dict.has_key(tmp_string)):
-            #self.iscsi.disconnect_volume(connection, '')
-            Str = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
-            os.popen(Str)
+        if self.target_path_dict.has_key(tmp_string):
+            connector.disconnect_volume(connection, '')
             LOG.debug("iscsi logout target according the connection :")
             LOG.debug(connection)
             self._delete_target_path_dict(connection)
@@ -146,7 +142,7 @@ class Session():
         return NotImplementedError()
 
     def _create_target(self, iqn, path):
-        self.target_id = self.tgt.create_iscsi_target(iqn, path)
+        self.target_id = iscsi.create_iscsi_target(iqn, path)
         LOG.debug("create a target and it's id is %s" % self.target_id)
         self.has_target = True
         #don't dynamic gain host_id and host_port
@@ -160,7 +156,7 @@ class Session():
                                                 lun = '1')
         
     def _delete_target(self):
-        self.tgt.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
+        iscsi.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
         self.has_target = False
         LOG.debug("successful remove target %s " % self.target_id)
   

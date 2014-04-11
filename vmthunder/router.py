@@ -1,8 +1,8 @@
 from vmthunder.common import wsgi
 from vmthunder import computeapi
 
-class ComputeRouter(wsgi.Router):
 
+class ComputeRouter(wsgi.Router):
     """WSGI router for VMThunder Instance requests"""
 
     def __init__(self, mapper):

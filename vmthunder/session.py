@@ -32,7 +32,7 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.vm = []
-        self.vclient = client.Client('http://10.107.14.170:7447')
+        self.vclient = client.Client('http://10.107.19.1:7447')
         self.peer_id = ''
         self.target_id = 0
         LOG.debug("create a session of volume_name %s" % self.volume_name)

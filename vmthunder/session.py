@@ -9,12 +9,12 @@ import struct
 from oslo.config import cfg
 
 from pydm.common import utils
-from voltclient.v1 import client
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
 from vmthunder.drivers import connector
+from vmthunder.drivers import voltclient
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -30,7 +30,6 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.vm = []
-        self.vclient = client.Client('http://%s:%s' % (CONF.host_ip, CONF.host_port))
         self.peer_id = ''
         self.target_id = 0
         LOG.debug("create a session of volume_name %s" % self.volume_name)
@@ -146,9 +145,11 @@ class Session():
         LOG.debug("create a target and it's id is %s" % self.target_id)
         self.has_target = True
         #don't dynamic gain host_id and host_port
+        #TODO: eth0?
         host_ip = self._get_ip_address('eth0')
         LOG.debug("logon to master server")
-        info = self.vclient.volumes.login(session_name = self.volume_name,
+        #TODO: port?
+        info = voltclient.login(session_name = self.volume_name,
                                                 peer_id = self.peer_id,
                                                 host = host_ip,
                                                 port = '3260',
@@ -205,7 +206,7 @@ class Session():
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')
         while(True):
-            self.peer_id, parent_list = self.vclient.volumes.get(session_name=self.volume_name, host=host_ip)
+            self.peer_id, parent_list = voltclient.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")
             LOG.debug(parent_list)
             bo = True
@@ -246,7 +247,7 @@ class Session():
         LOG.debug("destroy a vm %s" % vm_name)
         self.vm.remove(vm_name)
         if len(self.vm)== 0:
-            self.vclient.volumes.logout(self.volume_name, peer_id = self.peer_id)
+            voltclient.logout(self.volume_name, peer_id = self.peer_id)
             while self._is_connected() :
                 time.sleep(1)
             self.Destroy_for_adjust_structure()

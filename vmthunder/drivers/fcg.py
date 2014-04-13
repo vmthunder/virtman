@@ -8,7 +8,7 @@ CONF = cfg.CONF
 @SingleTon
 class FcgExecutor(FCG):
     def __init__(self):
-        super(FcgExecutor, self).__init__(CONF.fcg_name)
+        FCG.__init__(self, CONF.fcg_name)
 
 fcg_executor = FcgExecutor()
 

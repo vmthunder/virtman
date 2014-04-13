@@ -8,7 +8,7 @@ from vmthunder.singleton import SingleTon
 @SingleTon
 class ISCSIExecutor(ISCSIConnector):
     def __init__(self):
-        super(ISCSIExecutor, self).__init__('')
+        ISCSIConnector.__init__(self, '')
 
 iscsi_connector = ISCSIExecutor()
 

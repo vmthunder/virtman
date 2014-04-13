@@ -68,7 +68,7 @@ class ComputeAPI(object):
         #TODO：use policy.enforce
         instances = self.compute_instance.list()
         res_body = jsonutils.dumps(instances)
-        return Response(body='', status=200)
+        return Response(body=res_body, status=200)
 
     '''
     def list(self):
@@ -81,6 +81,7 @@ class ComputeAPI(object):
             return { 'instances': instance_list}
         return build_list_object(self.instance_dict)
     '''
+
 
 def create_resource():
     return wsgi.Resource(ComputeAPI())

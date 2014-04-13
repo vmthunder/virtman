@@ -9,7 +9,7 @@ CONF = cfg.CONF
 @SingleTon
 class VoltClient(client.Client):
     def __init__(self):
-        super(VoltClient, self).__init__('http://%s:%s' % (CONF.master_ip, CONF.master_ip))
+        client.Clien.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_ip))
 
 
 volt_client = VoltClient()

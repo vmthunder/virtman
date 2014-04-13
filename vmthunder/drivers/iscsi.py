@@ -7,7 +7,7 @@ from vmthunder.singleton import SingleTon
 @SingleTon
 class TgtExecutor(TgtAdm):
     def __index__(self):
-        super(TgtExecutor, self).__init__('', '/etc/tgt/conf.d')
+        TgtAdm.__init__(self, '', '/etc/tgt/conf.d')
 
 tgt = TgtExecutor()
 

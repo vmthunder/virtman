@@ -7,7 +7,7 @@ from webob import Response
 from webob import Request
 import eventlet
 
-from vmthunder.common import policy
+#from vmthunder.common import policy
 from vmthunder.common import exception
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging

@@ -28,7 +28,7 @@ def start():
 
 if __name__ == '__main__':
     CONF(sys.argv[1:], project='vmthunder',
-         default_config_files = ['../etc/vmthunder.conf'])
+         default_config_files = ['/root/develop/VMThunder/etc/vmthunder/api-paste.ini'])
     #print CONF.fcg_name, CONF.fcg_ssds, CONF.fcg_blocksize, CONF.fcg_pattern
     logging.setup('vmthunder')
     start()

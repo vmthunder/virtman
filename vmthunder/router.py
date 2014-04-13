@@ -11,14 +11,14 @@ class ComputeRouter(wsgi.Router):
         mapper.connect("/list",
                        controller=compute_resource,
                        action='list',
-                       conditions={'method':['GET']})
+                       conditions={'method': ['GET']})
         mapper.connect("/create",
                        controller=compute_resource,
                        action='create',
-                       conditions={'method':['POST']})
+                       conditions={'method': ['POST']})
         mapper.connect("/destroy",
                        controller=compute_resource,
                        action='destroy',
-                       conditions={'method':['POST']})
+                       conditions={'method': ['POST']})
 
         super(ComputeRouter, self).__init__(mapper)

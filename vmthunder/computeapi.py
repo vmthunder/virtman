@@ -79,5 +79,6 @@ class ComputeAPI(object):
         return build_list_object(self.instance_dict)
     '''
 
+
 def create_resource():
     return wsgi.Resource(ComputeAPI())

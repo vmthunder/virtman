@@ -1,0 +1,5 @@
+#
+#Command (execute this command in /tools/config directory, the detail is also in the directory):
+#  bash generate_sample.sh -b /root/develop/VMThunder -p vmthunder bin -o /root/develop/VMThunder/etc
+#
+

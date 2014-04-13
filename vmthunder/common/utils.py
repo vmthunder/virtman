@@ -43,7 +43,6 @@ from xml.sax import saxutils
 from brick.initiator import connector
 from vmthunder.common import exception
 from vmthunder.openstack.common import importutils
-from vmthunder.openstack.common import lockutils
 from vmthunder.openstack.common import log as logging
 from vmthunder.openstack.common import processutils
 from vmthunder.openstack.common import timeutils
@@ -53,8 +52,6 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 ISO_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S"
 PERFECT_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
-
-synchronized = lockutils.synchronized_with_prefix('vmthunder-')
 
 
 def find_config(config_path):

@@ -1,27 +1,19 @@
 #!/usr/bin/env python
-import threading
 
-from libfcg.fcg import FCG
+from vmthunder.drivers import fcg
 from vmthunder.session import Session
-from vmthunder.instancesnapcache import InstanceSnapCache
+from vmthunder.instance import Instance
 from vmthunder.singleton import SingleTon
 from vmthunder.openstack.common import log as logging
-from voltclient.v1 import client
-LOG = logging.getLogger(__name__)
 
+LOG = logging.getLogger(__name__)
 
 @SingleTon
 class Compute():
-
-    def __init__(self, fcg_name='fcg', ssds="ssds", blocksize="blo", pattern="pat"):
+    def __init__(self):
         self.session_dict = {}
         self.instance_dict = {}
-        self.fcg_name = fcg_name
-        fcg = FCG(fcg_name)
-        fcg.create_group(ssds, blocksize, pattern)
-        #self.log_filename = "log_file"
-        #self.log_format = '%(filename)s [%(asctime)s] [%(levelname)s] %(message)s'
-        #logging.basicConfig(filename = self.log_filename, filemode='a',format = self.log_format, datefmt = '%Y-%m-%d %H:%M:%S %p',level = logging.DEBUG)
+        self.cache_group = fcg.create_group()
         LOG.debug("creating a Compute_node")
 
     def destroy(self, vm_name):
@@ -37,19 +29,20 @@ class Compute():
             instance_list = []
             for instance in instances.keys():
                 instance_list.append({
-                    'vm_name':instances[instance].vm_name,
-                    })
-            return { 'instances': instance_list}
+                    'vm_name': instances[instance].vm_name,
+                })
+            return dict(instances=instance_list)
+
         return build_list_object(self.instance_dict)
 
     def create(self, volume_name, vm_name, connections, snapshot_dev):
-        if not self.instance_dict.has_key(vm_name):
+        if vm_name not in self.instance_dict.keys():
             LOG.debug("in compute to execute the method create")
-            if(not self.session_dict.has_key(volume_name)):
-                self.session_dict[volume_name] = Session('fcg', volume_name)
+            if not self.session_dict.has_key(volume_name):
+                self.session_dict[volume_name] = Session(volume_name)
             session = self.session_dict[volume_name]
             origin_path = session.deploy_image(vm_name, connections)
-            self.instance_dict[vm_name] = InstanceSnapCache('fcg', volume_name, vm_name, snapshot_dev)
+            self.instance_dict[vm_name] = Instance.factory(volume_name, vm_name, snapshot_dev)
             LOG.debug("origin is %s" % origin_path)
             self.instance_dict[vm_name].start_vm(origin_path)
             return self.instance_dict[vm_name].snapshot_path
@@ -58,5 +51,3 @@ class Compute():
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
-
-

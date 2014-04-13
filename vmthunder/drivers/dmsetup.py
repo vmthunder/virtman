@@ -5,9 +5,7 @@ from vmthunder.singleton import SingleTon
 
 @SingleTon
 class DmExecutor(dmsetup.Dmsetup):
-    def __init__(self):
-        super(DmExecutor, self).__init__()
-
+    pass
 dm = DmExecutor()
 prefix = dm.mapdev_prefix
 

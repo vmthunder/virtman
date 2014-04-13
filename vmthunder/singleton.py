@@ -8,4 +8,3 @@ def SingleTon(cls):
             instances[cls] = cls(*args, **kw)
         return instances[cls]
     return _singleton
-

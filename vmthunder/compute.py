@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from oslo.config import cfg
-
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.instance import Instance

@@ -2,6 +2,8 @@
 
 import sys
 
+from oslo.config import cfg
+
 from vmthunder import compute
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging

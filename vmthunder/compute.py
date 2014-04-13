@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from oslo.config import cfg
+
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.instance import Instance
@@ -8,14 +10,12 @@ from vmthunder.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)
 
-
 @SingleTon
 class Compute():
-    def __init__(self, fcg_name, ssds, blocksize, pattern):
+    def __init__(self):
         self.session_dict = {}
         self.instance_dict = {}
-        self.fcg_name = fcg_name
-        self.cache_group = fcg.create_group(ssds, blocksize, pattern)
+        self.cache_group = fcg.create_group()
         LOG.debug("creating a Compute_node")
 
     def destroy(self, vm_name):

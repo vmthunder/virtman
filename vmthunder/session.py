@@ -14,7 +14,7 @@ from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
 from vmthunder.drivers import connector
-from vmthunder.drivers import voltclient
+from vmthunder.drivers import volt
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -143,7 +143,7 @@ class Session():
         host_ip = self._get_ip_address('eth0')
         LOG.debug("logon to master server")
         #TODO: port?
-        info = voltclient.login(session_name=self.volume_name,
+        info = volt.login(session_name=self.volume_name,
                                 peer_id=self.peer_id,
                                 host=host_ip,
                                 port='3260',
@@ -200,7 +200,7 @@ class Session():
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')
         while (True):
-            self.peer_id, parent_list = voltclient.get(session_name=self.volume_name, host=host_ip)
+            self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")
             LOG.debug(parent_list)
             bo = True
@@ -241,7 +241,7 @@ class Session():
         LOG.debug("destroy a vm %s" % vm_name)
         self.vm.remove(vm_name)
         if len(self.vm) == 0:
-            voltclient.logout(self.volume_name, peer_id=self.peer_id)
+            volt.logout(self.volume_name, peer_id=self.peer_id)
             while self._is_connected():
                 time.sleep(1)
             self.Destroy_for_adjust_structure()

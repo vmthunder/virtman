@@ -18,7 +18,7 @@ CONF.register_opts(master_opts)
 @SingleTon
 class VoltClient(client.Client):
     def __init__(self):
-        client.Client.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_ip))
+        client.Client.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_port))
 
 
 volt_client = VoltClient()

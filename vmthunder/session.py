@@ -34,7 +34,6 @@ class Session():
         self.target_id = 0
         LOG.debug("create a session of volume_name %s" % self.volume_name)
 
-
     @staticmethod
     def _get_ip_address(ifname):
         LOG.debug("aquire ip address of %s" % ifname)

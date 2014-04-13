@@ -34,5 +34,5 @@ rm -rf /root/develop/VMThunder/build/ /root/develop/VMThunder/vmthunder.egg*
 cd /root/develop/VMThunder/tests
 cd ../
 python setup.py install
-cd bin
-python vmthunderd --debug
+cd vmthunder/cmd
+python vmthunderd.py --debug

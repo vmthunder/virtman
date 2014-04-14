@@ -48,6 +48,8 @@ class ComputeAPI(object):
         except:
             raise 'Failed to create %s' % vm_name
         else:
+            res_body = jsonutils.dumps(snapshot_path)
+            LOG.debug(res_body)
             return Response(body='', status=200)
 
     def destroy(self, req):

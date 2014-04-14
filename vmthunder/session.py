@@ -176,7 +176,7 @@ class Session():
         return cached_path
 
     def _delete_cache(self, multipath):
-        self.fcg.rm_disk(multipath)
+        fcg.rm_disk(multipath)
         self.has_cache = False
         LOG.debug("delete cache according to multipath %s " % multipath)
 
@@ -216,7 +216,7 @@ class Session():
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
-        parent_list = self._get_parent
+        parent_list = self._get_parent()
         new_connections = []
         if (len(parent_list) == 0):
             #TODO:hanging target from cinder

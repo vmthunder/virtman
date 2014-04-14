@@ -216,7 +216,7 @@ class Session():
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
         self.vm.append(vm_name)
-        parent_list = self._get_parent
+        parent_list = self._get_parent()
         new_connections = []
         if (len(parent_list) == 0):
             #TODO:hanging target from cinder

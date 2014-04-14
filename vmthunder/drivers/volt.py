@@ -25,7 +25,12 @@ volt_client = VoltClient()
 
 
 def login(session_name, peer_id, host, port, iqn, lun):
-    return volt_client.volumes.login(session_name, peer_id, host, port, iqn, lun)
+    return volt_client.volumes.login(session_name=session_name,
+                                     peer_id=peer_id,
+                                     host=host,
+                                     port=port,
+                                     iqn=iqn,
+                                     lun=lun)
 
 
 def get(session_name, host):
@@ -33,4 +38,4 @@ def get(session_name, host):
 
 
 def logout(session_name, peer_id):
-    return volt_client.volumes.logout(session_name, peer_id)
+    return volt_client.volumes.logout(session_name, peer_id=peer_id)

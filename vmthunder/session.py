@@ -176,7 +176,7 @@ class Session():
         return cached_path
 
     def _delete_cache(self, multipath):
-        self.fcg.rm_disk(multipath)
+        fcg.rm_disk(multipath)
         self.has_cache = False
         LOG.debug("delete cache according to multipath %s " % multipath)
 

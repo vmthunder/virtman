@@ -51,7 +51,7 @@ class ComputeAPI(object):
         else:
             res_body = jsonutils.dumps(snapshot_path)
             LOG.debug(res_body)
-            return Response(body=res_body, status=200)
+            return Response(body='', status=200)
 
     def destroy(self, req):
         instance = self._get_body(req)

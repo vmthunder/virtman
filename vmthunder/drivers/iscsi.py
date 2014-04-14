@@ -9,7 +9,7 @@ class TgtExecutor(TgtAdm):
     def __index__(self, root_helper='', volumes_dir= '/etc/tgt/conf.d'):
         TgtAdm.__init__(self, root_helper, volumes_dir)
 
-tgt = TgtExecutor()
+tgt = TgtExecutor('', '/etc/tgt/conf.d')
 
 
 def create_iscsi_target(iqn, path):

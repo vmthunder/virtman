@@ -1,10 +1,15 @@
 #!/usr/bin/env python
+import threading
+import thread
+import time
 
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.instance import Instance
 from vmthunder.singleton import SingleTon
 from vmthunder.openstack.common import log as logging
+from vmthunder.drivers import volt
+
 
 LOG = logging.getLogger(__name__)
 
@@ -15,6 +20,16 @@ class Compute():
         self.instance_dict = {}
         self.cache_group = fcg.create_group()
         LOG.debug("creating a Compute_node")
+        
+
+    def heartbeat(self):
+        info = volt.heartbeat()
+        for node in info:
+            for each_key in self.instance_dict:
+                if self.session_dict[each_key].peer_id == node['peer_id']:
+                    self.session_dict[each_key].adjust_for_heartbeat
+                    break
+    
 
     def destroy(self, vm_name):
         if self.instance_dict.has_key(vm_name):
@@ -51,3 +66,4 @@ class Compute():
         if self.session_dict.has_key(volume_name):
             session = self.session_dict[volume_name]
             session.adjust_structure(delete_connections, add_connections)
+

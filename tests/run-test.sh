@@ -5,7 +5,7 @@ tgtadm --lld iscsi --mode target --op delete --tid 3
 tgtadm --lld iscsi --mode target --op delete --tid 2
 dmsetup remove cached_dm-6
 dmsetup remove cached_dm-7
-dmsetup remove cached_dm-8
+dmsetup remove cached_dm-3
 dmsetup remove cache_fcg
 dmsetup remove ssd_fcg
 dmsetup remove fcg

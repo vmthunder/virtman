@@ -81,10 +81,12 @@ class Session():
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
+
         if (len(tmp) == 0):
             return False
         return True
-
+    def _judge_target_exist(self, iqn):
+        return iscsi.exist(iqn)
 
     def change_connection_mode(self, connection):
         LOG.debug("old connection is :")
@@ -233,7 +235,8 @@ class Session():
             cached_path = self._create_cache(multi_path)
             connection = connections[0]
             iqn = connection['target_iqn']
-            self._create_target(iqn, cached_path)
+            if self._judge_target_exist(iqn) is False:
+                self._create_target(iqn, cached_path)
             self._create_origin(cached_path)
         return self._origin_path()
 
@@ -242,7 +245,7 @@ class Session():
         self.vm.remove(vm_name)
         if len(self.vm) == 0:
             volt.logout(self.volume_name, peer_id=self.peer_id)
-            while self._is_connected():
+            while (self.has_target and self._is_connected()):
                 time.sleep(1)
             self.Destroy_for_adjust_structure()
         return self.volume_name
@@ -287,3 +290,20 @@ class Session():
         for connection in delete_connections:
             self._logout_target(connection)
         self.Destroy_for_adjust_structure()
+
+    def adjust_for_heartbeat(self, connections):
+        LOG.debug('adjust_for_heartbeat according connecctions:')
+        LOG.debug(connections)
+
+        for connection in connections:
+            if self._connection_exits(connection) is False:
+                self._login_target([connection])
+
+        self._add_path(connections)
+
+        for connection in self.connections:
+            if connection not in connections:
+                self._logout_target(connection)
+
+        self.connections = connections
+

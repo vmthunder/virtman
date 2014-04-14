@@ -34,7 +34,7 @@ def login(session_name, peer_id, host, port, iqn, lun):
 
 
 def get(session_name, host):
-    return volt_client.volumes.get(session_name, host)
+    return volt_client.volumes.get(session_name=session_name, host=host)
 
 
 def logout(session_name, peer_id):

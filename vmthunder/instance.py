@@ -49,14 +49,14 @@ class Instance():
         return 'snapshot_' + self.vm_name
 
     def link_snapshot(self):
-        #TODO:!!!
+        #TODO: 0 is a problem!!!
         root = self.session.root[0]
         target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
         if not os.path.exists(target_dev):
-            os.link(self.snapshot_path, target_dev)
+            os.symlink(self.snapshot_path, target_dev)
 
     def unlink_snapshot(self):
-        #TODO:!!!
+        #TODO: 0 is a problem!!!
         root = self.session.root[0]
         target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
         if os.path.exists(target_dev):

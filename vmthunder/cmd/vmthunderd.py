@@ -13,7 +13,7 @@ from vmthunder.openstack.common import log as logging
 #TODO: Auto determine host ip if not filled in conf file
 host_opts = [
     cfg.StrOpt('host_ip',
-               default='10.107.19.1',
+               default='10.107.14.170',
                help='localhost ip provide VMThunder service'),
     cfg.StrOpt('host_port',
                default='8001',

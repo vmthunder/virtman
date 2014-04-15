@@ -18,13 +18,17 @@ CONF.register_opts(instance_opts)
 
 LOG = logging.getLogger(__name__)
 
+iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
+
 
 class Instance():
-    def __init__(self, volume_name, vm_name, snapshot_dev):
+    def __init__(self, vm_name, session, snapshot_dev):
         self.vm_name = vm_name
         self.snapshot_dev = snapshot_dev
-        self.volume_name = volume_name
+        self.session = session
+        self.volume_name = session.volume_name
         self.snapshot_path = ''
+        self.has_link = False
 
         LOG.debug("creating a instance of name %s " % self.vm_name)
 
@@ -43,7 +47,19 @@ class Instance():
 
     def _snapshot_name(self):
         return 'snapshot_' + self.vm_name
-    
+
+    def link_snapshot(self):
+        root = self.session.root
+        target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
+        if not os.path.exists(target_dev):
+            os.link(self.snapshot_path, target_dev)
+
+    def unlink_snapshot(self):
+        root = self.session.root
+        target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
+        if os.path.exists(target_dev):
+            os.unlink(target_dev)
+
     def connect_snapshot(self, connection):
         """Connect snapshot volume in cinder server
         """

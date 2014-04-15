@@ -30,6 +30,7 @@ class Session():
         self.has_cache = False
         self.has_origin = False
         self.has_target = False
+        self.is_login = False
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
@@ -37,7 +38,7 @@ class Session():
 
     @staticmethod
     def _get_ip_address(ifname):
-        LOG.debug("aquire ip address of %s" % ifname)
+        LOG.debug("acquire ip address of %s" % ifname)
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(
             s.fileno(),
@@ -79,13 +80,14 @@ class Session():
 
     def _is_connected(self):
         """This method is to judge whether a target is hanging by other VMs"""
+        #TODO: try to call brick.iscsi
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
-
-        if (len(tmp) == 0):
+        if len(tmp) == 0:
             return False
         return True
+
     def _judge_target_exist(self, iqn):
         return iscsi.exist(iqn)
 
@@ -110,7 +112,7 @@ class Session():
         """
         connected_paths = []
         for connection in connections:
-            if (self._connection_exits(connection) is False):
+            if self._connection_exits(connection) is False:
                 LOG.debug("iscsi login target according the connection :")
                 LOG.debug(connection)
                 device_info = connector.connect_volume(connection)
@@ -129,13 +131,8 @@ class Session():
             LOG.debug("iscsi logout target according the connection :")
             LOG.debug(connection)
             self._delete_target_path_dict(connection)
-            if (self._connection_exits(connection)):
+            if self._connection_exits(connection):
                 self.connections.remove(connection)
-
-    def connect_image(self, connection):
-        """Connect image volume_name in cinder server
-        """
-        return NotImplementedError()
 
     def _create_target(self, iqn, path):
         self.target_id = iscsi.create_iscsi_target(iqn, path)
@@ -152,6 +149,7 @@ class Session():
                                 port='3260',
                                 iqn=iqn,
                                 lun='1')
+        self.is_login = True
 
     def _delete_target(self):
         iscsi.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
@@ -202,10 +200,11 @@ class Session():
 
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')
-        while (True):
+        while True:
             self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")
             LOG.debug(parent_list)
+            #TODO: Wait for parents are ready
             bo = True
             for parent in parent_list:
                 if parent.status == "pending":
@@ -215,19 +214,18 @@ class Session():
                 return parent_list
             time.sleep(1)
 
-    def deploy_image(self, vm_name, connections):
+    def deploy_image(self, connections):
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
         self.root = connections
-        self.vm.append(vm_name)
         parent_list = self._get_parent()
         new_connections = []
         if len(parent_list) == 0:
             #TODO:hanging target from cinder
             new_connections = connections
         else:
-            for son in parent_list:
-                new_connections.append(self.change_connection_mode(son))
+            for parent in parent_list:
+                new_connections.append(self.change_connection_mode(parent))
 
         connected_path = self._login_target(new_connections)
         if self.has_multipath:
@@ -242,15 +240,16 @@ class Session():
             self._create_origin(cached_path)
         return self._origin_path()
 
-    def destroy(self, vm_name):
-        LOG.debug("destroy a vm %s" % vm_name)
-        self.vm.remove(vm_name)
+    def destroy(self):
+        LOG.debug("destroy session")
         if len(self.vm) == 0:
-            volt.logout(self.volume_name, peer_id=self.peer_id)
-            while self.has_target and self._is_connected():
-                time.sleep(1)
+            if self.is_login is True:
+                volt.logout(self.volume_name, peer_id=self.peer_id)
+                self.is_login = False
+            if self.has_target and self._is_connected():
+                return False
             self.destroy_for_adjust_structure()
-        return self.volume_name
+        return True
 
     def destroy_for_adjust_structure(self):
         multipath = self._multipath()
@@ -311,6 +310,22 @@ class Session():
         for connection in self.connections:
             if connection not in connections:
                 self._logout_target(connection)
-
         self.connections = connections
 
+    def has_vm(self):
+        if len(self.vm) > 0:
+            return True
+        else:
+            return False
+
+    def add_vm(self, vm_name):
+        if vm_name not in self.vm:
+            self.vm.append(vm_name)
+        else:
+            LOG.error("Add vm failed, VM %s existed" % vm_name)
+
+    def rm_vm(self, vm_name):
+        try:
+            self.vm.remove(vm_name)
+        except ValueError:
+            LOG.error("remove vm failed. VM %s does not existed" % vm_name)

@@ -23,19 +23,21 @@ class Compute():
         LOG.debug("creating a Compute_node")
 
     def heartbeat(self):
-        info = volt.heartbeat()
         to_delete_sessions = []
         for each_key in self.sessions:
             if not self.sessions[each_key].has_vm():
                 if self.sessions[each_key].destroy():
                     to_delete_sessions.append(each_key)
-            else:
-                for session in info:
-                    if self.sessions[each_key].peer_id == session['peer_id']:
-                        self.sessions[each_key].adjust_for_heartbeat(session['parents'])
-                        break
+
         for key in to_delete_sessions:
             del self.sessions[key]
+
+        info = volt.heartbeat()
+        for each_key in self.sessions:
+            for session in info:
+                if self.sessions[each_key].peer_id == session['peer_id']:
+                    self.sessions[each_key].adjust_for_heartbeat(session['parents'])
+                    break
 
     def destroy(self, vm_name):
         if self.instances.has_key(vm_name):

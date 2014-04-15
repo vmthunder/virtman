@@ -32,7 +32,7 @@ def start():
         LOG = logging.getLogger(__name__)
         LOG.debug("At %s heartbeat once" % time.asctime())
         cn.heartbeat()
-        time.sleep(CONF.heartbeat_interval)
+        time.sleep(int(CONF.heartbeat_interval, 10))
         clock()
     
     thread.start_new_thread(clock, ())

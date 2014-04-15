@@ -23,6 +23,7 @@ LOG = logging.getLogger(__name__)
 class Session():
     def __init__(self, volume_name):
         self.volume_name = volume_name
+        self.root = None
         self.connections = []
         self.target_path_dict = {}
         self.has_multipath = False
@@ -81,10 +82,12 @@ class Session():
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
+
         if (len(tmp) == 0):
             return False
         return True
-
+    def _judge_target_exist(self, iqn):
+        return iscsi.exist(iqn)
 
     def change_connection_mode(self, connection):
         LOG.debug("old connection is :")
@@ -142,7 +145,7 @@ class Session():
         #TODO: eth0?
         host_ip = self._get_ip_address('eth0')
         LOG.debug("logon to master server")
-        #TODO: port?
+        #TODO: port? lun?
         info = volt.login(session_name=self.volume_name,
                                 peer_id=self.peer_id,
                                 host=host_ip,
@@ -204,8 +207,8 @@ class Session():
             LOG.debug("in get_parent function to get parent_list :")
             LOG.debug(parent_list)
             bo = True
-            for son in parent_list:
-                if son.status == "pending":
+            for parent in parent_list:
+                if parent.status == "pending":
                     bo = False
                     break
             if bo:
@@ -215,10 +218,11 @@ class Session():
     def deploy_image(self, vm_name, connections):
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
+        self.root = connections
         self.vm.append(vm_name)
         parent_list = self._get_parent()
         new_connections = []
-        if (len(parent_list) == 0):
+        if len(parent_list) == 0:
             #TODO:hanging target from cinder
             new_connections = connections
         else:
@@ -233,7 +237,8 @@ class Session():
             cached_path = self._create_cache(multi_path)
             connection = connections[0]
             iqn = connection['target_iqn']
-            self._create_target(iqn, cached_path)
+            if self._judge_target_exist(iqn) is False:
+                self._create_target(iqn, cached_path)
             self._create_origin(cached_path)
         return self._origin_path()
 
@@ -242,34 +247,35 @@ class Session():
         self.vm.remove(vm_name)
         if len(self.vm) == 0:
             volt.logout(self.volume_name, peer_id=self.peer_id)
-            while self._is_connected():
+            while self.has_target and self._is_connected():
                 time.sleep(1)
-            self.Destroy_for_adjust_structure()
+            self.destroy_for_adjust_structure()
         return self.volume_name
 
-    def Destroy_for_adjust_structure(self):
+    def destroy_for_adjust_structure(self):
         multipath = self._multipath()
-        if (len(self.vm) == 0):
+        if len(self.vm) == 0:
             self._delete_origin()
-        if (self.has_target):
+        if self.has_target:
             self._delete_target()
         time.sleep(1)
-        if (self.has_origin is False and self.has_target is False):
+        if self.has_origin is False and self.has_target is False:
             self._delete_cache(multipath)
-        if (self.has_cache is False):
+        if self.has_cache is False:
             self._delete_multipath()
         for connection in self.connections:
             self._logout_target(connection)
 
-
-    def _add_path(self):
-        if len(self.connections) == 0:
+    def _add_path(self, connections=[]):
+        if not connections:
+            connections = self.connections
+        if len(connections) == 0:
             #TODO:hanging target from cinder
             return
         multipath_name = self._multipath_name()
         key = self._connection_to_string(self.connections[0])
         size = utils.get_dev_sector_count(self.target_path_dict[key])
-        multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(self.connections))
+        multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(connections))
         for connection in self.connections:
             temp = self._connection_to_string(connection)
             multipath_table += self.target_path_dict[temp] + ' 128 '
@@ -286,4 +292,25 @@ class Session():
         self._add_path()
         for connection in delete_connections:
             self._logout_target(connection)
-        self.Destroy_for_adjust_structure()
+        self.destroy_for_adjust_structure()
+
+    def adjust_for_heartbeat(self, connections):
+        LOG.debug('adjust_for_heartbeat according connecctions:')
+        LOG.debug(connections)
+
+        #If NO parent to connect, connect the root
+        if not connections:
+            connections = self.root
+
+        for connection in connections:
+            if self._connection_exits(connection) is False:
+                self._login_target([connection])
+
+        self._add_path(connections)
+
+        for connection in self.connections:
+            if connection not in connections:
+                self._logout_target(connection)
+
+        self.connections = connections
+

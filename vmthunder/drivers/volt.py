@@ -6,7 +6,7 @@ from vmthunder.singleton import SingleTon
 
 master_opts = [
     cfg.StrOpt('master_ip',
-               default='10.107.14.170',
+               default='10.107.19.1',
                help='Master\'s ip to provide Voltclient service'),
     cfg.StrOpt('master_port',
                default='7447',
@@ -39,3 +39,8 @@ def get(session_name, host):
 
 def logout(session_name, peer_id):
     return volt_client.volumes.logout(session_name, peer_id=peer_id)
+
+def heartbeat():
+    return volt_client.members.heartbeat()
+
+

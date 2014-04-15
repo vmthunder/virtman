@@ -24,16 +24,17 @@ class Compute():
 
     def heartbeat(self):
         info = volt.heartbeat()
-        to_delete_session = []
+        to_delete_sessions = []
         for each_key in self.sessions:
-            for session in info:
-                if self.sessions[each_key].peer_id == session['peer_id']:
-                    self.sessions[each_key].adjust_for_heartbeat(session['parents'])
-                    break
             if not self.sessions[each_key].has_vm():
                 if self.sessions[each_key].destroy():
-                    to_delete_session.append(each_key)
-        for key in to_delete_session:
+                    to_delete_sessions.append(each_key)
+            else:
+                for session in info:
+                    if self.sessions[each_key].peer_id == session['peer_id']:
+                        self.sessions[each_key].adjust_for_heartbeat(session['parents'])
+                        break
+        for key in to_delete_sessions:
             del self.sessions[key]
 
     def destroy(self, vm_name):

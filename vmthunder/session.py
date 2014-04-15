@@ -243,8 +243,9 @@ class Session():
     def destroy(self):
         LOG.debug("destroy session")
         if len(self.vm) == 0:
-            if self.is_login is not True:
+            if self.is_login is True:
                 volt.logout(self.volume_name, peer_id=self.peer_id)
+                self.is_login = False
             if self.has_target and self._is_connected():
                 return False
             self.destroy_for_adjust_structure()

@@ -40,6 +40,7 @@ def get(session_name, host):
 def logout(session_name, peer_id):
     return volt_client.volumes.logout(session_name, peer_id=peer_id)
 
+
 def heartbeat():
     return volt_client.members.heartbeat()
 

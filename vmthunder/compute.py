@@ -24,6 +24,7 @@ class Compute():
 
     def heartbeat(self):
         info = volt.heartbeat()
+        to_delete_session = []
         for each_key in self.sessions:
             for session in info:
                 if self.sessions[each_key].peer_id == session['peer_id']:
@@ -31,7 +32,9 @@ class Compute():
                     break
             if not self.sessions[each_key].has_vm():
                 if self.sessions[each_key].destroy():
-                    del self.sessions[each_key]
+                    to_delete_session.append(each_key)
+        for key in to_delete_session:
+            del self.sessions[key]
 
     def destroy(self, vm_name):
         if self.instances.has_key(vm_name):

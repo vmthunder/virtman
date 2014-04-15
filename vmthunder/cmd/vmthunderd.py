@@ -18,19 +18,21 @@ host_opts = [
     cfg.StrOpt('host_port',
                default='8001',
                help='localhost port to provide VMThunder service'),
+    cfg.StrOpt('heartbeat_interval',
+               default=20,
+               help='localhost heartbeat interval'),
 ]
 CONF = cfg.CONF
 CONF.register_opts(host_opts)
 
+
 def start():
     cn = compute.Compute()
     def clock():
-        fp = open('/root/pri.txt', 'a')
-        fp.write('-------come to clock------------\n')
-        print "-----------come to clock---------"
+        LOG = logging.getLogger(__name__)
+        LOG.debug("At %s heartbeat once" % time.asctime())
         cn.heartbeat()
-        fp.close()
-        time.sleep(20)
+        time.sleep(CONF.heartbeat_interval)
         clock()
     
     thread.start_new_thread(clock, ())

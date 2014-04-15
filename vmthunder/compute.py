@@ -24,10 +24,10 @@ class Compute():
 
     def heartbeat(self):
         info = volt.heartbeat()
-        for node in info:
+        for session in info:
             for each_key in self.instance_dict:
-                if self.session_dict[each_key].peer_id == node['peer_id']:
-                    self.session_dict[each_key].adjust_for_heartbeat
+                if self.session_dict[each_key].peer_id == session['peer_id']:
+                    self.session_dict[each_key].adjust_for_heartbeat(session['parents'])
                     break
     
 

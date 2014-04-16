@@ -22,9 +22,20 @@ iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
 
 
 class Instance():
-    def __init__(self, vm_name, session, snapshot_dev):
+    def __init__(self, vm_name, session, snapshot_connection):
         self.vm_name = vm_name
-        self.snapshot_dev = snapshot_dev
+        self.connection = snapshot_connection
+        snapshot_link = self.connection_dev(snapshot_connection)
+        if os.path.exists(snapshot_link):
+            self.snapshot_link = snapshot_link
+        else:
+            raise Exception("Could NOT find snapshot link file %s!" % snapshot_link)
+
+        snapshot_dev = os.path.realpath(self.snapshot_link)
+        if os.path.exists(snapshot_dev):
+            self.snapshot_dev = snapshot_dev
+        else:
+            raise Exception("Could NOT find snapshot device %s!" % snapshot_dev)
         self.session = session
         self.volume_name = session.volume_name
         self.snapshot_path = ''
@@ -33,13 +44,13 @@ class Instance():
         LOG.debug("creating a instance of name %s " % self.vm_name)
 
     @staticmethod
-    def factory(volume_name, vm_name, snapshot_dev):
+    def factory(volume_name, vm_name, snapshot_conn):
         from vmthunder.instancecommon import InstanceCommon
         from vmthunder.instancesnapcache import InstanceSnapCache
         if CONF.instance_type == 'common':
-            return InstanceCommon(volume_name, vm_name, snapshot_dev)
+            return InstanceCommon(volume_name, vm_name, snapshot_conn)
         elif CONF.instance_type == 'snapcache':
-            return InstanceSnapCache( volume_name, vm_name, snapshot_dev)
+            return InstanceSnapCache( volume_name, vm_name, snapshot_conn)
         else:
             msg = "Instance type %s not found" % CONF.instance_type
             LOG.error(msg)
@@ -48,17 +59,21 @@ class Instance():
     def _snapshot_name(self):
         return 'snapshot_' + self.vm_name
 
+    @staticmethod
+    def connection_dev(connection):
+        return iscsi_disk_format % (connection['target_portal'], connection['target_iqn'], connection['target_lun'])
+
     def link_snapshot(self):
-        #TODO: 0 is a problem!!!
-        root = self.session.root[0]
-        target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
+        #root = self.session.root[0]
+        #target_dev = self.connection_dev(root)
+        target_dev = self.snapshot_link
+        os.unlink(target_dev)
         if not os.path.exists(target_dev):
             os.symlink(self.snapshot_path, target_dev)
 
     def unlink_snapshot(self):
-        #TODO: 0 is a problem!!!
-        root = self.session.root[0]
-        target_dev = iscsi_disk_format % (root['target_portal'], root['target_iqn'], root['target_lun'])
+        #root = self.session.root[0]
+        target_dev = self.snapshot_link
         if os.path.exists(target_dev):
             os.unlink(target_dev)
 

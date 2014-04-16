@@ -62,14 +62,15 @@ class Compute():
 
         return build_list_object(self.instances)
 
-    def create(self, volume_name, vm_name, connections, snapshot_dev):
+    def create(self, volume_name, vm_name, image_connection, snapshot_connection):
+        #TODO: roll back if failed
         if vm_name not in self.instances.keys():
             LOG.debug("in compute to execute the method create")
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
-            origin_path = session.deploy_image(connections)
-            self.instances[vm_name] = Instance.factory(vm_name, session, snapshot_dev)
+            self.instances[vm_name] = Instance.factory(vm_name, session, snapshot_connection['data'])
+            origin_path = session.deploy_image(image_connection['data'])
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].start_vm(origin_path)
             return self.instances[vm_name].snapshot_path
@@ -78,4 +79,3 @@ class Compute():
         if volume_name in self.sessions.keys():
             session = self.sessions[volume_name]
             session.adjust_structure(delete_connections, add_connections)
-

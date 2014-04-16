@@ -28,8 +28,14 @@ dmsetup remove multipath_1
 iscsiadm -m node -T iqn.2010-10.org.openstack:1 -p 10.107.14.164 --logout
 iscsiadm -m node -T iqn.2010-10.org.openstack:1 -p 10.107.14.162 --logout
 iscsiadm -m node -T iqn.2010-10.org.openstack:1 -p 10.107.14.169 --logout
+
+rm -f /dev/disk/by-path/ip-10.100.9.8-iqn-hgiuhikhkj-snap1
+ln -s /dev/loop1 /dev/disk/by-path/ip-10.100.9.8-iqn-hgiuhikhkj-snap1
+
+
 rm -rf /usr/local/lib/python2.7/dist-packages/vmthunder*
 rm -rf /root/develop/VMThunder/build/ /root/develop/VMThunder/vmthunder.egg*
+
 
 cd /root/develop/VMThunder/tests
 cd ../

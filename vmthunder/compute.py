@@ -33,6 +33,10 @@ class Compute():
             del self.sessions[key]
 
         info = volt.heartbeat()
+        print "======================================================================"
+        for se in info:
+            print se['parents']
+        print "======================================================================"
         for each_key in self.sessions:
             for session in info:
                 if self.sessions[each_key].peer_id == session['peer_id']:
@@ -58,14 +62,15 @@ class Compute():
 
         return build_list_object(self.instances)
 
-    def create(self, volume_name, vm_name, connections, snapshot_dev):
+    def create(self, volume_name, vm_name, image_connection, snapshot_link):
+        #TODO: roll back if failed
         if vm_name not in self.instances.keys():
             LOG.debug("in compute to execute the method create")
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
-            origin_path = session.deploy_image(connections)
-            self.instances[vm_name] = Instance.factory(vm_name, session, snapshot_dev)
+            self.instances[vm_name] = Instance.factory(vm_name, session, snapshot_link)
+            origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].start_vm(origin_path)
             return self.instances[vm_name].snapshot_path
@@ -74,4 +79,3 @@ class Compute():
         if volume_name in self.sessions.keys():
             session = self.sessions[volume_name]
             session.adjust_structure(delete_connections, add_connections)
-

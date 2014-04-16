@@ -272,10 +272,10 @@ class Session():
             #TODO:hanging target from cinder
             return
         multipath_name = self._multipath_name()
-        key = self._connection_to_string(self.connections[0])
+        key = self._connection_to_string(connections[0])
         size = utils.get_dev_sector_count(self.target_path_dict[key])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(connections))
-        for connection in self.connections:
+        for connection in connections:
             temp = self._connection_to_string(connection)
             multipath_table += self.target_path_dict[temp] + ' 128 '
         multipath_table += '\n'
@@ -298,19 +298,23 @@ class Session():
         LOG.debug(connections)
 
         #If NO parent to connect, connect the root
+        new_connections = []
         if not connections:
-            connections = self.root
+            new_connections = self.root
+        else:
+            for connection in connections:
+                new_connections.append(self.change_connection_mode(connection))
 
-        for connection in connections:
+        for connection in new_connections:
             if self._connection_exits(connection) is False:
                 self._login_target([connection])
 
-        self._add_path(connections)
+        self._add_path(new_connections)
 
         for connection in self.connections:
-            if connection not in connections:
+            if connection not in new_connections:
                 self._logout_target(connection)
-        self.connections = connections
+        self.connections = new_connections
 
     def has_vm(self):
         if len(self.vm) > 0:

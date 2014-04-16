@@ -33,6 +33,10 @@ class Compute():
             del self.sessions[key]
 
         info = volt.heartbeat()
+        print "======================================================================"
+        for se in info:
+            print se['parents']
+        print "======================================================================"
         for each_key in self.sessions:
             for session in info:
                 if self.sessions[each_key].peer_id == session['peer_id']:

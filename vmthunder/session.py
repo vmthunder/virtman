@@ -300,6 +300,10 @@ class Session():
         #If NO parent to connect, connect the root
         if not connections:
             connections = self.root
+        new_connection = []
+
+        for connection in connections:
+            new_connection.append(self.change_connection_mode(connection))
 
         for connection in connections:
             if self._connection_exits(connection) is False:

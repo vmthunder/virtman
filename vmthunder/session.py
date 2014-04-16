@@ -298,23 +298,23 @@ class Session():
         LOG.debug(connections)
 
         #If NO parent to connect, connect the root
+        new_connections = []
         if not connections:
-            connections = self.root
-        new_connection = []
+            new_connections = self.root
+        else:
+            for connection in connections:
+                new_connections.append(self.change_connection_mode(connection))
 
-        for connection in connections:
-            new_connection.append(self.change_connection_mode(connection))
-
-        for connection in connections:
+        for connection in new_connections:
             if self._connection_exits(connection) is False:
                 self._login_target([connection])
 
-        self._add_path(connections)
+        self._add_path(new_connections)
 
         for connection in self.connections:
-            if connection not in connections:
+            if connection not in new_connections:
                 self._logout_target(connection)
-        self.connections = connections
+        self.connections = new_connections
 
     def has_vm(self):
         if len(self.vm) > 0:

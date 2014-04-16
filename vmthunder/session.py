@@ -272,10 +272,10 @@ class Session():
             #TODO:hanging target from cinder
             return
         multipath_name = self._multipath_name()
-        key = self._connection_to_string(self.connections[0])
+        key = self._connection_to_string(connections[0])
         size = utils.get_dev_sector_count(self.target_path_dict[key])
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(connections))
-        for connection in self.connections:
+        for connection in connections:
             temp = self._connection_to_string(connection)
             multipath_table += self.target_path_dict[temp] + ' 128 '
         multipath_table += '\n'

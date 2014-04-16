@@ -22,17 +22,17 @@ iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
 
 
 class Instance():
-    def __init__(self, vm_name, session, snapshot_connection):
+    def __init__(self, vm_name, session, snapshot_link):
         self.vm_name = vm_name
-        self.connection = snapshot_connection
-        snapshot_link = self.connection_dev(snapshot_connection)
+        #self.connection = snapshot_connection
+        #snapshot_link = self.connection_dev(snapshot_connection)
         if os.path.exists(snapshot_link):
             self.snapshot_link = snapshot_link
         else:
             raise Exception("Could NOT find snapshot link file %s!" % snapshot_link)
 
         snapshot_dev = os.path.realpath(self.snapshot_link)
-        if os.path.exists(snapshot_dev):
+        if os.path.exists(snapshot_dev) or snapshot_dev == snapshot_link:
             self.snapshot_dev = snapshot_dev
         else:
             raise Exception("Could NOT find snapshot device %s!" % snapshot_dev)

@@ -1,4 +1,3 @@
-
 from webob.exc import HTTPBadRequest
 from webob.exc import HTTPForbidden
 from webob.exc import HTTPConflict
@@ -16,11 +15,13 @@ from vmthunder import compute
 
 LOG = logging.getLogger(__name__)
 
+
 class ComputeAPI(object):
     """
 
     """
     compute_instance = compute.Compute()
+
     def __init__(self):
         #self.policy = policy.Enforcer()
         self.pool = eventlet.GreenPool(size=1024)
@@ -42,9 +43,10 @@ class ComputeAPI(object):
         image_id = instance['image_id']
         vm_name = instance['vm_name']
         connections = instance['connections']
-        snapshot_dev = instance['snapshot_dev']
+        #TODO: snapshot_dev should be a link to snapshot
+        snapshot_link = instance['snapshot_dev']
         #try:
-        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_dev)
+        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_link)
         #except:
         #    raise 'Failed to create %s' % vm_name
         #else:

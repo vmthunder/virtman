@@ -26,7 +26,7 @@ class Instance():
     def __init__(self, vm_name, session, snapshot_connection):
         self.vm_name = vm_name
         self.connection = snapshot_connection
-        
+
         snapshot_info = connector.connect_volume(snapshot_connection)
         snapshot_link = snapshot_info['path']
         if os.path.exists(snapshot_link):

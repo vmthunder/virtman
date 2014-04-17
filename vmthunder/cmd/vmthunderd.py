@@ -18,7 +18,7 @@ host_opts = [
     cfg.StrOpt('host_port',
                default='8001',
                help='localhost port to provide VMThunder service'),
-    cfg.StrOpt('heartbeat_interval',
+    cfg.IntOpt('heartbeat_interval',
                default=20,
                help='localhost heartbeat interval'),
 ]

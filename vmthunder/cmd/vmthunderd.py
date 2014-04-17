@@ -36,7 +36,8 @@ def start():
         clock()
     
     thread.start_new_thread(clock, ())
-        
+
+    #TODO:!!!
     server = wsgi.Server('vmthunder-api', path='/root/develop/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()

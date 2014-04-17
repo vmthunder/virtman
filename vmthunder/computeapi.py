@@ -47,9 +47,9 @@ class ComputeAPI(object):
         vm_name = instance['vm_name']
         connections = instance['connections']
         #TODO: snapshot_dev should be a link to snapshot
-        snapshot_link = instance['snapshot_dev']
+        snapshot_connection = instance['snapshot_dev']
         #try:
-        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_link)
+        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_connection)
         #except:
         #    raise 'Failed to create %s' % vm_name
         #else:

@@ -37,12 +37,12 @@ class ComputeAPI(object):
         body = jsonutils.loads(req.GET.get('body'))
         return body
 
-    def create(self, req):
+    def create(self, req, **kwargs):
         #TODO：use policy.enforce
         #instance = self._get_body(req)
         LOG.debug("In computeapi create, req = ")
         LOG.debug(req)
-        instance = req['body']
+        instance = kwargs['body']
         image_id = instance['image_id']
         vm_name = instance['vm_name']
         connections = instance['connections']
@@ -57,8 +57,9 @@ class ComputeAPI(object):
         LOG.debug(res_body)
         return snapshot_path
 
-    def destroy(self, req):
-        instance = self._get_body(req)
+    def destroy(self, req, **kwargs):
+        #instance = self._get_body(req)
+        instance = kwargs['body']
         vm_name = instance['vm_name']
         #try:
         self.compute_instance.destroy(vm_name)

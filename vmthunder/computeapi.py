@@ -39,7 +39,10 @@ class ComputeAPI(object):
 
     def create(self, req):
         #TODO：use policy.enforce
-        instance = self._get_body(req)
+        #instance = self._get_body(req)
+        LOG.debug("In computeapi create, req = ")
+        LOG.debug(req)
+        instance = req['body']
         image_id = instance['image_id']
         vm_name = instance['vm_name']
         connections = instance['connections']

@@ -18,7 +18,7 @@ host_opts = [
     cfg.StrOpt('host_port',
                default='8001',
                help='localhost port to provide VMThunder service'),
-    cfg.StrOpt('heartbeat_interval',
+    cfg.IntOpt('heartbeat_interval',
                default=20,
                help='localhost heartbeat interval'),
 ]
@@ -36,7 +36,8 @@ def start():
         clock()
     
     thread.start_new_thread(clock, ())
-        
+
+    #TODO:!!!
     server = wsgi.Server('vmthunder-api', path='/root/develop/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()

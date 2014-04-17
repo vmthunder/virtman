@@ -7,6 +7,7 @@ from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import dmsetup
+from vmthunder.drivers import connector
 
 instance_opts = [
     cfg.StrOpt('instance_type',
@@ -22,10 +23,12 @@ iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
 
 
 class Instance():
-    def __init__(self, vm_name, session, snapshot_link):
+    def __init__(self, vm_name, session, snapshot_connection):
         self.vm_name = vm_name
-        #self.connection = snapshot_connection
-        #snapshot_link = self.connection_dev(snapshot_connection)
+        self.connection = snapshot_connection
+
+        snapshot_info = connector.connect_volume(snapshot_connection)
+        snapshot_link = snapshot_info['path']
         if os.path.exists(snapshot_link):
             self.snapshot_link = snapshot_link
         else:

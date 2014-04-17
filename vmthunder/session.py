@@ -25,6 +25,7 @@ class Session():
         self.volume_name = volume_name
         self.root = None
         self.connections = []
+        self.origin = ''
         self.target_path_dict = {}
         self.has_multipath = False
         self.has_cache = False
@@ -197,6 +198,7 @@ class Session():
         dmsetup.remove_table(origin_name)
         LOG.debug("remove origin %s " % origin_name)
         self.has_origin = False
+        self.origin = ''
 
     def _get_parent(self):
         host_ip = self._get_ip_address('eth0')
@@ -217,6 +219,12 @@ class Session():
     def deploy_image(self, connections):
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
+
+        if self.is_login:
+            return self.origin
+
+        if isinstance(connections, dict):
+            connections = [connections]
         self.root = connections
         parent_list = self._get_parent()
         new_connections = []
@@ -238,7 +246,8 @@ class Session():
             if self._judge_target_exist(iqn) is False:
                 self._create_target(iqn, cached_path)
             self._create_origin(cached_path)
-        return self._origin_path()
+        self.origin = self._origin_path()
+        return self.origin
 
     def destroy(self):
         LOG.debug("destroy session")

@@ -37,16 +37,19 @@ class ComputeAPI(object):
         body = jsonutils.loads(req.GET.get('body'))
         return body
 
-    def create(self, req):
+    def create(self, req, **kwargs):
         #TODO：use policy.enforce
-        instance = self._get_body(req)
+        #instance = self._get_body(req)
+        LOG.debug("In computeapi create, req = ")
+        LOG.debug(req)
+        instance = kwargs['body']
         image_id = instance['image_id']
         vm_name = instance['vm_name']
         connections = instance['connections']
         #TODO: snapshot_dev should be a link to snapshot
-        snapshot_link = instance['snapshot_dev']
+        snapshot_connection = instance['snapshot_dev']
         #try:
-        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_link)
+        snapshot_path = self.compute_instance.create(image_id, vm_name, connections, snapshot_connection)
         #except:
         #    raise 'Failed to create %s' % vm_name
         #else:
@@ -54,8 +57,9 @@ class ComputeAPI(object):
         LOG.debug(res_body)
         return snapshot_path
 
-    def destroy(self, req):
-        instance = self._get_body(req)
+    def destroy(self, req, **kwargs):
+        #instance = self._get_body(req)
+        instance = kwargs['body']
         vm_name = instance['vm_name']
         #try:
         self.compute_instance.destroy(vm_name)

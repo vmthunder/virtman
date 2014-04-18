@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import threading
-import thread
-import time
 
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
@@ -13,6 +11,7 @@ from vmthunder.drivers import volt
 
 LOG = logging.getLogger(__name__)
 
+lock = threading.Lock()
 
 @SingleTon
 class Compute():
@@ -23,6 +22,7 @@ class Compute():
         LOG.debug("creating a Compute_node")
 
     def heartbeat(self):
+        lock.acquire()
         to_delete_sessions = []
         for each_key in self.sessions:
             if not self.sessions[each_key].has_vm():
@@ -42,29 +42,34 @@ class Compute():
                 if self.sessions[each_key].peer_id == session['peer_id']:
                     self.sessions[each_key].adjust_for_heartbeat(session['parents'])
                     break
+        lock.release()
 
     def destroy(self, vm_name):
+        lock.acquire()
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
             #session = self.sessions[instance.volume_name]
             instance.del_vm()
             #session.destroy(vm_name)
             del self.instances[vm_name]
+        lock.release()
 
     def list(self):
         def build_list_object(instances):
+            lock.acquire()
             instance_list = []
             for instance in instances.keys():
                 instance_list.append({
                     'vm_name': instances[instance].vm_name,
                 })
+            lock.release()
             return dict(instances=instance_list)
-
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed
         if vm_name not in self.instances.keys():
+            lock.acquire()
             LOG.debug("in compute to execute the method create")
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
@@ -73,6 +78,7 @@ class Compute():
             origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].start_vm(origin_path)
+            lock.release()
             return self.instances[vm_name].snapshot_path
 
     def adjust_structure(self, volume_name, delete_connections, add_connections):

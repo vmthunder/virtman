@@ -22,6 +22,7 @@ class Compute():
         LOG.debug("creating a Compute_node")
 
     def heartbeat(self):
+        LOG.debug("VMThunder: ====================heartbeat start======================")
         lock.acquire()
         to_delete_sessions = []
         for each_key in self.sessions:
@@ -33,18 +34,17 @@ class Compute():
             del self.sessions[key]
 
         info = volt.heartbeat()
-        print "======================================================================"
-        for se in info:
-            print se['parents']
-        print "======================================================================"
+
         for each_key in self.sessions:
             for session in info:
                 if self.sessions[each_key].peer_id == session['peer_id']:
                     self.sessions[each_key].adjust_for_heartbeat(session['parents'])
                     break
         lock.release()
+        LOG.debug("VMThunder: ====================heartbeat end======================")
 
     def destroy(self, vm_name):
+        LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         lock.acquire()
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
@@ -53,6 +53,7 @@ class Compute():
             #session.destroy(vm_name)
             del self.instances[vm_name]
         lock.release()
+        LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % (vm_name))
 
     def list(self):
         def build_list_object(instances):
@@ -69,8 +70,8 @@ class Compute():
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed
         if vm_name not in self.instances.keys():
+            LOG.debug("VMThunder: create vm started, volume_name = %s, vm_name = %s" % (volume_name, vm_name))
             lock.acquire()
-            LOG.debug("in compute to execute the method create")
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
@@ -79,7 +80,8 @@ class Compute():
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].start_vm(origin_path)
             lock.release()
-            return self.instances[vm_name].snapshot_path
+            LOG.debug("VMThunder: create vm completed, volume_name = %s, vm_name = %s, snapshot = %s" % (volume_name, vm_name, self.instances[vm_name].snapshot_path))
+            return self.instances[vm_name].snapshot_link
 
     def adjust_structure(self, volume_name, delete_connections, add_connections):
         if volume_name in self.sessions.keys():

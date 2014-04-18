@@ -26,6 +26,8 @@ class Compute():
         LOG.debug("VMThunder: ====================heartbeat start======================")
         to_delete_sessions = []
         for each_key in self.sessions:
+            LOG.debug("VMThunder: session_name = %s, instances in session = " % self.sessions[each_key].volume_name)
+            LOG.debug(self.sessions[each_key].vm)
             if not self.sessions[each_key].has_vm():
                 if self.sessions[each_key].destroy():
                     to_delete_sessions.append(each_key)

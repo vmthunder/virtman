@@ -32,6 +32,7 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.is_login = False
+        #TODO: all virtual machines called instance
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
@@ -81,7 +82,7 @@ class Session():
 
     def _is_connected(self):
         """This method is to judge whether a target is hanging by other VMs"""
-        #TODO: try to call brick.iscsi
+        #TODO: try to call brick.iscsi, at least move this tgtadm call to driver.iscsi
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()

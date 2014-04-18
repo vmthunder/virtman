@@ -140,8 +140,8 @@ class Session():
         LOG.debug("create a target and it's id is %s" % self.target_id)
         self.has_target = True
         #don't dynamic gain host_id and host_port
-        #TODO: eth0?
-        host_ip = self._get_ip_address('eth0')
+        #TODO: eth0? br100?
+        host_ip = self._get_ip_address('br100')
         LOG.debug("logon to master server")
         #TODO: port? lun?
         info = volt.login(session_name=self.volume_name,
@@ -201,7 +201,8 @@ class Session():
         self.origin = ''
 
     def _get_parent(self):
-        host_ip = self._get_ip_address('eth0')
+        #TODO: !!!
+        host_ip = self._get_ip_address('br100')
         while True:
             self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")

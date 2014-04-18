@@ -221,6 +221,8 @@ class Session():
     def deploy_image(self, connections):
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
+        LOG.debug("VMThunder: in deploy_image, volume name = %s, is_login = " % self.volume_name)
+        LOG.debug(self.is_login)
 
         if self.is_login:
             return self.origin

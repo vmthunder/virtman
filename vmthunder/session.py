@@ -32,6 +32,7 @@ class Session():
         self.has_origin = False
         self.has_target = False
         self.is_login = False
+        #TODO: all virtual machines called instance
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
@@ -81,7 +82,7 @@ class Session():
 
     def _is_connected(self):
         """This method is to judge whether a target is hanging by other VMs"""
-        #TODO: try to call brick.iscsi
+        #TODO: try to call brick.iscsi, at least move this tgtadm call to driver.iscsi
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
         Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
         tmp = os.popen(Str).readlines()
@@ -140,8 +141,8 @@ class Session():
         LOG.debug("create a target and it's id is %s" % self.target_id)
         self.has_target = True
         #don't dynamic gain host_id and host_port
-        #TODO: eth0?
-        host_ip = self._get_ip_address('eth0')
+        #TODO: eth0? br100?
+        host_ip = self._get_ip_address('br100')
         LOG.debug("logon to master server")
         #TODO: port? lun?
         info = volt.login(session_name=self.volume_name,
@@ -201,7 +202,8 @@ class Session():
         self.origin = ''
 
     def _get_parent(self):
-        host_ip = self._get_ip_address('eth0')
+        #TODO: !!!
+        host_ip = self._get_ip_address('br100')
         while True:
             self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")
@@ -219,6 +221,8 @@ class Session():
     def deploy_image(self, connections):
         LOG.debug("come to deploy_image")
         #TODO: Roll back if failed !
+        LOG.debug("VMThunder: in deploy_image, volume name = %s, is_login = " % self.volume_name)
+        LOG.debug(self.is_login)
 
         if self.is_login:
             return self.origin

@@ -6,7 +6,7 @@ from vmthunder.singleton import SingleTon
 
 master_opts = [
     cfg.StrOpt('master_ip',
-               default='10.107.14.170',
+               default='10.107.11.120',
                help='Master\'s ip to provide Voltclient service'),
     cfg.StrOpt('master_port',
                default='7447',

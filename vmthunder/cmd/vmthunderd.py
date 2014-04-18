@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-import thread
+import threading
 import time
 
 from oslo.config import cfg
@@ -28,22 +28,29 @@ CONF.register_opts(host_opts)
 
 def start():
     cn = compute.Compute()
-    def clock():
-        LOG = logging.getLogger(__name__)
-        LOG.debug("At %s heartbeat once" % time.asctime())
-        cn.heartbeat()
-        time.sleep(int(CONF.heartbeat_interval, 10))
-        clock()
-    
-    thread.start_new_thread(clock, ())
+
+    class HeartBeater(threading.Thread):
+        def __init__(self, thread_name):
+            super(HeartBeater, self).__init__(name = thread_name)
+
+        def run(self):
+            def clock():
+                LOG = logging.getLogger(__name__)
+                LOG.debug("At %s heartbeat once" % time.asctime())
+                cn.heartbeat()
+                time.sleep(CONF.heartbeat_interval)
+                clock()
+            clock()
+    heartbeat = HeartBeater('heartbeat')
+    heartbeat.start()
 
     #TODO:!!!
-    server = wsgi.Server('vmthunder-api', path='/root/develop/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
+    server = wsgi.Server('vmthunder-api', path='/root/packages/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
     server.start()
     server.wait()
 
 if __name__ == '__main__':
     CONF(sys.argv[1:], project='vmthunder',
-         default_config_files = ['/root/develop/VMThunder/etc/vmthunder/api-paste.ini'])
+         default_config_files = ['/root/packages/VMThunder/etc/vmthunder/vmthunder.conf'])
     logging.setup('vmthunder')
     start()

@@ -22,8 +22,8 @@ class Compute():
         LOG.debug("creating a Compute_node")
 
     def heartbeat(self):
-        LOG.debug("VMThunder: ====================heartbeat start======================")
         lock.acquire()
+        LOG.debug("VMThunder: ====================heartbeat start======================")
         to_delete_sessions = []
         for each_key in self.sessions:
             if not self.sessions[each_key].has_vm():
@@ -44,8 +44,8 @@ class Compute():
         LOG.debug("VMThunder: ====================heartbeat end======================")
 
     def destroy(self, vm_name):
-        LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         lock.acquire()
+        LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
             #session = self.sessions[instance.volume_name]
@@ -70,8 +70,8 @@ class Compute():
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed
         if vm_name not in self.instances.keys():
-            LOG.debug("VMThunder: create vm started, volume_name = %s, vm_name = %s" % (volume_name, vm_name))
             lock.acquire()
+            LOG.debug("VMThunder: create vm started, volume_name = %s, vm_name = %s" % (volume_name, vm_name))
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]

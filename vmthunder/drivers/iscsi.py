@@ -19,5 +19,6 @@ def create_iscsi_target(iqn, path):
 def remove_iscsi_target(tid, lun, vol_id, vol_name, **kwargs):
     return tgt.remove_iscsi_target(tid, lun, vol_id, vol_name, **kwargs)
 
-def exist (iqn):
+
+def exist(iqn):
     return tgt.exist(iqn)

@@ -10,6 +10,8 @@ from oslo.config import cfg
 
 from pydm.common import utils
 from vmthunder.openstack.common import log as logging
+from vmthunder.path import connection_to_str
+from vmthunder.path import Path
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
@@ -20,10 +22,11 @@ CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
 
-class Session():
+class Session(object):
     def __init__(self, volume_name):
         self.volume_name = volume_name
         self.root = None
+        self.paths = {}
         self.connections = []
         self.origin = ''
         self.target_path_dict = {}
@@ -36,7 +39,67 @@ class Session():
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
-        LOG.debug("create a session of volume_name %s" % self.volume_name)
+        LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
+
+    @property
+    def origin_name(self):
+        return 'origin_' + self.volume_name
+
+    @property
+    def origin_path(self):
+        return dmsetup.prefix + self.origin_name
+
+    @property
+    def multipath_name(self):
+        return 'multipath_' + self.volume_name
+
+    @property
+    def multipath_path(self):
+        return dmsetup.prefix + self.multipath_name
+
+    def deploy_image(self, image_connection):
+        #TODO: Roll back if failed !
+        """
+        deploy image in compute node, return the origin path to create snapshot
+        :param image_connection: the connection towards to the base image
+        :return: origin path to create snapshot
+        """
+        LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, is_login = %s" %
+                  (self.volume_name, self.has_origin, self.is_login))
+
+        if self.has_origin:
+            return self.origin_path
+
+        image_path = Path(self.reform_connection(image_connection))
+        self.root = image_path
+
+        #TODO: continue here!
+        parent_list = self._get_parent()
+        new_connections = []
+        if len(parent_list) == 0:
+            #TODO:hanging target from cinder
+            new_connections = [self.root]
+        else:
+            for parent in parent_list:
+                parent_connection = self.reform_connection(parent)
+                parent_str = connection_to_str(parent_connection)
+                #TODO: rebuild session's paths!
+                if parent_str not in self.paths.keys():
+                    self.paths[parent_str] = Path(parent_connection) #TODO: potential bug here
+
+        connected_path = self._login_target(new_connections)
+        if self.has_multipath:
+            self._add_path()
+        else:
+            multi_path = self._create_multipath(connected_path)
+            cached_path = self._create_cache(multi_path)
+            connection = image_connection[0]
+            iqn = connection['target_iqn']
+            if self._judge_target_exist(iqn) is False:
+                self._create_target(iqn, cached_path)
+            self._create_origin(cached_path)
+        self.origin = self.origin_path
+        return self.origin
 
     @staticmethod
     def _get_ip_address(ifname):
@@ -59,21 +122,6 @@ class Session():
         if key in self.target_path_dict.keys():
             del self.target_path_dict[key]
 
-    def _origin_name(self):
-        return 'origin_' + self.volume_name
-
-    def _multipath_name(self):
-        return 'multipath_' + self.volume_name
-
-    def _multipath(self):
-        multipath_name = self._multipath_name()
-        multipath = dmsetup.prefix + multipath_name
-        return multipath
-
-    def _origin_path(self):
-        origin_name = self._origin_name()
-        return dmsetup.prefix + origin_name
-
     def _connection_exits(self, connection):
         if connection in self.connections:
             return True
@@ -84,8 +132,8 @@ class Session():
         """This method is to judge whether a target is hanging by other VMs"""
         #TODO: try to call brick.iscsi, at least move this tgtadm call to driver.iscsi
         LOG.debug("execute a command of tgtadm to judge a target_id %s whether is hanging" % self.target_id)
-        Str = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
-        tmp = os.popen(Str).readlines()
+        cmd = "tgtadm --lld iscsi --mode conn --op show --tid " + str(self.target_id)
+        tmp = os.popen(cmd).readlines()
         if len(tmp) == 0:
             return False
         return True
@@ -93,7 +141,8 @@ class Session():
     def _judge_target_exist(self, iqn):
         return iscsi.exist(iqn)
 
-    def change_connection_mode(self, connection):
+    @staticmethod
+    def reform_connection(connection):
         LOG.debug("old connection is :")
         LOG.debug(connection)
         new_connection = {'target_portal': connection.host + ':' + connection.port,
@@ -159,7 +208,7 @@ class Session():
         LOG.debug("successful remove target %s " % self.target_id)
 
     def _create_multipath(self, disks):
-        multipath_name = self._multipath_name()
+        multipath_name = self.multipath_name
         multipath_path = dmsetup.multipath(multipath_name, disks)
         self.has_multipath = True
         LOG.debug("create multipath according connection :")
@@ -167,7 +216,7 @@ class Session():
         return multipath_path
 
     def _delete_multipath(self):
-        multipath_name = self._multipath_name()
+        multipath_name = self.multipath_name
         dmsetup.remove_table(multipath_name)
         self.has_multipath = False
         LOG.debug("delete multipath of %s" % multipath_name)
@@ -184,10 +233,10 @@ class Session():
         LOG.debug("delete cache according to multipath %s " % multipath)
 
     def _create_origin(self, origin_dev):
-        origin_name = self._origin_name()
+        origin_name = self.origin_name
         origin_path = ''
         if self.has_origin:
-            origin_path = self._origin_path()
+            origin_path = self.origin_path
         else:
             origin_path = dmsetup.origin(origin_name, origin_dev)
             LOG.debug("create origin on %s" % origin_dev)
@@ -195,20 +244,20 @@ class Session():
         return origin_path
 
     def _delete_origin(self):
-        origin_name = self._origin_name()
+        origin_name = self.origin_name
         dmsetup.remove_table(origin_name)
         LOG.debug("remove origin %s " % origin_name)
         self.has_origin = False
         self.origin = ''
 
     def _get_parent(self):
-        #TODO: !!!
+        #TODO: br100???
         host_ip = self._get_ip_address('br100')
         while True:
             self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("in get_parent function to get parent_list :")
             LOG.debug(parent_list)
-            #TODO: Wait for parents are ready
+            #Wait for parents are ready
             bo = True
             for parent in parent_list:
                 if parent.status == "pending":
@@ -216,42 +265,8 @@ class Session():
                     break
             if bo:
                 return parent_list
+            #TODO: sleep???
             time.sleep(1)
-
-    def deploy_image(self, connections):
-        LOG.debug("come to deploy_image")
-        #TODO: Roll back if failed !
-        LOG.debug("VMThunder: in deploy_image, volume name = %s, is_login = " % self.volume_name)
-        LOG.debug(self.is_login)
-
-        if self.is_login:
-            return self.origin
-
-        if isinstance(connections, dict):
-            connections = [connections]
-        self.root = connections
-        parent_list = self._get_parent()
-        new_connections = []
-        if len(parent_list) == 0:
-            #TODO:hanging target from cinder
-            new_connections = connections
-        else:
-            for parent in parent_list:
-                new_connections.append(self.change_connection_mode(parent))
-
-        connected_path = self._login_target(new_connections)
-        if self.has_multipath:
-            self._add_path()
-        else:
-            multi_path = self._create_multipath(connected_path)
-            cached_path = self._create_cache(multi_path)
-            connection = connections[0]
-            iqn = connection['target_iqn']
-            if self._judge_target_exist(iqn) is False:
-                self._create_target(iqn, cached_path)
-            self._create_origin(cached_path)
-        self.origin = self._origin_path()
-        return self.origin
 
     def destroy(self):
         LOG.debug("destroy session")
@@ -265,7 +280,7 @@ class Session():
         return True
 
     def destroy_for_adjust_structure(self):
-        multipath = self._multipath()
+        multipath = self.multipath_path
         if len(self.vm) == 0:
             self._delete_origin()
         if self.has_target:
@@ -284,9 +299,10 @@ class Session():
         if len(connections) == 0:
             #TODO:hanging target from cinder
             return
-        multipath_name = self._multipath_name()
+        multipath_name = self.multipath_name
         key = self._connection_to_string(connections[0])
         size = utils.get_dev_sector_count(self.target_path_dict[key])
+        #TODO: Call dmsetup.multipath
         multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(connections))
         for connection in connections:
             temp = self._connection_to_string(connection)
@@ -316,7 +332,7 @@ class Session():
             new_connections = self.root
         else:
             for connection in connections:
-                new_connections.append(self.change_connection_mode(connection))
+                new_connections.append(self.reform_connection(connection))
 
         for connection in new_connections:
             if self._connection_exits(connection) is False:

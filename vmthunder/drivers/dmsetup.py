@@ -1,10 +1,10 @@
 from pydm import dmsetup
 from pydm.common import utils
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 
-@SingleTon
+@singleton
 class DmExecutor(dmsetup.Dmsetup):
     def __init__(self):
         dmsetup.Dmsetup.__init__(self)

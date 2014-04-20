@@ -3,10 +3,10 @@ import os
 
 from brick.iscsi.iscsi import TgtAdm
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 
-@SingleTon
+@singleton
 class TgtExecutor(TgtAdm):
     def __index__(self, root_helper='', volumes_dir= '/etc/tgt/conf.d'):
         TgtAdm.__init__(self, root_helper, volumes_dir)

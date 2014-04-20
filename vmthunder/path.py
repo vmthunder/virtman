@@ -14,7 +14,7 @@ class Path(object):
         self.connection = connection
         self.connected = False
         self.device_info = None
-        self.path = ''
+        self.device_path = ''
 
     def __str__(self):
         return connection_to_str(self.connection)
@@ -22,9 +22,9 @@ class Path(object):
     def connect(self):
         device_info = connector.connect_volume(self.connection)
         self.device_info = device_info
-        self.path = self.device_info['path']
+        self.device_path = self.device_info['path']
         self.connected = True
-        return self.path
+        return self.device_path
 
     def disconnect(self):
         connector.disconnect_volume(self.connection, self.device_info)

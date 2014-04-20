@@ -2,10 +2,10 @@ import os
 
 from brick.initiator.connector import ISCSIConnector
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 
-@SingleTon
+@singleton
 class ISCSIExecutor(ISCSIConnector):
     def __init__(self):
         ISCSIConnector.__init__(self, '')

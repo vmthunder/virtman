@@ -1,9 +1,10 @@
 from pydm import dmsetup
+from pydm.common import utils
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 
-@SingleTon
+@singleton
 class DmExecutor(dmsetup.Dmsetup):
     def __init__(self):
         dmsetup.Dmsetup.__init__(self)
@@ -23,6 +24,15 @@ def reload_table(name, table):
 
 def multipath(name, disks):
     return dm.multipath(name, disks)
+
+
+def reload_multipath(name, disks):
+    size = utils.get_dev_sector_count(disks[0])
+    multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(disks))
+    for disk in disks:
+        multipath_table += disk + ' 128 '
+    multipath_table += '\n'
+    reload_table(name, multipath_table)
 
 
 def origin(origin_name, origin_dev):

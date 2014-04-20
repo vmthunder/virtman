@@ -1,7 +1,7 @@
 from libfcg.fcg import FCG
 from oslo.config import cfg
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 fcg_opts = [
     cfg.StrOpt('fcg_name',
@@ -22,7 +22,8 @@ fcg_opts = [
 CONF = cfg.CONF
 CONF.register_opts(fcg_opts)
 
-@SingleTon
+
+@singleton
 class FcgExecutor(FCG):
     def __init__(self):
         FCG.__init__(self, CONF.fcg_name)

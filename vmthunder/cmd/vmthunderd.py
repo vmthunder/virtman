@@ -39,6 +39,7 @@ def start():
                 LOG.debug("At %s heartbeat once" % time.asctime())
                 cn.heartbeat()
                 time.sleep(CONF.heartbeat_interval)
+                #TODO: the max depth of recursion
                 clock()
             clock()
     heartbeat = HeartBeater('heartbeat')

@@ -67,15 +67,12 @@ class Instance():
         return iscsi_disk_format % (connection['target_portal'], connection['target_iqn'], connection['target_lun'])
 
     def link_snapshot(self):
-        #root = self.session.root[0]
-        #target_dev = self.connection_dev(root)
         target_dev = self.snapshot_link
         os.unlink(target_dev)
         if not os.path.exists(target_dev):
             os.symlink(self.snapshot_path, target_dev)
 
     def unlink_snapshot(self):
-        #root = self.session.root[0]
         target_dev = self.snapshot_link
         if os.path.exists(target_dev):
             os.unlink(target_dev)

@@ -2,7 +2,7 @@
 from oslo.config import cfg
 from voltclient.v1 import client
 
-from vmthunder.singleton import SingleTon
+from vmthunder.singleton import singleton
 
 master_opts = [
     cfg.StrOpt('master_ip',
@@ -15,7 +15,8 @@ master_opts = [
 CONF = cfg.CONF
 CONF.register_opts(master_opts)
 
-@SingleTon
+
+@singleton
 class VoltClient(client.Client):
     def __init__(self):
         client.Client.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_port))

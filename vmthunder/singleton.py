@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-def SingleTon(cls):
+
+def singleton(cls):
     instances = {}
 
     def _singleton(*args, **kw):

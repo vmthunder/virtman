@@ -194,9 +194,9 @@ class Session(object):
     def reform_connection(connection):
         LOG.debug("old connection is :")
         LOG.debug(connection)
-        new_connection = {'target_portal': connection.host + ':' + connection.port,
-                          'target_iqn': connection.iqn,
-                          'target_lun': connection.lun,
+        new_connection = {'target_portal': connection['target_portal'],
+                          'target_iqn': connection['target_iqn'],
+                          'target_lun': connection['target_lun'],
         }
         LOG.debug("new connection is :")
         LOG.debug(new_connection)

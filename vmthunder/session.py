@@ -163,7 +163,8 @@ class Session(object):
                         self.paths[str(parent)] = parent
                 else:
                     raise(Exception("Unknown %s type of %s "%(type(parent), parent)))
-        #Connect net paths
+        #Connect new paths
+        print type(self.paths)
         for key in self.paths.keys():
             if key not in keys_to_remove and not self.paths[key].connected:
                 self.paths[key].connect()

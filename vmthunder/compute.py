@@ -100,9 +100,9 @@ class Compute():
         self.rlock.acquire()
         try:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
-        except Exception, e:
-            LOG.error(str(e))
-            raise e
+        #except Exception, e:
+            #LOG.error(str(e))
+            #raise e
         finally:
             print "--------release lock-----------------"
             self.rlock.release()

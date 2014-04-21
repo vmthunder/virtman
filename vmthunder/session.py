@@ -79,10 +79,9 @@ class Session(object):
         if not self.has_origin:
             self._create_origin(self.cached_path)
 
-        if not self.is_login:
+        if not self.has_target:
             iqn = image_connection['target_iqn']
-            if iscsi.exists(iqn) is False:
-                self._create_target(iqn, self.cached_path)
+            self._create_target(iqn, self.cached_path)
         return self.origin_path
 
     def destroy(self):
@@ -210,22 +209,20 @@ class Session(object):
         return new_connections
 
     def _create_target(self, iqn, path):
-        self.target_id = iscsi.create_iscsi_target(iqn, path)
-        LOG.debug("VMThunder: create a target and it's id is %s" % self.target_id)
-        self.has_target = True
+        if iscsi.exists(iqn) is False:
+            self.target_id = iscsi.create_iscsi_target(iqn, path)
+            LOG.debug("VMThunder: create a target and it's id is %s" % self.target_id)
+            self.has_target = True
         #don't dynamic gain host_id and host_port
         #TODO: eth0? br100?
         host_ip = self._get_ip_address('br100')
         LOG.debug("VMThunder: try to login to master server")
         #TODO: port? lun? what is info
-        info = volt.login(session_name=self.volume_name,
-                                peer_id=self.peer_id,
-                                host=host_ip,
-                                port='3260',
-                                iqn=iqn,
-                                lun='1')
-        LOG.debug("VMThunder: login to master server %s" % info)
-        self.is_login = True
+        if not self.is_login:
+            info = volt.login(session_name=self.volume_name, peer_id=self.peer_id,
+                              host=host_ip, port='3260', iqn=iqn, lun='1')
+            LOG.debug("VMThunder: login to master server %s" % info)
+            self.is_login = True
 
     def _delete_target(self):
         iscsi.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)

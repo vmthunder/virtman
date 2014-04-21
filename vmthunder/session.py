@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 class Session(object):
     def __init__(self, volume_name):
         self.volume_name = volume_name
-        self.root = None
+        self.root = {}
         self.paths = {}
         self.cached_path = ''
         self.has_multipath = False
@@ -68,7 +68,7 @@ class Session(object):
             return self.origin_path
 
         image_path = Path(self.reform_connection(image_connection))
-        self.root = [image_path]
+        self.root[str(image_path)] = image_path
 
         parent_list = self._get_parent()
         self.rebuild_paths(parent_list)

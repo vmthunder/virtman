@@ -100,8 +100,8 @@ class Compute():
         self.rlock.acquire()
         try:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
-        #except Exception, e:
-            #LOG.error(str(e))
+        except Exception, e:
+            LOG.error(str(e))
             #raise e
         finally:
             print "--------release lock-----------------"
@@ -109,6 +109,7 @@ class Compute():
 
     def _create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed
+        raise Exception("test for release lock")
         if vm_name not in self.instances.keys():
             self.rlock.acquire()
             LOG.debug("VMThunder: create vm started, volume_name = %s, vm_name = %s" % (volume_name, vm_name))

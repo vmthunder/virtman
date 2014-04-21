@@ -224,7 +224,7 @@ class Session(object):
                                 port='3260',
                                 iqn=iqn,
                                 lun='1')
-        LOG.debug("VMThunder: login to master server successfully")
+        LOG.debug("VMThunder: login to master server %s" % info)
         self.is_login = True
 
     def _delete_target(self):

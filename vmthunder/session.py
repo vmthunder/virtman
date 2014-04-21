@@ -72,6 +72,7 @@ class Session(object):
 
         if len(self.paths) > 0:
             parent_list = self._get_parent()
+            print "--------------%s_______________" % parent_list
             self.rebuild_paths(parent_list)
 
         if not self.has_cache:

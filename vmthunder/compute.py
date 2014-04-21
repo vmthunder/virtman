@@ -104,6 +104,7 @@ class Compute():
             LOG.error(str(e))
             raise e
         finally:
+            print "--------release lock-----------------"
             self.rlock.release()
 
     def _create(self, volume_name, vm_name, image_connection, snapshot_link):

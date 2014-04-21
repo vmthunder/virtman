@@ -72,7 +72,6 @@ class Session(object):
 
         #if len(self.paths) > 0:
         parent_list = self._get_parent()
-        print "--------------%s_______________" % parent_list
         self.rebuild_paths(parent_list)
 
         if not self.has_cache:
@@ -134,7 +133,6 @@ class Session(object):
             self.vm.remove(vm_name)
         except ValueError:
             LOG.error("remove vm failed. VM %s does not existed" % vm_name)
-
 
     def rebuild_paths(self, parents_list):
         #Reform connections

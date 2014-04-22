@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import time
-import os
 import socket
 import fcntl
 import struct
+import threading
 
 from oslo.config import cfg
 
@@ -19,6 +19,15 @@ from vmthunder.drivers import volt
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
+
+
+class Enum(set):
+    def __getattr__(self, item):
+        if item in self:
+            return item
+        return AttributeError
+
+STATUS = Enum(['empty', 'building', 'ok', 'destroying'])
 
 
 class Session(object):
@@ -36,6 +45,8 @@ class Session(object):
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
+        self.__status = STATUS.empty
+        self.status_lock = threading.RLock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -54,6 +65,26 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
+    def set_status_building(self):
+        ret = False
+        if self.__status == STATUS.empty:
+            self.status_lock.acquire()
+            if self.__status == STATUS.empty:
+                self.__status = STATUS.building
+                ret = True
+            self.status_lock.release()
+        return ret
+
+    def set_status_ok(self):
+        ret = False
+        if self.__status == STATUS.building:
+            self.status_lock.acquire()
+            if self.__status == STATUS.building:
+                self.__status = STATUS.ok
+                ret = True
+            self.status_lock.release()
+        return ret
+
     def deploy_image(self, image_connection):
         #TODO: Roll back if failed !
         """
@@ -63,6 +94,13 @@ class Session(object):
         """
         LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, is_login = %s" %
                   (self.volume_name, self.has_origin, self.is_login))
+
+        #Check current status
+        success = self.set_status_building()
+        if not success:
+            while self.__status == STATUS.building:
+                LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
+                time.sleep(3)
 
         if self.has_origin:
             return self.origin_path
@@ -83,6 +121,8 @@ class Session(object):
         if not self.has_target:
             iqn = image_connection['target_iqn']
             self._create_target(iqn, self.cached_path)
+        #TODO: A potential bug here, what happen if a error happened, threads are waiting for build ok.
+        self.set_status_ok()
         return self.origin_path
 
     def destroy(self):

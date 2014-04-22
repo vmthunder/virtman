@@ -20,7 +20,7 @@ class Compute():
         self.instances = {}
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
-        LOG.debug("creating a Compute_node")
+        LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
         self.rlock.acquire()

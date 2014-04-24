@@ -65,28 +65,33 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
-    #TODO: rewrite here
-    def set_status_building(self):
+    def change_status(self, src_status, dst_status):
         ret = False
-        if self.__status == STATUS.empty:
+        if self.__status == src_status:
             self.status_lock.acquire()
-            if self.__status == STATUS.empty:
-                self.__status = STATUS.building
-                ret = True
-            self.status_lock.release()
-        return ret
-
-    def set_status_ok(self):
-        ret = False
-        if self.__status == STATUS.building:
-            self.status_lock.acquire()
-            if self.__status == STATUS.building:
-                self.__status = STATUS.ok
+            if self.__status == src_status:
+                self.__status = dst_status
                 ret = True
             self.status_lock.release()
         return ret
 
     def deploy_image(self, image_connection):
+        success = self.change_status(STATUS.empty, STATUS.building)
+        if not success:
+            while self.__status == STATUS.building:
+                LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
+                time.sleep(3)
+        try:
+            origin_path = self._deploy_image(image_connection)
+        except Exception, e:
+            LOG.error(e)
+            self.change_status(STATUS.building, STATUS.error)
+            raise e
+        else:
+            self.change_status(STATUS.building, STATUS.ok)
+        return origin_path
+
+    def _deploy_image(self, image_connection):
         #TODO: Roll back if failed !
         """
         deploy image in compute node, return the origin path to create snapshot
@@ -97,11 +102,6 @@ class Session(object):
                   (self.volume_name, self.has_origin, self.is_login))
 
         #Check current status
-        success = self.set_status_building()
-        if not success:
-            while self.__status == STATUS.building:
-                LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
-                time.sleep(3)
 
         if self.has_origin:
             return self.origin_path
@@ -123,7 +123,6 @@ class Session(object):
             iqn = image_connection['target_iqn']
             self._create_target(iqn, self.cached_path)
         #TODO: A potential bug here, what happen if a error happened, threads are waiting for build ok.
-        self.set_status_ok()
         return self.origin_path
 
     def destroy(self):

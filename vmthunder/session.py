@@ -14,7 +14,6 @@ from vmthunder.path import Path
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
-from vmthunder.drivers import connector
 from vmthunder.drivers import volt
 
 CONF = cfg.CONF
@@ -27,7 +26,8 @@ class Enum(set):
             return item
         return AttributeError
 
-STATUS = Enum(['empty', 'building', 'ok', 'destroying'])
+STATUS = Enum(['empty', 'building', 'ok', 'destroying', 'error'])
+ACTIONS = Enum(['build', 'destroy'])
 
 
 class Session(object):
@@ -65,6 +65,7 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
+    #TODO: rewrite here
     def set_status_building(self):
         ret = False
         if self.__status == STATUS.empty:

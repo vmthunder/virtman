@@ -8,11 +8,12 @@ from oslo.config import cfg
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import connector
+from vmthunder.drivers import fcg
 
 instance_opts = [
-    cfg.StrOpt('instance_type',
-               default='common',
-               help='Instance snapshot type'),
+    cfg.BoolOpt('snapshot_with_cache',
+                default=False,
+                help='Whether snapshot can have cache'),
 ]
 CONF = cfg.CONF
 CONF.register_opts(instance_opts)
@@ -26,8 +27,10 @@ class Instance():
     def __init__(self, vm_name, session, snapshot_connection):
         self.vm_name = vm_name
         self.connection = snapshot_connection
+        self.snapshot_with_cache = CONF.snapshot_with_cache
 
         snapshot_info = connector.connect_volume(snapshot_connection)
+        #TODO: move code fit for openstack outside
         snapshot_link = snapshot_info['path']
         if os.path.exists(snapshot_link):
             self.snapshot_link = snapshot_link
@@ -45,19 +48,6 @@ class Instance():
         self.has_link = False
 
         LOG.debug("creating a instance of name %s " % self.vm_name)
-
-    @staticmethod
-    def factory(volume_name, vm_name, snapshot_conn):
-        from vmthunder.instancecommon import InstanceCommon
-        from vmthunder.instancesnapcache import InstanceSnapCache
-        if CONF.instance_type == 'common':
-            return InstanceCommon(volume_name, vm_name, snapshot_conn)
-        elif CONF.instance_type == 'snapcache':
-            return InstanceSnapCache( volume_name, vm_name, snapshot_conn)
-        else:
-            msg = "Instance type %s not found" % CONF.instance_type
-            LOG.error(msg)
-            raise ValueError(msg)
 
     def _snapshot_name(self):
         return 'snapshot_' + self.vm_name
@@ -82,11 +72,41 @@ class Instance():
         """
         return NotImplementedError()
 
+    def _create_cache(self):
+        cached_path = fcg.add_disk(self.snapshot_dev)
+        return cached_path
+
+    def _delete_cache(self):
+        fcg.rm_disk(self.snapshot_dev)
+
+    def _create_snapshot(self, origin_path):
+        if self.snapshot_with_cache:
+            snap_path = self._create_cache()
+        else:
+            snap_path = self.snapshot_dev
+        snapshot_name = self._snapshot_name()
+        snapshot_path = dmsetup.snapshot(origin_path, snapshot_name, snap_path)
+        self.snapshot_path = snapshot_path
+        return snapshot_path
+
+    def _delete_snapshot(self):
+        snapshot_name = self._snapshot_name()
+        dmsetup.remove_table(snapshot_name)
+        if self.snapshot_with_cache:
+            self._delete_cache()
+
     def start_vm(self, origin_path):
-        return NotImplementedError()
+        LOG.debug("VMThunder: start vm %s according origin_path %s" % (self.vm_name, origin_path))
+        self._create_snapshot(origin_path)
+        self.link_snapshot()
+        self.session.add_vm(self.vm_name)
+        return self.vm_name
 
     def del_vm(self):
-        return NotImplementedError()
+        LOG.debug("VMThunder: come to instanceSnapCache to delete vm %s" % self.vm_name)
+        self._delete_snapshot()
+        self.unlink_snapshot()
+        self.session.rm_vm(self.vm_name)
     
     def _snapshot_path(self):
         snapshot_name = self._snapshot_name()

@@ -108,7 +108,7 @@ class Compute():
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
-            self.instances[vm_name] = Instance.factory(vm_name, session, snapshot_link)
+            self.instances[vm_name] = Instance(vm_name, session, snapshot_link)
             origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].start_vm(origin_path)

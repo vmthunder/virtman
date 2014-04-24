@@ -29,9 +29,6 @@ class Instance():
         self.connection = snapshot_connection
         self.snapshot_with_cache = CONF.snapshot_with_cache
 
-        LOG.debug("VMThunder: sleep 5 seconds before start %s " % self.vm_name)
-        time.sleep(5)
-
         snapshot_info = connector.connect_volume(snapshot_connection)
         #TODO: move code fit for openstack outside
         snapshot_link = snapshot_info['path']

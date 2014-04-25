@@ -109,9 +109,9 @@ class Session(object):
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
-        #if len(self.paths) > 0:
-        parent_list = self._get_parent()
-        self.rebuild_paths(parent_list)
+        if len(self.paths) == 0:
+            parent_list = self._get_parent()
+            self.rebuild_paths(parent_list)
 
         if not self.has_cache:
             self.cached_path = self._create_cache(self.multipath_path)

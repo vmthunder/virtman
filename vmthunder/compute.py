@@ -4,7 +4,7 @@ import threading
 
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
-from vmthunder.instance import Instance
+from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import volt
@@ -67,7 +67,7 @@ class Compute():
         LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
-            instance.del_vm()
+            instance.deconfig_volume()
             del self.instances[vm_name]
         self.rlock.release()
         LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % vm_name)
@@ -108,10 +108,10 @@ class Compute():
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
-            self.instances[vm_name] = Instance(vm_name, session, snapshot_link)
+            self.instances[vm_name] = StackBDImage(vm_name, session, snapshot_link)
             origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)
-            self.instances[vm_name].start_vm(origin_path)
+            self.instances[vm_name].config_volume(origin_path)
             self.rlock.release()
             LOG.debug("VMThunder: create vm completed, volume_name = %s, vm_name = %s, snapshot = %s" %
                       (volume_name, vm_name, self.instances[vm_name].snapshot_path))

@@ -4,11 +4,11 @@ import time
 import socket
 import fcntl
 import struct
-import threading
 
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
+from vmthunder.openstack.common.lockutils import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.drivers import fcg
@@ -46,7 +46,6 @@ class Session(object):
         self.peer_id = ''
         self.target_id = 0
         self.__status = STATUS.empty
-        self.status_lock = threading.RLock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -65,14 +64,12 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
+    @synchronized("status_lock")
     def change_status(self, src_status, dst_status):
         ret = False
         if self.__status == src_status:
-            self.status_lock.acquire()
-            if self.__status == src_status:
-                self.__status = dst_status
-                ret = True
-            self.status_lock.release()
+            self.__status = dst_status
+            ret = True
         return ret
 
     def deploy_image(self, image_connection):

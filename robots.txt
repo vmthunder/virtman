@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: www.vmthunder.org/sitemap.xml 
+Sitemap: http://www.vmthunder.org/VMThunder/sitemap.xml 

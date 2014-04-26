@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[VMThunder ---- Booting 1000 VMs in a minute!]]></title>
+  <link href="www.vmthunder.org/atom.xml" rel="self"/>
+  <link href="www.vmthunder.org/"/>
+  <updated>2014-03-17T21:12:27+08:00</updated>
+  <id>www.vmthunder.org/</id>
+  <author>
+    <name><![CDATA[lihuiba]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Key Idears Behind VMThunder]]></title>
+    <link href="www.vmthunder.org/blog/2014/03/02/key-idears/"/>
+    <updated>2014-03-02T21:52:09+08:00</updated>
+    <id>www.vmthunder.org/blog/2014/03/02/key-idears</id>
+    <content type="html"><![CDATA[<h2>1. On-demand Transferring</h2>
+
+<p>The booting process of a VM requires only a small part of the image data.
+We test the bootstrap process of popular operating systems, including
+Windows and various Linux distributions like Fedora, Ubuntu, OpenSUSE,
+and CentOS. We record the data access traces, including the address and
+the request time of the data blocks. The following figure shows the result.</p>
+
+<p><img src="www.vmthunder.org/images/img-differentos.png" width="450"></p>
+
+<p>The test shows that, only a few hundreds MBs of data is required for
+booting, whereas the whole image is at least GBs big. Most of the data
+is not used during the booting process, and some of data is nevever
+used during the whole life time of the VM instance. So on-demand
+transferring will reduce a lot of data transferring need, escpecially
+in the booting process.</p>
+
+<h2>2. Caching</h2>
+
+<p>Data blocks should be cached on compute nodes so that they can be reused
+later, if the instance is rebooted or new instances of the image are
+created.</p>
+
+<h2>3. P2P Transferring</h2>
+
+<p>The data set required to boot each VM instance of the same origin image
+is quite similar to one another. So data received by a compute node can
+be forwarded to another, in order to reduce pressure of image server(s),
+and to improve efficiency. P2P transferring allows image service capacity
+to scale up accordingly with the number of clients (compute nodes).</p>
+
+<p><img src="www.vmthunder.org/images/img-tree.png" width="450"></p>
+
+<h2>4. Prefetching</h2>
+
+<p>The sequence of data blocks required to boot each VM instance of the
+same origin image is quite similar to one another, too. And the sequence
+is likely to stay preserved when the instance is rebooted. So we record
+the sequence of each image, and use it as a predict to prefetch data
+for the booting process.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Publication]]></title>
+    <link href="www.vmthunder.org/blog/2014/03/02/publication/"/>
+    <updated>2014-03-02T19:18:21+08:00</updated>
+    <id>www.vmthunder.org/blog/2014/03/02/publication</id>
+    <content type="html"><![CDATA[<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385-abs.html"><img src="http://www.computer.org/plugins/images/digitalLibrary/magazines/tpds.gif" alt="TPDS" /> (Publisher)</a></p>
+
+<h1>VMThunder: Fast Provisioning of Large-Scale Virtual Machine Clusters</h1>
+
+<p><strong>Zhaoning Zhang, Ziyang Li, Kui Wu, Dongsheng Li, Huiba Li, Yuxing Peng, Xicheng Lu</strong></p>
+
+<h2>Abstract</h2>
+
+<p>Infrastructure as a service (IaaS) allows users to rent
+resources from cloud to meet their various computing
+requirements. The pay-as-you-use model, however, poses a
+non-trivial technical challenge to the IaaS cloud service
+providers: how to fast provision a large number of virtual
+machines (VMs) to meet users&#8217; dynamic computing requests?
+We address this challenge with VMThunder, a new VM
+provisioning tool, which downloads data blocks on demand
+during the VM booting process and speeds up VM image
+streaming by strategically integrating peer-to-peer (P2P)
+streaming techniques with enhanced optimization schemes
+such as transfer on demand (ToD), cache on read (CoR),
+snapshot on local (SoL), and relay on cache (RoC). In
+particular, VMThunder stores the original images in a
+share storage and in the meantime it adopts a tree-based
+P2P streaming scheme so that common image blocks are
+cached and re-used across the nodes in the cluster. We
+implement VMThunder in CentOS Linux and thoroughly test
+its performance. Comprehensive experimental results show
+that VMThunder outperforms the state-of-the-art VM
+provisioning methods, with respect to scalability,
+latency, and VM runtime I/O performance.</p>
+
+<p><a href="http://www.computer.org/csdl/trans/td/preprint/06719385.pdf">Full Text (PDF)</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Background]]></title>
+    <link href="www.vmthunder.org/blog/2014/02/13/background/"/>
+    <updated>2014-02-13T11:51:53+08:00</updated>
+    <id>www.vmthunder.org/blog/2014/02/13/background</id>
+    <content type="html"><![CDATA[<p>The Infrastructure as a Service (IaaS) cloud has become
+increasingly important due to its flexible pay-as-you-go business
+model. Over the IaaS cloud, customers
+can rent computing and storage resources
+according to their actual service requirement, and thus
+they can save a great deal of cost without the need to
+invest on computing infrastructure. The convenience
+for customers, however, poses a challenging problem
+to IaaS cloud providers: how to accommodate dynamic
+computing requirements of customers, who may
+request a large quantity of virtual machines (VMs) in
+a short time period?</p>
+
+<p>It has been seen that in large-scale IaaS cloud
+like the National Supercomputing Center of China
+in Tianjin (NSCC-Tianjin), some users require
+resources (virtual CPU, memory, disk space) for
+compute-intensive applications, including, for example,
+animation, DNA sequence analysis, and weather
+forecast. In many cases, they may submit requests
+for hundreds of VMs and they need the cloud to
+respond to their requests quickly. Once their services
+finish, they normally release VMs to save cost. The
+similar phenomenon has been observed in other commercial
+IaaS cloud such as Amazon EC2.
+For an IaaS cloud service provider, a large delay in
+VM provisioning (e.g., hours) may turn its customers
+away to its competitors, and it is thus critical to
+support fast provisioning of a large amount of VMs
+to maintain its market competence.</p>
+
+<p>Substantial efforts have been devoted to fast provisioning
+of a large number of VMs. Nevertheless,
+existing solutions still have large room for further
+improvement. For example, the time for provisioning
+VMs over Amazon EC2 is still non trivial, taking from
+3 minutes up to 30 minutes to get a 1 GB compressed
+VM image ready to work. Wartel et al. use
+the peer-to-peer (P2P) technology to disseminate VM
+images, and it takes about 30 minutes to configure 400
+servers. Some work focuses on the problem
+of optimal image placement. Based on the analysis
+of empirical usage of VM images, they split
+the images into small strips over the distributed file
+system for efficient access and storage. This method,
+however, needs a long time to pre-process the image
+files. Another type of solutions uses the so-termed
+&ldquo;memory fork&rdquo; method (e.g., SnowFlock and Twinkle),
+which remotely clones VMs by duplicating
+the running states of the VM. Memory fork, however,
+may cause new problems such as data persistence.</p>
+
+<p>Though the transferring process can be eliminated by using network
+storage like NFS, cluster FS, distributed FS or SAN, this approach
+lacks scalability due to the limited number of replica for each piece
+of data. Booting a large number of virtual machines will direct a
+large number of servers to access the same set of data at the same
+time, which will generate great pressure on the storage servers.
+What&rsquo;s more, network storage tends to provide less I/O performance
+at a reasonable price.</p>
+
+<p>VMThunder pushes the state of the art of largescale VM provisioning,
+by integrating on-demand transferring, compute node (client-side)
+caching, P2P transfering and prefetching. The protocol for data
+transferring is iSCSI, but technically compatible with other
+protocols like nbd, FCoE or AoE. Caching is realized with Facebook&rsquo;s
+flashcache module, but technically compatible with other block-level
+caching modules like bcache, dm-cache, etc.</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[VMThunder]]></title>
+    <link href="www.vmthunder.org/blog/2014/02/13/vmthunder/"/>
+    <updated>2014-02-13T11:48:46+08:00</updated>
+    <id>www.vmthunder.org/blog/2014/02/13/vmthunder</id>
+    <content type="html"><![CDATA[<p>Creating a large number of virtual machine instances in an IaaS
+cloud can be quite time-consuming, because the virtual disk
+images need to be transferred to the compute nodes in prior to
+booting.</p>
+
+<p>VMThunder addresses this problem by following improvements: compute node
+caching, P2P transfering and prefetching, in addition to on-demand
+transfering (network storage). VMThunder is a scalable and cost-effective
+accelerator for bulk povisioning of virtual machines. And it can
+be, if preferred, gracefully turned off after the booting process is
+complete.</p>
+
+<p>Benchmarks show that VMThunder can boot 160 VMs (CentOS 6.2 with
+gnome desktop) on 160 compute nodes with in a minute, and
+the average time consumption is 20 seconds. With prefetching, the
+complete and average time consumption can be respecttively reduced
+to 18 and 16 seconds. The network is Gigabit Ethernet for all
+servers in the benchmark environment.</p>
+
+<p>VMThunder can greatly improves the <strong><em>elasticity</em></strong> of a cloud system,
+which is considered as a major advantage over traditional system.
+VMThunder is feasible for VM cluster of any <strong><em>scale</em></strong>, no matter
+large or small. VMThunder is independent of and transparent to VMM.
+That means <strong><em>any</em></strong> VMM can be supported, such as VMM, Xen, Virtual BOX,
+VMWare etc.</p>
+]]></content>
+  </entry>
+  
+</feed>

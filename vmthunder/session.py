@@ -68,11 +68,11 @@ class Session(object):
     #@synchronized("status_lock")
     def change_status(self, src_status, dst_status):
         with self.status_lock:
-            LOG.debug("VMThunder: source status = %s, dst status = %s" % (src_status, dst_status))
             ret = False
             if self.__status == src_status:
                 self.__status = dst_status
                 ret = True
+            LOG.debug("VMThunder: source status = %s, dst status = %s, ret = %s" % (src_status, dst_status, ret))
             return ret
 
     def deploy_image(self, image_connection):

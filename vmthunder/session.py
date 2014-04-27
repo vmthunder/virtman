@@ -81,17 +81,17 @@ class Session(object):
             while self.__status == STATUS.building:
                 LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
                 time.sleep(3)
-        LOG.debug("VMThunder: ..........begin to deploy base image.......")
+        LOG.debug("VMThunder: ..........begin to deploy base image")
         try:
             origin_path = self._deploy_image(image_connection)
         except Exception, e:
-            LOG.debug("VMThunder: ..........error during deploying base image.......")
+            LOG.debug("VMThunder: ..........error during deploying base image")
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
             raise
         else:
             self.change_status(STATUS.building, STATUS.ok)
-        LOG.debug("VMThunder: ..........deploy base image completed.......")
+        LOG.debug("VMThunder: ..........deploy base image completed")
         return origin_path
 
     def _deploy_image(self, image_connection):
@@ -116,6 +116,7 @@ class Session(object):
             self.rebuild_paths(parent_list)
 
         if not self.has_cache:
+            LOG.debug("VMThunder: ......begin to create cache, multipath = %s" % self.multipath_path)
             self.cached_path = self._create_cache(self.multipath_path)
 
         if not self.has_origin:

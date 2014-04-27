@@ -68,6 +68,7 @@ class Session(object):
     #@synchronized("status_lock")
     def change_status(self, src_status, dst_status):
         with self.status_lock:
+            LOG.debug("VMThunder: source status = %s, dst status = %s" % (src_status, dst_status))
             ret = False
             if self.__status == src_status:
                 self.__status = dst_status
@@ -75,7 +76,6 @@ class Session(object):
             return ret
 
     def deploy_image(self, image_connection):
-        print self.__status
         success = self.change_status(STATUS.empty, STATUS.building)
         if not success:
             while self.__status == STATUS.building:
@@ -86,10 +86,9 @@ class Session(object):
         except Exception, e:
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
-            raise e
+            raise
         else:
             self.change_status(STATUS.building, STATUS.ok)
-        print self.__status
         return origin_path
 
     def _deploy_image(self, image_connection):

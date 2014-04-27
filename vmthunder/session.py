@@ -111,12 +111,13 @@ class Session(object):
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
+        LOG.debug("VMThunder: .........begin to rebuild paths")
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
-
+        LOG.debug("VMThunder: .........rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
-            LOG.debug("VMThunder: ......begin to create cache, multipath = %s" % self.multipath_path)
+            LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
             self.cached_path = self._create_cache(self.multipath_path)
 
         if not self.has_origin:

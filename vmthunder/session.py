@@ -46,7 +46,7 @@ class Session(object):
         self.peer_id = ''
         self.target_id = 0
         self.__status = STATUS.empty
-        self.status_lock = threading.RLock()
+        self.status_lock = threading.Lock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property

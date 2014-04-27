@@ -4,6 +4,7 @@ import time
 import socket
 import fcntl
 import struct
+import threading
 
 from oslo.config import cfg
 
@@ -46,6 +47,7 @@ class Session(object):
         self.peer_id = ''
         self.target_id = 0
         self.__status = STATUS.empty
+        self.status_lock = threading.RLock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -64,13 +66,14 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
-    @synchronized("status_lock")
+    #@synchronized("status_lock")
     def change_status(self, src_status, dst_status):
-        ret = False
-        if self.__status == src_status:
-            self.__status = dst_status
-            ret = True
-        return ret
+        with self.status_lock:
+            ret = False
+            if self.__status == src_status:
+                self.__status = dst_status
+                ret = True
+            return ret
 
     def deploy_image(self, image_connection):
         success = self.change_status(STATUS.empty, STATUS.building)

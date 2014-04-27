@@ -75,6 +75,7 @@ class Session(object):
             return ret
 
     def deploy_image(self, image_connection):
+        print self.__status
         success = self.change_status(STATUS.empty, STATUS.building)
         if not success:
             while self.__status == STATUS.building:
@@ -88,6 +89,7 @@ class Session(object):
             raise e
         else:
             self.change_status(STATUS.building, STATUS.ok)
+        print self.__status
         return origin_path
 
     def _deploy_image(self, image_connection):

@@ -119,6 +119,7 @@ class Session(object):
         if not self.has_cache:
             LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
             self.cached_path = self._create_cache(self.multipath_path)
+            LOG.debug("VMThunder: .........create cache completed, cache path = %s" % self.cached_path)
 
         if not self.has_origin:
             self._create_origin(self.cached_path)

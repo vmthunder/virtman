@@ -41,7 +41,7 @@ class Session(object):
         self.has_origin = False
         self.has_target = False
         self.is_login = False
-        #TODO: all virtual machines called instance
+        #TODO: all virtual machines called image
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
@@ -81,14 +81,17 @@ class Session(object):
             while self.__status == STATUS.building:
                 LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
                 time.sleep(3)
+        LOG.debug("VMThunder: ..........begin to deploy base image.......")
         try:
             origin_path = self._deploy_image(image_connection)
         except Exception, e:
+            LOG.debug("VMThunder: ..........error during deploying base image.......")
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
             raise
         else:
             self.change_status(STATUS.building, STATUS.ok)
+        LOG.debug("VMThunder: ..........deploy base image completed.......")
         return origin_path
 
     def _deploy_image(self, image_connection):
@@ -102,7 +105,6 @@ class Session(object):
                   (self.volume_name, self.has_origin, self.is_login))
 
         #Check current status
-
         if self.has_origin:
             return self.origin_path
 
@@ -122,7 +124,7 @@ class Session(object):
         if not self.has_target:
             iqn = image_connection['target_iqn']
             self._create_target(iqn, self.cached_path)
-        #TODO: A potential bug here, what happen if a error happened, threads are waiting for build ok.
+
         return self.origin_path
 
     def destroy(self):

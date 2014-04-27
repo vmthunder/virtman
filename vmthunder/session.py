@@ -9,7 +9,6 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
-from vmthunder.openstack.common.lockutils import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.drivers import fcg

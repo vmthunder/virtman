@@ -56,7 +56,7 @@ class BDImage(Image):
         self.vm_name = name
         self.snapshot_dev = snapshot_dev
         self.session = session
-        self.has_link = False
+        self.snapshot_with_cache = CONF.snapshot_with_cache
 
     @property
     def snapshot_name(self):
@@ -76,10 +76,6 @@ class BDImage(Image):
         LOG.debug("VMThunder: come to instanceSnapCache to delete vm %s" % self.vm_name)
         self._delete_snapshot()
         self.session.rm_vm(self.vm_name)
-
-    @staticmethod
-    def connection_dev(connection):
-        return iscsi_disk_format % (connection['target_portal'], connection['target_iqn'], connection['target_lun'])
 
     def _create_cache(self):
         cached_path = fcg.add_disk(self.snapshot_dev)
@@ -111,8 +107,6 @@ class StackBDImage(BDImage):
     """
     def __init__(self, session, name, snapshot_connection):
         self.connection = snapshot_connection
-        self.snapshot_with_cache = CONF.snapshot_with_cache
-
         snapshot_info = connector.connect_volume(snapshot_connection)
         snapshot_link = snapshot_info['path']
         if os.path.exists(snapshot_link):

@@ -41,12 +41,12 @@ class Session(object):
         self.has_origin = False
         self.has_target = False
         self.is_login = False
-        #TODO: all virtual machines called instance
+        #TODO: all virtual machines called image
         self.vm = []
         self.peer_id = ''
         self.target_id = 0
         self.__status = STATUS.empty
-        self.status_lock = threading.RLock()
+        self.status_lock = threading.Lock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -65,15 +65,15 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
+    #@synchronized("status_lock")
     def change_status(self, src_status, dst_status):
-        ret = False
-        if self.__status == src_status:
-            self.status_lock.acquire()
+        with self.status_lock:
+            ret = False
             if self.__status == src_status:
                 self.__status = dst_status
                 ret = True
-            self.status_lock.release()
-        return ret
+            LOG.debug("VMThunder: source status = %s, dst status = %s, ret = %s" % (src_status, dst_status, ret))
+            return ret
 
     def deploy_image(self, image_connection):
         success = self.change_status(STATUS.empty, STATUS.building)
@@ -81,14 +81,17 @@ class Session(object):
             while self.__status == STATUS.building:
                 LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
                 time.sleep(3)
+        LOG.debug("VMThunder: ..........begin to deploy base image")
         try:
             origin_path = self._deploy_image(image_connection)
         except Exception, e:
+            LOG.debug("VMThunder: ..........error during deploying base image")
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
-            raise e
+            raise
         else:
             self.change_status(STATUS.building, STATUS.ok)
+        LOG.debug("VMThunder: ..........deploy base image completed")
         return origin_path
 
     def _deploy_image(self, image_connection):
@@ -102,19 +105,22 @@ class Session(object):
                   (self.volume_name, self.has_origin, self.is_login))
 
         #Check current status
-
         if self.has_origin:
             return self.origin_path
 
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
-        #if len(self.paths) > 0:
-        parent_list = self._get_parent()
-        self.rebuild_paths(parent_list)
-
+        LOG.debug("VMThunder: .........begin to rebuild paths")
+        if len(self.paths) == 0:
+            parent_list = self._get_parent()
+            self.rebuild_paths(parent_list)
+        LOG.debug("VMThunder: .........rebuild paths completed, multipath = %s" % self.multipath_path)
+        #TODO: need to sleep some waiting for ready
         if not self.has_cache:
+            LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
             self.cached_path = self._create_cache(self.multipath_path)
+            LOG.debug("VMThunder: .........create cache completed, cache path = %s" % self.cached_path)
 
         if not self.has_origin:
             self._create_origin(self.cached_path)
@@ -122,7 +128,7 @@ class Session(object):
         if not self.has_target:
             iqn = image_connection['target_iqn']
             self._create_target(iqn, self.cached_path)
-        #TODO: A potential bug here, what happen if a error happened, threads are waiting for build ok.
+
         return self.origin_path
 
     def destroy(self):

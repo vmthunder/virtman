@@ -8,6 +8,8 @@ function dmsetup_remove()
     done
 }
 
+for i in `ps ax|grep vmt |grep python | awk '{print $1}'`;do kill -9 $i;done
+
 dmsetup remove origin_1
 dmsetup remove cached_loop1
 tgtadm --lld iscsi --mode target --op delete --tid 1

@@ -116,9 +116,10 @@ class Session(object):
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
         LOG.debug("VMThunder: .........rebuild paths completed, multipath = %s" % self.multipath_path)
-        #TODO: need to sleep some waiting for ready
         if not self.has_cache:
             LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
+            #TODO:wait for previous setup complete, NEED to fix
+            time.sleep(1)
             self.cached_path = self._create_cache(self.multipath_path)
             LOG.debug("VMThunder: .........create cache completed, cache path = %s" % self.cached_path)
 

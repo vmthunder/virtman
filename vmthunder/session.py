@@ -117,7 +117,7 @@ class Session(object):
         LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
             #TODO: NEED to fix here
-            LOG.info("VMThunder: create cache for base image %s" % self.volume_name)
+            LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
             self.cached_path = self._create_cache(self.multipath_path)
             LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
 

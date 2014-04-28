@@ -6,7 +6,7 @@ class ComputeRouter(wsgi.Router):
     """WSGI router for VMThunder Instance requests"""
 
     def __init__(self, mapper):
-        compute_resource = vmthunderapi.create_resource()
+        compute_resource = computeapi.create_resource()
 
         mapper.connect("/list",
                        controller=compute_resource,

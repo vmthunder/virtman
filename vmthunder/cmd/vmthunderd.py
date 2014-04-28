@@ -6,7 +6,7 @@ import time
 
 from oslo.config import cfg
 
-from vmthunder import vmthunder
+from vmthunder import compute
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 
@@ -27,7 +27,7 @@ CONF.register_opts(host_opts)
 
 
 def start():
-    vmt = vmt.VMThunder()
+    cn = compute.Compute()
 
     class HeartBeater(threading.Thread):
         def __init__(self, thread_name):
@@ -37,7 +37,7 @@ def start():
             def clock():
                 LOG = logging.getLogger(__name__)
                 LOG.debug("At %s heartbeat once" % time.asctime())
-                vmt.heartbeat()
+                cn.heartbeat()
                 time.sleep(CONF.heartbeat_interval)
                 #TODO: the max depth of recursion
                 clock()

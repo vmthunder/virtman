@@ -9,6 +9,7 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
+from vmthunder.lock import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.drivers import fcg
@@ -65,7 +66,7 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
-    #@synchronized("status_lock")
+    #@synchronized("session")
     def change_status(self, src_status, dst_status):
         with self.status_lock:
             ret = False

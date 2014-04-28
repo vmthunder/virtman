@@ -85,7 +85,6 @@ class Session(object):
         try:
             origin_path = self._deploy_image(image_connection)
         except Exception, e:
-            LOG.debug("VMThunder: ..........error during deploying base image")
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
             raise
@@ -101,8 +100,8 @@ class Session(object):
         :param image_connection: the connection towards to the base image
         :return: origin path to create snapshot
         """
-        LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, is_login = %s" %
-                  (self.volume_name, self.has_origin, self.is_login))
+        LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, has cache = %s, "
+                  "is_login = %s" % (self.volume_name, self.has_origin, self.has_cache, self.is_login))
 
         #Check current status
         if self.has_origin:
@@ -111,17 +110,16 @@ class Session(object):
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
-        LOG.debug("VMThunder: .........begin to rebuild paths")
+        LOG.debug("VMThunder: begin to rebuild paths")
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
-        LOG.debug("VMThunder: .........rebuild paths completed, multipath = %s" % self.multipath_path)
+        LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
-            LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
-            #TODO:wait for previous setup complete, NEED to fix
-            time.sleep(1)
+            #TODO: NEED to fix here
+            LOG.info("VMThunder: create cache for base image %s" % self.volume_name)
             self.cached_path = self._create_cache(self.multipath_path)
-            LOG.debug("VMThunder: .........create cache completed, cache path = %s" % self.cached_path)
+            LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
 
         if not self.has_origin:
             self._create_origin(self.cached_path)

@@ -15,7 +15,7 @@ LOG = logging.getLogger(__name__)
 
 
 @singleton
-class VMThunder():
+class Compute():
     def __init__(self):
         self.sessions = {}
         self.instances = {}

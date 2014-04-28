@@ -19,17 +19,17 @@ class Compute():
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
-        self.rlock = threading.RLock()
+        #self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
-        self.rlock.acquire()
-        try:
-            self._heartbeat()
-        except Exception, e:
-            LOG.error(str(e))
-        finally:
-            self.rlock.release()
+        #self.rlock.acquire()
+        #try:
+        self._heartbeat()
+        #except Exception, e:
+        #    LOG.error(str(e))
+        #finally:
+        #    self.rlock.release()
 
     def _heartbeat(self):
         LOG.debug("VMThunder: heartbeat start @ %s" % time.asctime())
@@ -54,13 +54,13 @@ class Compute():
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
     def destroy(self, vm_name):
-        self.rlock.acquire()
-        try:
+        #self.rlock.acquire()
+        #try:
             self._destroy(vm_name)
-        except Exception, e:
-            LOG.error(str(e))
-        finally:
-            self.rlock.release()
+        #except Exception, e:
+        #    LOG.error(str(e))
+        #finally:
+        #    self.rlock.release()
 
     def _destroy(self, vm_name):
         LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
@@ -71,13 +71,13 @@ class Compute():
         LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % vm_name)
 
     def list(self):
-        self.rlock.acquire()
-        try:
-            return self._list()
-        except Exception, e:
-            LOG.error(str(e))
-        finally:
-            self.rlock.release()
+        #self.rlock.acquire()
+        #try:
+        return self._list()
+        #except Exception, e:
+        #    LOG.error(str(e))
+        #finally:
+        #    self.rlock.release()
 
     def _list(self):
         def build_list_object(instances):
@@ -90,13 +90,13 @@ class Compute():
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
-        self.rlock.acquire()
-        try:
-            return self._create(volume_name, vm_name, image_connection, snapshot_link)
-        except Exception, e:
-            LOG.error(str(e))
-        finally:
-            self.rlock.release()
+        #self.rlock.acquire()
+        #try:
+        return self._create(volume_name, vm_name, image_connection, snapshot_link)
+        #except Exception, e:
+        #    LOG.error(str(e))
+        #finally:
+        #    self.rlock.release()
 
     def _create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed

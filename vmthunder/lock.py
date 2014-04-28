@@ -1,5 +1,7 @@
 import threading
 
+from vmthunder.openstack.common import log as logging
+
 LOG = logging.getLogger(__name__)
 
 

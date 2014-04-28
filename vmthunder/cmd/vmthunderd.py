@@ -6,7 +6,7 @@ import time
 
 from oslo.config import cfg
 
-from vmthunder import vmthunder
+from vmthunder import vmt
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 
@@ -27,7 +27,7 @@ CONF.register_opts(host_opts)
 
 
 def start():
-    vmt = vmthunder.VMThunder()
+    vmt = vmt.VMThunder()
 
     class HeartBeater(threading.Thread):
         def __init__(self, thread_name):

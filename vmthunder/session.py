@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import os
 import socket
 import fcntl
 import struct
@@ -114,15 +115,19 @@ class Session(object):
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
+            time.sleep(1)
         LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
             #TODO: NEED to fix here
             LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
+            os.wait()
             self.cached_path = self._create_cache(self.multipath_path)
             LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
 
         if not self.has_origin:
+            LOG.debug("VMThunder: start to create origin, cache path = %s" % self.cached_path)
             self._create_origin(self.cached_path)
+            LOG.debug("VMThunder: create origin complete, cache path = %s" % self.cached_path)
 
         if not self.has_target:
             iqn = image_connection['target_iqn']

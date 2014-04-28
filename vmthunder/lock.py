@@ -1,5 +1,7 @@
 import threading
 
+LOG = logging.getLogger(__name__)
+
 
 def synchronized(name):
     """Synchronization decorator.

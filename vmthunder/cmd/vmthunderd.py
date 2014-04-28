@@ -6,7 +6,7 @@ import time
 
 from oslo.config import cfg
 
-from vmthunder import vmt
+from vmthunder import vmthunder
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 

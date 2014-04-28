@@ -128,6 +128,8 @@ class Session(object):
             self._create_origin(self.cached_path)
             LOG.debug("VMThunder: create origin complete, cache path = %s" % self.cached_path)
 
+        LOG.debug("VMThunder: create target is an option!!!")
+
         if not self.has_target:
             LOG.debug("VMThunder: start to create target, cache path = %s" % self.cached_path)
             iqn = image_connection['target_iqn']

@@ -120,7 +120,6 @@ class Session(object):
         if not self.has_cache:
             #TODO: NEED to fix here
             LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
-            os.wait()
             self.cached_path = self._create_cache(self.multipath_path)
             LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
 

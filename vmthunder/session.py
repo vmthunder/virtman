@@ -66,7 +66,6 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
-    #@synchronized("session")
     def change_status(self, src_status, dst_status):
         with self.status_lock:
             ret = False

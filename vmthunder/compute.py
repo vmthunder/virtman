@@ -20,7 +20,7 @@ class Compute():
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
-        self.rlock = threading.Lock()
+        self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):

@@ -11,7 +11,7 @@ from vmthunder.common import exception
 from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 from vmthunder.openstack.common import jsonutils
-from vmthunder import vmt
+from vmthunder import vmthunder
 
 LOG = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class VMThunderAPI(object):
     """
 
     """
-    compute_instance = vmt.VMThunder()
+    compute_instance = vmthunder.VMThunder()
 
     def __init__(self):
         #self.policy = policy.Enforcer()

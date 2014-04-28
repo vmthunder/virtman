@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-function dmsetup_remove()
+function dmsetup_remove
 {
     for table in `dmsetup table | grep $1_ | awk -F ':' '{print $1}'`
     do

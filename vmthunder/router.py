@@ -1,5 +1,5 @@
 from vmthunder.common import wsgi
-from vmthunder import vmthunderapi
+from vmthunder import computeapi
 
 
 class ComputeRouter(wsgi.Router):

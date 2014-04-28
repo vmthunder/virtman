@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import time
+import os
 import threading
 
 from vmthunder.drivers import fcg
@@ -80,6 +81,7 @@ class Compute():
 
     def _create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed
+        LOG.debug("VMThunder: -----PID = %s" % os.getpid())
         if vm_name not in self.instances.keys():
             LOG.debug("VMThunder: create vm started, volume_name = %s, vm_name = %s" % (volume_name, vm_name))
             if not self.sessions.has_key(volume_name):

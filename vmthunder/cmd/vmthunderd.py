@@ -31,7 +31,7 @@ def start():
 
     class HeartBeater(threading.Thread):
         def __init__(self, thread_name):
-            super(HeartBeater, self).__init__(name = thread_name)
+            super(HeartBeater, self).__init__(name=thread_name)
 
         def run(self):
             def clock():

@@ -19,7 +19,7 @@ class Compute():
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
-        self.rlock = threading.RLock()
+        self.rlock = threading.Lock()
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
@@ -71,7 +71,6 @@ class Compute():
                 instance_list.append({
                     'vm_name': instances[instance].vm_name,
                 })
-            self.rlock.release()
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):

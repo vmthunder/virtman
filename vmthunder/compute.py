@@ -20,12 +20,12 @@ class Compute():
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
-        #self.rlock = threading.RLock()
+        self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
-    @synchronized('vmthunder')
     def heartbeat(self):
-        self._heartbeat()
+        with self.rlock:
+            self._heartbeat()
 
     def _heartbeat(self):
         LOG.debug("VMThunder: heartbeat start @ %s" % time.asctime())
@@ -49,9 +49,9 @@ class Compute():
                     break
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
-    @synchronized('vmthunder')
     def destroy(self, vm_name):
-        self._destroy(vm_name)
+        with self.rlock:
+            self._destroy(vm_name)
 
     def _destroy(self, vm_name):
         LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
@@ -61,9 +61,9 @@ class Compute():
             del self.instances[vm_name]
         LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % vm_name)
 
-    @synchronized('vmthunder')
     def list(self):
-        return self._list()
+        with self.rlock:
+            return self._list()
 
     def _list(self):
         def build_list_object(instances):
@@ -75,9 +75,9 @@ class Compute():
             self.rlock.release()
         return build_list_object(self.instances)
 
-    @synchronized('vmthunder')
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
-        return self._create(volume_name, vm_name, image_connection, snapshot_link)
+        with self.rlock:
+            return self._create(volume_name, vm_name, image_connection, snapshot_link)
 
     def _create(self, volume_name, vm_name, image_connection, snapshot_link):
         #TODO: roll back if failed

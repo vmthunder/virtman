@@ -87,7 +87,8 @@ class Compute():
         return build_list_object(self.instances)
 
     def create_(self, volume_name, vm_name, image_connection, snapshot_link):
-        self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
+        th = self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
+        th.start
 
     def create_with_lock(self, volume_name, vm_name, image_connection, snapshot_link):
         with self.rlock:

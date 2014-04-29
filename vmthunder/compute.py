@@ -5,11 +5,15 @@ import threading
 
 from oslo.config import cfg
 
+try:
+    from nova.openstack.common import log as logging
+except ImportError:
+    from vmthunder.openstack.common import log as logging
+
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
-from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import volt
 
 

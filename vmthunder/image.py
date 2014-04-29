@@ -4,7 +4,10 @@ import os
 
 from oslo.config import cfg
 
-from vmthunder.openstack.common import log as logging
+try:
+    from nova.openstack.common import log as logging
+except ImportError:
+    from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import connector
 from vmthunder.drivers import fcg

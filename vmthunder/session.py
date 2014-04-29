@@ -2,7 +2,6 @@
 
 import eventlet
 import time
-import os
 import socket
 import fcntl
 import struct
@@ -13,6 +12,7 @@ from oslo.config import cfg
 from vmthunder.openstack.common import log as logging
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
+from vmthunder.enum import Enum
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
@@ -21,12 +21,6 @@ from vmthunder.drivers import volt
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
-
-class Enum(set):
-    def __getattr__(self, item):
-        if item in self:
-            return item
-        return AttributeError
 
 STATUS = Enum(['empty', 'building', 'ok', 'destroying', 'error'])
 ACTIONS = Enum(['build', 'destroy'])

@@ -10,7 +10,6 @@ from vmthunder.session import Session
 from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
 from vmthunder.openstack.common import log as logging
-from vmthunder.openstack.common import threadgroup
 from vmthunder.drivers import volt
 
 
@@ -32,7 +31,6 @@ class Compute():
         self.instances = {}
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
-        #self.pool = threadgroup.ThreadGroup(CONF.thread_pool_size)
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
@@ -85,10 +83,6 @@ class Compute():
                     'vm_name': instances[instance].vm_name,
                 })
         return build_list_object(self.instances)
-
-    #def create_(self, volume_name, vm_name, image_connection, snapshot_link):
-    #    th = self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
-    #    th.start
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
         with self.rlock:

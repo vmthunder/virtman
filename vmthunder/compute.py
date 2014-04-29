@@ -3,14 +3,24 @@ import time
 import os
 import threading
 
+from oslo.config import cfg
+
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
-from vmthunder.lock import synchronized
 from vmthunder.openstack.common import log as logging
+from vmthunder.openstack.common import threadgroup
 from vmthunder.drivers import volt
 
+
+compute_opts = [
+    cfg.IntOpt('thread_pool_size',
+               default=100,
+               help='The count of work threads'),
+]
+CONF = cfg.CONF
+CONF.register_opts(compute_opts)
 
 LOG = logging.getLogger(__name__)
 
@@ -21,7 +31,8 @@ class Compute():
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
-        self.rlock = threading.Lock()
+        self.rlock = threading.RLock()
+        self.pool = threadgroup.ThreadGroup(CONF.thread_pool_size)
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
@@ -75,7 +86,10 @@ class Compute():
                 })
         return build_list_object(self.instances)
 
-    def create(self, volume_name, vm_name, image_connection, snapshot_link):
+    def create_(self, volume_name, vm_name, image_connection, snapshot_link):
+        self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
+
+    def create_with_lock(self, volume_name, vm_name, image_connection, snapshot_link):
         with self.rlock:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
 

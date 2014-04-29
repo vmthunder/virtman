@@ -37,6 +37,22 @@ class Compute():
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
+        class HeartBeater(threading.Thread):
+            def __init__(self, thread_name):
+                super(HeartBeater, self).__init__(name=thread_name)
+
+            def run(self):
+                def clock():
+                    LOG = logging.getLogger(__name__)
+                    LOG.debug("At %s heartbeat once" % time.asctime())
+                    self.heartbeat()
+                    time.sleep(CONF.heartbeat_interval)
+                    #TODO: the max depth of recursion
+                    clock()
+                clock()
+        #heartbeat = HeartBeater('heartbeat')
+        #heartbeat.start()
+
     def heartbeat(self):
         with self.rlock:
             self._heartbeat()

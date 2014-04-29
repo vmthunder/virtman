@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import eventlet
 import time
+import os
 import socket
 import fcntl
 import struct
@@ -9,6 +11,7 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
+from vmthunder.lock import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.drivers import fcg
@@ -46,7 +49,7 @@ class Session(object):
         self.peer_id = ''
         self.target_id = 0
         self.__status = STATUS.empty
-        self.status_lock = threading.Lock()
+        self.status_lock = threading.RLock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -65,7 +68,6 @@ class Session(object):
     def multipath_path(self):
         return dmsetup.prefix + self.multipath_name
 
-    #@synchronized("status_lock")
     def change_status(self, src_status, dst_status):
         with self.status_lock:
             ret = False
@@ -80,12 +82,11 @@ class Session(object):
         if not success:
             while self.__status == STATUS.building:
                 LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
-                time.sleep(3)
+                eventlet.sleep(3)
         LOG.debug("VMThunder: ..........begin to deploy base image")
         try:
             origin_path = self._deploy_image(image_connection)
         except Exception, e:
-            LOG.debug("VMThunder: ..........error during deploying base image")
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
             raise
@@ -101,8 +102,8 @@ class Session(object):
         :param image_connection: the connection towards to the base image
         :return: origin path to create snapshot
         """
-        LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, is_login = %s" %
-                  (self.volume_name, self.has_origin, self.is_login))
+        LOG.debug("VMThunder: in deploy_image, volume name = %s, has origin = %s, has cache = %s, "
+                  "is_login = %s" % (self.volume_name, self.has_origin, self.has_cache, self.is_login))
 
         #Check current status
         if self.has_origin:
@@ -111,23 +112,30 @@ class Session(object):
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
-        LOG.debug("VMThunder: .........begin to rebuild paths")
+        LOG.debug("VMThunder: begin to rebuild paths")
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
-        LOG.debug("VMThunder: .........rebuild paths completed, multipath = %s" % self.multipath_path)
-        #TODO: need to sleep some waiting for ready
+            time.sleep(1)
+        LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
-            LOG.debug("VMThunder: .........begin to create cache, multipath = %s" % self.multipath_path)
+            #TODO: NEED to fix here
+            LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
             self.cached_path = self._create_cache(self.multipath_path)
-            LOG.debug("VMThunder: .........create cache completed, cache path = %s" % self.cached_path)
+            LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
 
         if not self.has_origin:
+            LOG.debug("VMThunder: start to create origin, cache path = %s" % self.cached_path)
             self._create_origin(self.cached_path)
+            LOG.debug("VMThunder: create origin complete, cache path = %s" % self.cached_path)
+
+        LOG.debug("VMThunder: create target is an option!!!")
 
         if not self.has_target:
+            LOG.debug("VMThunder: start to create target, cache path = %s" % self.cached_path)
             iqn = image_connection['target_iqn']
             self._create_target(iqn, self.cached_path)
+            LOG.debug("VMThunder: create target complete, cache path = %s" % self.cached_path)
 
         return self.origin_path
 

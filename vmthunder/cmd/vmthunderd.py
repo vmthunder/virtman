@@ -44,11 +44,6 @@ def start():
     heartbeat = HeartBeater('heartbeat')
     heartbeat.start()
 
-    #TODO:!!!
-    server = wsgi.Server('vmthunder-api', path='/root/packages/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
-    server.start()
-    server.wait()
-
 if __name__ == '__main__':
     CONF(sys.argv[1:], project='vmthunder',
          default_config_files = ['/root/packages/VMThunder/etc/vmthunder/vmthunder.conf'])

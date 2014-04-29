@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import eventlet
 import time
 import os
 import socket
@@ -81,7 +82,7 @@ class Session(object):
         if not success:
             while self.__status == STATUS.building:
                 LOG.debug("VMThunder: in deploy_image, sleep 3 seconds waiting for build completed")
-                time.sleep(3)
+                eventlet.sleep(3)
         LOG.debug("VMThunder: ..........begin to deploy base image")
         try:
             origin_path = self._deploy_image(image_connection)

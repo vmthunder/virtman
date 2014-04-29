@@ -32,7 +32,7 @@ class Compute():
         self.instances = {}
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
-        self.pool = threadgroup.ThreadGroup(CONF.thread_pool_size)
+        #self.pool = threadgroup.ThreadGroup(CONF.thread_pool_size)
         LOG.debug("VMThunder: creating a Compute_node")
 
     def heartbeat(self):
@@ -86,11 +86,11 @@ class Compute():
                 })
         return build_list_object(self.instances)
 
-    def create_(self, volume_name, vm_name, image_connection, snapshot_link):
-        th = self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
-        th.start
+    #def create_(self, volume_name, vm_name, image_connection, snapshot_link):
+    #    th = self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
+    #    th.start
 
-    def create_with_lock(self, volume_name, vm_name, image_connection, snapshot_link):
+    def create(self, volume_name, vm_name, image_connection, snapshot_link):
         with self.rlock:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
 

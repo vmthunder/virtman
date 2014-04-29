@@ -197,7 +197,10 @@ def register_one_by_one(cli_opts):
         try:
             CONF.get(opt)
         except:
-            CONF.register_cli_opt(opt)
+            try:
+                CONF.register_cli_opt(opt)
+            except:
+                pass
 
 register_one_by_one(common_cli_opts)
 register_one_by_one(logging_cli_opts)

@@ -11,7 +11,6 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
-from vmthunder.lock import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.drivers import fcg
@@ -116,7 +115,6 @@ class Session(object):
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
-            time.sleep(1)
         LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
             #TODO: NEED to fix here

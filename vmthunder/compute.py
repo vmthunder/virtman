@@ -5,12 +5,15 @@ import threading
 
 from oslo.config import cfg
 
+#try:
+#    from brick.openstack.common import log as logging
+#except ImportError:
+from vmthunder.openstack.common import log as logging
+
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
-from vmthunder.openstack.common import log as logging
-from vmthunder.openstack.common import threadgroup
 from vmthunder.drivers import volt
 
 
@@ -32,8 +35,23 @@ class Compute():
         self.instances = {}
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
-        #self.pool = threadgroup.ThreadGroup(CONF.thread_pool_size)
         LOG.debug("VMThunder: creating a Compute_node")
+
+        class HeartBeater(threading.Thread):
+            def __init__(self, thread_name):
+                super(HeartBeater, self).__init__(name=thread_name)
+
+            def run(self):
+                def clock():
+                    LOG = logging.getLogger(__name__)
+                    LOG.debug("At %s heartbeat once" % time.asctime())
+                    self.heartbeat()
+                    time.sleep(CONF.heartbeat_interval)
+                    #TODO: the max depth of recursion
+                    clock()
+                clock()
+        #heartbeat = HeartBeater('heartbeat')
+        #heartbeat.start()
 
     def heartbeat(self):
         with self.rlock:
@@ -85,10 +103,6 @@ class Compute():
                     'vm_name': instances[instance].vm_name,
                 })
         return build_list_object(self.instances)
-
-    #def create_(self, volume_name, vm_name, image_connection, snapshot_link):
-    #    th = self.pool.add_thread(self.create_with_lock(volume_name, vm_name, image_connection, snapshot_link))
-    #    th.start
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
         with self.rlock:

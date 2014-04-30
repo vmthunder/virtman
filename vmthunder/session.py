@@ -2,7 +2,6 @@
 
 import eventlet
 import time
-import os
 import socket
 import fcntl
 import struct
@@ -10,10 +9,13 @@ import threading
 
 from oslo.config import cfg
 
+#try:
+#    from brick.openstack.common import log as logging
+#except ImportError:
 from vmthunder.openstack.common import log as logging
-from vmthunder.lock import synchronized
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
+from vmthunder.enum import Enum
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
@@ -22,12 +24,6 @@ from vmthunder.drivers import volt
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
-
-class Enum(set):
-    def __getattr__(self, item):
-        if item in self:
-            return item
-        return AttributeError
 
 STATUS = Enum(['empty', 'building', 'ok', 'destroying', 'error'])
 ACTIONS = Enum(['build', 'destroy'])
@@ -116,7 +112,6 @@ class Session(object):
         if len(self.paths) == 0:
             parent_list = self._get_parent()
             self.rebuild_paths(parent_list)
-            time.sleep(1)
         LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
             #TODO: NEED to fix here

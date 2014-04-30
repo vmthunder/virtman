@@ -7,7 +7,6 @@ import time
 from oslo.config import cfg
 
 from vmthunder import compute
-from vmthunder.common import wsgi
 from vmthunder.openstack.common import log as logging
 
 #TODO: Auto determine host ip if not filled in conf file
@@ -44,11 +43,6 @@ def start():
             clock()
     heartbeat = HeartBeater('heartbeat')
     heartbeat.start()
-
-    #TODO:!!!
-    server = wsgi.Server('vmthunder-api', path='/root/packages/VMThunder/etc/vmthunder/api-paste.ini') #or path = ${a specified path} like '/root/VMThunder/etc/api-paste.ini'
-    server.start()
-    server.wait()
 
 if __name__ == '__main__':
     CONF(sys.argv[1:], project='vmthunder',

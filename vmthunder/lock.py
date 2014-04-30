@@ -1,5 +1,8 @@
 import threading
 
+#try:
+#    from brick.openstack.common import log as logging
+#except ImportError:
 from vmthunder.openstack.common import log as logging
 
 LOG = logging.getLogger(__name__)

@@ -10,7 +10,7 @@ from vmthunder.drivers import rootwrap
 @singleton
 class TgtExecutor(TgtAdm):
     def __init__(self, root_helper='', volumes_dir= '/etc/tgt/conf.d'):
-        super(TgtExecutor, self).__init__(self, root_helper, volumes_dir)
+        TgtAdm.__init__(self, root_helper, volumes_dir)
 
 tgt = TgtExecutor(rootwrap.root_helper(), '/etc/tgt/conf.d')
 

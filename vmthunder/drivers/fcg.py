@@ -2,6 +2,7 @@ from libfcg.fcg import FCG
 from oslo.config import cfg
 
 from vmthunder.singleton import singleton
+from vmthunder.drivers import rootwrap
 
 fcg_opts = [
     cfg.StrOpt('fcg_name',
@@ -26,7 +27,7 @@ CONF.register_opts(fcg_opts)
 @singleton
 class FcgExecutor(FCG):
     def __init__(self):
-        FCG.__init__(self, CONF.fcg_name)
+        FCG.__init__(self, CONF.fcg_name, root_helper=rootwrap.root_helper())
 
 fcg_executor = FcgExecutor()
 

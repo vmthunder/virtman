@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import time
 import os
+import sys
 import threading
 
 from oslo.config import cfg
@@ -13,6 +14,17 @@ from vmthunder.image import StackBDImage
 from vmthunder.singleton import singleton
 from vmthunder.drivers import volt
 
+host_opts = [
+    cfg.StrOpt('host_ip',
+               default='10.107.11.120',
+               help='localhost ip provide VMThunder service'),
+    cfg.StrOpt('host_port',
+               default='8001',
+               help='localhost port to provide VMThunder service'),
+    cfg.IntOpt('heartbeat_interval',
+               default=20,
+               help='localhost heartbeat interval'),
+]
 
 compute_opts = [
     cfg.IntOpt('thread_pool_size',
@@ -21,6 +33,7 @@ compute_opts = [
 ]
 CONF = cfg.CONF
 CONF.register_opts(compute_opts)
+CONF.register_opts(host_opts)
 
 LOG = logging.getLogger(__name__)
 
@@ -33,6 +46,10 @@ class Compute():
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
+
+        CONF(sys.argv[1:], project='vmthunder',
+             default_config_files=['/root/packages/VMThunder/etc/vmthunder/vmthunder.conf'])
+        logging.setup('vmthunder')
 
         #TODO: Add heartbeat later
         class HeartBeater(threading.Thread):
@@ -47,9 +64,10 @@ class Compute():
                     time.sleep(CONF.heartbeat_interval)
                     #TODO: the max depth of recursion
                     clock()
+
                 clock()
-        #heartbeat = HeartBeater('heartbeat')
-        #heartbeat.start()
+                #heartbeat = HeartBeater('heartbeat')
+                #heartbeat.start()
 
     def heartbeat(self):
         with self.rlock:
@@ -100,6 +118,7 @@ class Compute():
                 instance_list.append({
                     'vm_name': instances[instance].vm_name,
                 })
+
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):

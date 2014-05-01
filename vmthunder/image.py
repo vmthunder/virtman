@@ -123,19 +123,32 @@ class StackBDImage(BDImage):
 
     def config_volume(self, origin_path):
         super(StackBDImage, self).config_volume(origin_path)
-        self.link_snapshot()
+        self._link_snapshot()
 
     def deconfig_volume(self):
         super(StackBDImage, self).deconfig_volume()
-        self.unlink_snapshot()
+        self._unlink_snapshot()
 
-    def link_snapshot(self):
+    def _link_snapshot(self):
         target_dev = self.snapshot_link
         os.unlink(target_dev)
         if not os.path.exists(target_dev):
             os.symlink(self._final_path, target_dev)
 
-    def unlink_snapshot(self):
+    def _unlink_snapshot(self):
         target_dev = self.snapshot_link
         if os.path.exists(target_dev):
             os.unlink(target_dev)
+            
+class QCOW2Image(Image):
+    """
+    QCOW2 image, with 
+    """
+    pass
+
+class RAWImage(BDImage):
+    """
+    RAW file image, with loop and dm-snapshoting
+    """
+    pass
+

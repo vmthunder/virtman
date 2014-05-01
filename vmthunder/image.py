@@ -4,9 +4,6 @@ import os
 
 from oslo.config import cfg
 
-#try:
-#    from brick.openstack.common import log as logging
-#except ImportError:
 from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import connector
@@ -54,6 +51,8 @@ class BDImage(Image):
     Block device image
     """
     def __init__(self, session, name, snapshot_dev):
+        if not os.path.exists(snapshot_dev):
+            raise Exception("Could NOT find snapshot device %s!" % snapshot_dev)
         super(BDImage, self).__init__(session, name)
         self.vm_name = name
         self.snapshot_dev = snapshot_dev

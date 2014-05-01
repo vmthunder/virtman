@@ -9,9 +9,6 @@ import threading
 
 from oslo.config import cfg
 
-#try:
-#    from brick.openstack.common import log as logging
-#except ImportError:
 from vmthunder.openstack.common import log as logging
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path

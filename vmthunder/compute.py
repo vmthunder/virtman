@@ -5,9 +5,6 @@ import threading
 
 from oslo.config import cfg
 
-#try:
-#    from brick.openstack.common import log as logging
-#except ImportError:
 from vmthunder.openstack.common import log as logging
 
 from vmthunder.drivers import fcg
@@ -37,6 +34,7 @@ class Compute():
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
+        #TODO: Add heartbeat later
         class HeartBeater(threading.Thread):
             def __init__(self, thread_name):
                 super(HeartBeater, self).__init__(name=thread_name)

@@ -8,6 +8,7 @@ from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import connector
 from vmthunder.drivers import fcg
+from vmthunder.drivers import commands
 
 instance_opts = [
     cfg.BoolOpt('snapshot_with_cache',
@@ -131,14 +132,14 @@ class StackBDImage(BDImage):
 
     def _link_snapshot(self):
         target_dev = self.snapshot_link
-        os.unlink(target_dev)
+        commands.unlink(target_dev)
         if not os.path.exists(target_dev):
-            os.symlink(self._final_path, target_dev)
+            commands.link(self._final_path, target_dev)
 
     def _unlink_snapshot(self):
         target_dev = self.snapshot_link
         if os.path.exists(target_dev):
-            os.unlink(target_dev)
+            commands.unlink(target_dev)
             
 class QCOW2Image(Image):
     """

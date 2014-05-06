@@ -189,23 +189,10 @@ log_opts = [
 ]
 
 CONF = cfg.CONF
-
-
-def register_one_by_one(cli_opts):
-    global CONF
-    for opt in cli_opts:
-        try:
-            CONF.get(opt)
-        except:
-            try:
-                CONF.register_cli_opt(opt)
-            except:
-                pass
-
-register_one_by_one(common_cli_opts)
-register_one_by_one(logging_cli_opts)
-register_one_by_one(generic_log_opts)
-register_one_by_one(log_opts)
+CONF.register_cli_opts(common_cli_opts)
+CONF.register_cli_opts(logging_cli_opts)
+CONF.register_opts(generic_log_opts)
+CONF.register_opts(log_opts)
 
 # our new audit level
 # NOTE(jkoelker) Since we synthesized an audit level, make the logging

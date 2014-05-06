@@ -29,4 +29,4 @@ python setup.py install
 cd vmthunder/cmd
 echo "" > vmthunder.log
 echo "" > vmthunder.log
-python vmthunderd.py --debug --log-file vmthunder.log
+#python vmthunderd.py --debug --log-file vmthunder.log

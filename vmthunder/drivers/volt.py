@@ -1,4 +1,3 @@
-
 from oslo.config import cfg
 from voltclient.v1 import client
 
@@ -22,10 +21,8 @@ class VoltClient(client.Client):
         client.Client.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_port))
 
 
-volt_client = VoltClient()
-
-
 def login(session_name, peer_id, host, port, iqn, lun):
+    volt_client = VoltClient()
     return volt_client.volumes.login(session_name=session_name,
                                      peer_id=peer_id,
                                      host=host,
@@ -35,14 +32,17 @@ def login(session_name, peer_id, host, port, iqn, lun):
 
 
 def get(session_name, host):
+    volt_client = VoltClient()
     return volt_client.volumes.get(session_name=session_name, host=host)
 
 
 def logout(session_name, peer_id):
+    volt_client = VoltClient()
     return volt_client.volumes.logout(session_name, peer_id=peer_id)
 
 
 def heartbeat():
+    volt_client = VoltClient()
     return volt_client.members.heartbeat()
 
 

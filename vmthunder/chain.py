@@ -1,11 +1,10 @@
-
 class Chain:
     def __init__(self):
         self._chain = []
 
     def add_step(self, do, undo):
         assert callable(do) and callable(undo), "%s and %s must be callable" % (do, undo)
-        self._chain.append((do, undo) )
+        self._chain.append((do, undo))
 
     def do(self):
         for i in range(len(self._chain)):

@@ -1,4 +1,3 @@
-
 from oslo.config import cfg
 
 rootwrap_opts = [
@@ -9,6 +8,7 @@ rootwrap_opts = [
 
 CONF = cfg.CONF
 CONF.register_opts(rootwrap_opts)
+
 
 def root_helper():
     return CONF.root_helper

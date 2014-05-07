@@ -7,3 +7,4 @@ flashcache_destroy: CommandFilter, flashcache_destroy, root
 flashcache_invalidate: CommandFilter, flashcache_invalidate, root
 tgt-admin: CommandFilter, tgt-admin, root
 ln: CommandFilter, ln, root
+rm: CommandFilter, rm, root

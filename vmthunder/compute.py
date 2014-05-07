@@ -35,6 +35,8 @@ CONF = cfg.CONF
 CONF.register_opts(compute_opts)
 CONF.register_opts(host_opts)
 
+logging.setup('vmthunder')
+
 LOG = logging.getLogger(__name__)
 
 
@@ -48,8 +50,7 @@ class Compute():
         LOG.debug("VMThunder: creating a Compute_node")
 
         CONF(sys.argv[1:], project='vmthunder',
-             default_config_files=['/root/packages/VMThunder/etc/vmthunder/vmthunder.conf'])
-        logging.setup('vmthunder')
+             default_config_files=['/etc/vmthunder/vmthunder.conf'])
 
         #TODO: Add heartbeat later
         class HeartBeater(threading.Thread):

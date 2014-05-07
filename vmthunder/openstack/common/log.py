@@ -82,6 +82,7 @@ common_cli_opts = [
 
 logging_cli_opts = [
     cfg.StrOpt('log-config-append',
+               default='',
                metavar='PATH',
                deprecated_name='log-config',
                help='The name of logging configuration file. It does not '
@@ -191,21 +192,17 @@ log_opts = [
 CONF = cfg.CONF
 
 
-def register_one_by_one(cli_opts):
+def register_opts(cli_opts):
     global CONF
-    for opt in cli_opts:
-        try:
-            CONF.get(opt)
-        except:
-            try:
-                CONF.register_cli_opt(opt)
-            except:
-                pass
+    try:
+        CONF.register_opts(cli_opts)
+    except cfg.DuplicateOptError:
+        pass
 
-register_one_by_one(common_cli_opts)
-register_one_by_one(logging_cli_opts)
-register_one_by_one(generic_log_opts)
-register_one_by_one(log_opts)
+register_opts(common_cli_opts)
+register_opts(logging_cli_opts)
+register_opts(generic_log_opts)
+register_opts(log_opts)
 
 # our new audit level
 # NOTE(jkoelker) Since we synthesized an audit level, make the logging

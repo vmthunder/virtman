@@ -1,0 +1,9 @@
+[Filters]
+
+dmsetup: CommandFilter, dmsetup, root
+blockdev: CommandFilter, blockdev, root
+flashcache_create: CommandFilter, flashcache_create, root
+flashcache_destroy: CommandFilter, flashcache_destroy, root
+flashcache_invalidate: CommandFilter, flashcache_invalidate, root
+tgt-admin: CommandFilter, tgt-admin, root
+ln: CommandFilter, ln, root

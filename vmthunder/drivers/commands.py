@@ -4,12 +4,12 @@ from vmthunder.drivers import rootwrap
 
 
 def execute(*cmd, **kwargs):
-    putils.execute(*cmd, **kwargs)
+    return putils.execute(*cmd, **kwargs)
 
 
 def unlink(path):
-    execute('rm', '-f', path, run_as_root=True, root_helper=rootwrap.root_helper())
+    return execute('rm', '-f', path, run_as_root=True, root_helper=rootwrap.root_helper())
 
 
 def link(src, dst):
-    execute('ln', '-s', src, dst, run_as_root=True, root_helper=rootwrap.root_helper())
+    return execute('ln', '-s', src, dst, run_as_root=True, root_helper=rootwrap.root_helper())

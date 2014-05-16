@@ -50,9 +50,11 @@ class Compute():
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
-        if not openstack_compatible:
-            CONF(sys.argv[1:], project='vmthunder',
-                 default_config_files=['/etc/vmthunder/vmthunder.conf'])
+        if openstack_compatible:
+            config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
+        else:
+            config_files = ['/etc/vmthunder/vmthunder.conf']
+        CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
         #TODO: Add heartbeat later
         class HeartBeater(threading.Thread):

@@ -24,9 +24,6 @@ host_opts = [
     cfg.IntOpt('heartbeat_interval',
                default=20,
                help='localhost heartbeat interval'),
-    cfg.BoolOpt('openstack_compatible',
-                default=True,
-                help='Whether live with openstack'),
 ]
 
 compute_opts = [
@@ -45,14 +42,14 @@ LOG = logging.getLogger(__name__)
 
 @singleton
 class Compute():
-    def __init__(self):
+    def __init__(self, openstack_compatible=True):
         self.sessions = {}
         self.instances = {}
         self.cache_group = fcg.create_group()
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
-        if not CONF.openstack_compatible:
+        if not openstack_compatible:
             CONF(sys.argv[1:], project='vmthunder',
                  default_config_files=['/etc/vmthunder/vmthunder.conf'])
 

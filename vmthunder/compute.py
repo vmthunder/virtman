@@ -45,7 +45,8 @@ class Compute():
     def __init__(self, openstack_compatible=True):
         self.sessions = {}
         self.instances = {}
-        self.cache_group = fcg.create_group()
+        if not fcg.is_valid():
+            fcg.create_group()
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 

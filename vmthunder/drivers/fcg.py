@@ -30,6 +30,10 @@ class FcgExecutor(FCG):
         FCG.__init__(self, CONF.fcg_name, root_helper=rootwrap.root_helper())
 
 
+def is_valid():
+    fcg_executor = FcgExecutor()
+    return fcg_executor.is_valid()
+
 def create_group():
     fcg_executor = FcgExecutor()
     return fcg_executor.create_group(CONF.fcg_ssds, CONF.fcg_blocksize, CONF.fcg_pattern)

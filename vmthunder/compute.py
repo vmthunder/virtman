@@ -24,6 +24,9 @@ host_opts = [
     cfg.IntOpt('heartbeat_interval',
                default=20,
                help='localhost heartbeat interval'),
+    cfg.BoolOpt('openstack_compatible',
+                default=True,
+                help='Whether live with openstack'),
 ]
 
 compute_opts = [
@@ -49,8 +52,9 @@ class Compute():
         self.rlock = threading.RLock()
         LOG.debug("VMThunder: creating a Compute_node")
 
-        CONF(sys.argv[1:], project='vmthunder',
-             default_config_files=['/etc/vmthunder/vmthunder.conf'])
+        if not CONF.openstack_compatible:
+            CONF(sys.argv[1:], project='vmthunder',
+                 default_config_files=['/etc/vmthunder/vmthunder.conf'])
 
         #TODO: Add heartbeat later
         class HeartBeater(threading.Thread):
@@ -134,6 +138,7 @@ class Compute():
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
+            #TODO: whether openstack_compatible?
             self.instances[vm_name] = StackBDImage(session, vm_name, snapshot_link)
             origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)

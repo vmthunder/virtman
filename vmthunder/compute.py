@@ -57,23 +57,20 @@ class Compute():
             config_files = ['/etc/vmthunder/vmthunder.conf']
         CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
-        #TODO: Add heartbeat later
-        class HeartBeater(threading.Thread):
-            def __init__(self, thread_name):
-                super(HeartBeater, self).__init__(name=thread_name)
+        self.heartbeat_event = threading.Event()
+        self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
+        self.heartbeat_thread.daemon = True
+        self.heartbeat_thread.start()
 
-            def run(self):
-                def clock():
-                    LOG.debug("At %s heartbeat once" % time.asctime())
-                    self.heartbeat()
-                    time.sleep(CONF.heartbeat_interval)
-                    #TODO: the max depth of recursion
-                    clock()
+        LOG.info("VMThunder: create a VMThunder Compute_node completed")
 
-                clock()
-                #heartbeat = HeartBeater('heartbeat')
-                #heartbeat.start()
-            LOG.info("VMThunder: create a VMThunder Compute_node completed")
+    def __del__(self):
+        self.heartbeat_event.set()
+
+    def heartbeat_clock(self):
+        while not self.heartbeat_event.wait(CONF.heartbeat_interval):
+            self.heartbeat()
+        LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):
         with self.rlock:

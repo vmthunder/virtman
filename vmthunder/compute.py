@@ -11,6 +11,7 @@ from vmthunder.openstack.common import log as logging
 from vmthunder.drivers import fcg
 from vmthunder.session import Session
 from vmthunder.image import StackBDImage
+from vmthunder.image import BDImage
 from vmthunder.singleton import singleton
 from vmthunder.drivers import volt
 
@@ -43,14 +44,14 @@ LOG = logging.getLogger(__name__)
 @singleton
 class Compute():
     def __init__(self, openstack_compatible=True):
+        LOG.info("VMThunder: start to create a VMThunder Compute_node")
+        self.openstack_compatible = openstack_compatible
         self.sessions = {}
         self.instances = {}
         if not fcg.is_valid():
             fcg.create_group()
         self.rlock = threading.RLock()
-        LOG.debug("VMThunder: creating a Compute_node")
-
-        if openstack_compatible:
+        if self.openstack_compatible:
             config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
         else:
             config_files = ['/etc/vmthunder/vmthunder.conf']
@@ -63,7 +64,6 @@ class Compute():
 
             def run(self):
                 def clock():
-                    LOG = logging.getLogger(__name__)
                     LOG.debug("At %s heartbeat once" % time.asctime())
                     self.heartbeat()
                     time.sleep(CONF.heartbeat_interval)
@@ -73,6 +73,7 @@ class Compute():
                 clock()
                 #heartbeat = HeartBeater('heartbeat')
                 #heartbeat.start()
+            LOG.info("VMThunder: create a VMThunder Compute_node completed")
 
     def heartbeat(self):
         with self.rlock:
@@ -130,7 +131,7 @@ class Compute():
         with self.rlock:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
 
-    def _create(self, volume_name, vm_name, image_connection, snapshot_link):
+    def _create(self, volume_name, vm_name, image_connection, snapshot):
         #TODO: roll back if failed
         LOG.debug("VMThunder: -----PID = %s" % os.getpid())
         if vm_name not in self.instances.keys():
@@ -138,8 +139,10 @@ class Compute():
             if not self.sessions.has_key(volume_name):
                 self.sessions[volume_name] = Session(volume_name)
             session = self.sessions[volume_name]
-            #TODO: whether openstack_compatible?
-            self.instances[vm_name] = StackBDImage(session, vm_name, snapshot_link)
+            if self.openstack_compatible:
+                self.instances[vm_name] = StackBDImage(session, vm_name, snapshot)
+            else:
+                self.instances[vm_name] = BDImage(session, vm_name, snapshot)
             origin_path = session.deploy_image(image_connection)
             LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].config_volume(origin_path)

@@ -1,0 +1,1 @@
+10.107.19.19 /dev/loop7 1 iqn.2010-10.org.openstack:1

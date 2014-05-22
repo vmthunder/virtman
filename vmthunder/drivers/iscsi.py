@@ -16,7 +16,7 @@ tgt = TgtExecutor(rootwrap.root_helper(), '/etc/tgt/conf.d')
 
 
 def create_iscsi_target(iqn, path):
-    return tgt.create_iscsi_target(iqn, '', '', path)
+    return tgt.create_iscsi_target(iqn, '', '', path, root_helper=rootwrap.root_helper())
 
 
 def remove_iscsi_target(tid, lun, vol_id, vol_name, **kwargs):

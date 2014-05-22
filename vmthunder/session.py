@@ -260,7 +260,8 @@ class Session(object):
             self.has_target = True
         #don't dynamic gain host_id and host_port
         #TODO: eth0? br100?
-        host_ip = self._get_ip_address('br100')
+        #host_ip = self._get_ip_address('br100')
+        host_ip = CONF.host_ip
         LOG.debug("VMThunder: try to login to master server")
         #TODO: port? lun? what is info
         if not self.is_login:

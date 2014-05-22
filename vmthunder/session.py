@@ -239,10 +239,18 @@ class Session(object):
     def reform_connection(connection):
         LOG.debug("old connection is :")
         LOG.debug(connection)
-        new_connection = {'target_portal': connection['target_portal'],
-                          'target_iqn': connection['target_iqn'],
-                          'target_lun': connection['target_lun'],
-        }
+        if isinstance(connection, dict):
+            new_connection = {'target_portal': connection['target_portal'],
+                            'target_iqn': connection['target_iqn'],
+                            'target_lun': connection['target_lun'],
+            }
+        else:
+            parent = connection['parents']
+            new_connection = {
+                'target_portal': "%s:%s" % (parent.host, parent.port),
+                'target_iqn': parent.iqn,
+                'target_lun': parent.lun,
+            }
         LOG.debug("new connection is :")
         LOG.debug(new_connection)
         return new_connection

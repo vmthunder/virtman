@@ -320,7 +320,8 @@ class Session(object):
 
     def _get_parent(self):
         #TODO: br100???
-        host_ip = self._get_ip_address('br100')
+        #host_ip = self._get_ip_address('br100')
+        host_ip = CONF.host_ip
         while True:
             self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
             LOG.debug("VMThunder: in get_parent function to get parent_list :")

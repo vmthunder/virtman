@@ -40,29 +40,32 @@ logging.setup('vmthunder')
 
 LOG = logging.getLogger(__name__)
 
+compute_lock = threading.Lock()
 
 @singleton
 class Compute():
     def __init__(self, openstack_compatible=True):
-        LOG.info("VMThunder: start to create a VMThunder Compute_node")
-        self.openstack_compatible = openstack_compatible
-        self.sessions = {}
-        self.instances = {}
-        if not fcg.is_valid():
-            fcg.create_group()
-        self.rlock = threading.RLock()
-        if self.openstack_compatible:
-            config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
-        else:
-            config_files = ['/etc/vmthunder/vmthunder.conf']
-        CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
+        global compute_lock
+        with compute_lock:
+            LOG.info("VMThunder: start to create a VMThunder Compute_node")
+            self.openstack_compatible = openstack_compatible
+            self.sessions = {}
+            self.instances = {}
+            if not fcg.is_valid():
+                fcg.create_group()
+            self.lock = threading.Lock()
+            if self.openstack_compatible:
+                config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
+            else:
+                config_files = ['/etc/vmthunder/vmthunder.conf']
+            CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
-        self.heartbeat_event = threading.Event()
-        self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
-        self.heartbeat_thread.daemon = True
-        self.heartbeat_thread.start()
+            self.heartbeat_event = threading.Event()
+            self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
+            self.heartbeat_thread.daemon = True
+            self.heartbeat_thread.start()
 
-        LOG.info("VMThunder: create a VMThunder Compute_node completed")
+            LOG.info("VMThunder: create a VMThunder Compute_node completed")
 
     def __del__(self):
         self.heartbeat_event.set()
@@ -73,7 +76,7 @@ class Compute():
         LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):
-        with self.rlock:
+        with self.lock:
             self._heartbeat()
 
     def _heartbeat(self):
@@ -99,7 +102,7 @@ class Compute():
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
     def destroy(self, vm_name):
-        with self.rlock:
+        with self.lock:
             self._destroy(vm_name)
 
     def _destroy(self, vm_name):
@@ -111,7 +114,7 @@ class Compute():
         LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % vm_name)
 
     def list(self):
-        with self.rlock:
+        with self.lock:
             return self._list()
 
     def _list(self):
@@ -125,7 +128,7 @@ class Compute():
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot_link):
-        with self.rlock:
+        with self.lock:
             return self._create(volume_name, vm_name, image_connection, snapshot_link)
 
     def _create(self, volume_name, vm_name, image_connection, snapshot):

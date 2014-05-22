@@ -40,32 +40,29 @@ logging.setup('vmthunder')
 
 LOG = logging.getLogger(__name__)
 
-compute_lock = threading.Lock()
 
 @singleton
 class Compute():
     def __init__(self, openstack_compatible=True):
-        global compute_lock
-        with compute_lock:
-            LOG.info("VMThunder: start to create a VMThunder Compute_node")
-            self.openstack_compatible = openstack_compatible
-            self.sessions = {}
-            self.instances = {}
-            if not fcg.is_valid():
-                fcg.create_group()
-            self.lock = threading.Lock()
-            if self.openstack_compatible:
-                config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
-            else:
-                config_files = ['/etc/vmthunder/vmthunder.conf']
-            CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
+        LOG.info("VMThunder: start to create a VMThunder Compute_node")
+        self.openstack_compatible = openstack_compatible
+        self.sessions = {}
+        self.instances = {}
+        if not fcg.is_valid():
+            fcg.create_group()
+        self.lock = threading.Lock()
+        if self.openstack_compatible:
+            config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
+        else:
+            config_files = ['/etc/vmthunder/vmthunder.conf']
+        CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
-            self.heartbeat_event = threading.Event()
-            self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
-            self.heartbeat_thread.daemon = True
-            self.heartbeat_thread.start()
+        self.heartbeat_event = threading.Event()
+        self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
+        self.heartbeat_thread.daemon = True
+        self.heartbeat_thread.start()
 
-            LOG.info("VMThunder: create a VMThunder Compute_node completed")
+        LOG.info("VMThunder: create a VMThunder Compute_node completed")
 
     def __del__(self):
         self.heartbeat_event.set()

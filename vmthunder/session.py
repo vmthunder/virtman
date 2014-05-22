@@ -21,7 +21,6 @@ from vmthunder.drivers import volt
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
-
 STATUS = Enum(['empty', 'building', 'ok', 'destroying', 'error'])
 ACTIONS = Enum(['build', 'destroy'])
 
@@ -207,7 +206,7 @@ class Session(object):
                     if str(parent) not in self.paths.keys():
                         self.paths[str(parent)] = parent
                 else:
-                    raise(Exception("Unknown %s type of %s "%(type(parent), parent)))
+                    raise (Exception("Unknown %s type of %s " % (type(parent), parent)))
         #Connect new paths
         for key in self.paths.keys():
             if key not in keys_to_remove and not self.paths[key].connected:
@@ -241,23 +240,32 @@ class Session(object):
         LOG.debug(connection)
         if isinstance(connection, dict):
             new_connection = {'target_portal': connection['target_portal'],
-                            'target_iqn': connection['target_iqn'],
-                            'target_lun': connection['target_lun'],
+                              'target_iqn': connection['target_iqn'],
+                              'target_lun': connection['target_lun'],
             }
         else:
-            parent = connection['parents']
             new_connection = {
-                'target_portal': "%s:%s" % (parent.host, parent.port),
-                'target_iqn': parent.iqn,
-                'target_lun': parent.lun,
+                'target_portal': "%s:%s" % (connection.host, connection.port),
+                'target_iqn': connection.iqn,
+                'target_lun': connection.lun,
             }
         LOG.debug("new connection is :")
         LOG.debug(new_connection)
         return new_connection
 
     def reform_connections(self, connections):
+        if isinstance(connections, dict):
+            assert 'parents' in connections.keys(), \
+                'Unknown connections type: connection: {0:s}, type: {1:s}'.format(
+                    connections, type(connections))
+            parents = connections['parents']
+        elif isinstance(connections, list):
+            parents = connections
+        else:
+            raise Exception('Unknown connections type: connection: {0:s}, type: {1:s}'.format(
+                connections, type(connections)))
         new_connections = []
-        for connection in connections:
+        for connection in parents:
             new_connections.append(self.reform_connection(connection))
         return new_connections
 

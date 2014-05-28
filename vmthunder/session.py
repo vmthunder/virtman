@@ -36,6 +36,7 @@ class Session(object):
         self.has_origin = False
         self.has_target = False
         self.is_login = False
+        self.is_local = False
         #TODO: all virtual machines called image
         self.vm = []
         self.peer_id = ''
@@ -104,11 +105,17 @@ class Session(object):
         image_path = Path(self.reform_connection(image_connection))
         self.root[str(image_path)] = image_path
 
-        LOG.debug("VMThunder: begin to rebuild paths")
+        if image_path.connection['target_portal'].find(CONF.host_ip) >= 0:
+            self.is_local = True
+
         if len(self.paths) == 0:
-            parent_list = self._get_parent()
-            self.rebuild_paths(parent_list)
-        LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
+            LOG.debug("VMThunder: begin to rebuild paths")
+            if self.is_local:
+                self.rebuild_paths([image_connection])
+            else:
+                parent_list = self._get_parent()
+                self.rebuild_paths(parent_list)
+            LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
         if not self.has_cache:
             #TODO: NEED to fix here
             LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
@@ -158,8 +165,7 @@ class Session(object):
 
     def adjust_for_heartbeat(self, parent_list):
         self.rebuild_paths(parent_list)
-        LOG.debug('VMThunder: adjust_for_heartbeat according to connections:')
-        LOG.debug(parent_list)
+        LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parent_list)
 
     def has_vm(self):
         if len(self.vm) > 0:
@@ -262,7 +268,7 @@ class Session(object):
         elif isinstance(connections, list):
             parents = connections
         else:
-            raise Exception('Unknown connections type: connection: {0:s}, type: {1:s}'.format(
+            raise Exception('VMThunder: Unknown connections type: connection: {0:s}, type: {1:s}'.format(
                 connections, type(connections)))
         new_connections = []
         for connection in parents:
@@ -270,13 +276,16 @@ class Session(object):
         return new_connections
 
     def _create_target(self, iqn, path):
-        if iscsi.exists(iqn) is False:
+        if iscsi.exists(iqn):
+            self.has_target = True
+        else:
             self.target_id = iscsi.create_iscsi_target(iqn, path)
             LOG.debug("VMThunder: create a target and it's id is %s" % self.target_id)
             self.has_target = True
+
+        if self.is_local:
+            return
         #don't dynamic gain host_id and host_port
-        #TODO: eth0? br100?
-        #host_ip = self._get_ip_address('br100')
         host_ip = CONF.host_ip
         LOG.debug("VMThunder: try to login to master server")
         #TODO: port? lun? what is info

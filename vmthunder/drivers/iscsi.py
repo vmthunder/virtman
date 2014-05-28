@@ -8,11 +8,11 @@ from vmthunder.drivers import rootwrap
 
 @singleton
 class TgtExecutor(TgtAdm):
-    def __init__(self, root_helper='', volumes_dir='/etc/tgt/conf.d'):
+    def __init__(self, root_helper='', volumes_dir='/etc/tgt/stack.d'):
         TgtAdm.__init__(self, root_helper, volumes_dir)
 
 
-tgt = TgtExecutor(rootwrap.root_helper(), '/etc/tgt/conf.d')
+tgt = TgtExecutor(rootwrap.root_helper(), '/etc/tgt/stack.d')
 
 
 def create_iscsi_target(iqn, path):

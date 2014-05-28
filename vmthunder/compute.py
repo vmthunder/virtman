@@ -69,7 +69,10 @@ class Compute():
 
     def heartbeat_clock(self):
         while not self.heartbeat_event.wait(CONF.heartbeat_interval):
-            self.heartbeat()
+            try:
+                self.heartbeat()
+            except Exception, e:
+                LOG.error("VMThudner: heartbeat failed due to %s" % e)
         LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):

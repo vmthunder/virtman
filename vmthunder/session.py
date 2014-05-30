@@ -138,9 +138,10 @@ class Session(object):
         return self.origin_path
 
     def destroy(self):
-        LOG.debug("VMThunder: destroy session %s" % self.volume_name)
+        LOG.debug("VMThunder: destroy session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
         assert not self.has_vm(), 'Destroy session %s failed, still has vm' % self.volume_name
         if self.is_login is True:
+            LOG.debug("VMThunder: logout volt session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
             volt.logout(self.volume_name, peer_id=self.peer_id)
             self.is_login = False
         if self.has_target:
@@ -224,6 +225,9 @@ class Session(object):
             self._reload_multipath(disks)
         else:
             self._create_multipath(disks)
+
+        #TODO:fix here, wait for multipath device ready
+        time.sleep(2)
 
         #Disconnect path to remove
         for key in keys_to_remove:
@@ -345,20 +349,19 @@ class Session(object):
         self.has_origin = False
 
     def _get_parent(self):
-        #TODO: br100???
-        #host_ip = self._get_ip_address('br100')
+        max_try_count = 10
         host_ip = CONF.host_ip
+        try_times = 0
         while True:
-            self.peer_id, parent_list = volt.get(session_name=self.volume_name, host=host_ip)
-            LOG.debug("VMThunder: in get_parent function to get parent_list :")
-            LOG.debug(parent_list)
-            #Wait for parents are ready
-            bo = True
-            for parent in parent_list:
-                if parent.status == "pending":
-                    bo = False
-                    break
-            if bo:
+            try:
+                self.peer_id, parent_list  = volt.get(session_name=self.volume_name, host=host_ip)
+                LOG.debug("VMThunder: in get_parent function, peer_id = %s, parent_list = %s:" % (self.peer_id, parent_list))
                 return parent_list
-            #TODO: sleep???
-            time.sleep(1)
+            except Exception, e:
+                LOG.debug("VMThunder: get parent info from volt server failed due to %s, tried %d times" % (e, try_times))
+                if try_times < max_try_count:
+                    time.sleep(3)
+                    try_times += 1
+                    continue
+                else:
+                    raise Exception("VMThunder: Get parent info failed due to %s! " % e)

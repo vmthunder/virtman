@@ -1,5 +1,5 @@
 from pydm import dmsetup
-from pydm.common import utils
+from pydm.blockdev import Blockdev
 
 from vmthunder.singleton import singleton
 from vmthunder.drivers import rootwrap
@@ -28,7 +28,8 @@ def multipath(name, disks):
 
 
 def reload_multipath(name, disks):
-    size = utils.get_dev_sector_count(disks[0])
+    blk = Blockdev(root_helper=rootwrap.root_helper())
+    size = blk.get_sector_count(disks[0])
     multipath_table = '0 %d multipath 0 0 1 1 queue-length 0 %d 1 ' % (size, len(disks))
     for disk in disks:
         multipath_table += disk + ' 128 '

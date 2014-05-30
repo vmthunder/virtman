@@ -302,13 +302,13 @@ class Session(object):
     def _delete_target(self):
         iscsi.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
         self.has_target = False
-        LOG.debug("successful remove target %s " % self.target_id)
+        LOG.debug("VMThunder: successful remove target %s " % self.target_id)
 
     def _create_multipath(self, disks):
         multipath_name = self.multipath_name
         multipath_path = dmsetup.multipath(multipath_name, disks)
         self.has_multipath = True
-        LOG.debug("create multipath according connection :")
+        LOG.debug("VMThunder: create multipath according connection :")
         LOG.debug(disks)
         return multipath_path
 
@@ -316,7 +316,7 @@ class Session(object):
         multipath_name = self.multipath_name
         dmsetup.remove_table(multipath_name)
         self.has_multipath = False
-        LOG.debug("delete multipath of %s" % multipath_name)
+        LOG.debug("VMThunder: delete multipath of %s" % multipath_name)
 
     def _reload_multipath(self, disks):
         dmsetup.reload_multipath(self.multipath_name, disks)

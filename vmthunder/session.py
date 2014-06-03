@@ -27,6 +27,8 @@ ACTIONS = Enum(['build', 'destroy'])
 
 class Session(object):
     def __init__(self, volume_name):
+        if not volume_name.startswith("volume-"):
+            volume_name = "volume-" + volume_name
         self.volume_name = volume_name
         self.root = {}
         self.paths = {}

@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import threading
+import traceback
 
 from oslo.config import cfg
 
@@ -52,7 +53,7 @@ class Compute():
             fcg.create_group()
         self.lock = threading.Lock()
         if self.openstack_compatible:
-            config_files = ['/etc/nova/nova.conf','/etc/vmthunder/vmthunder.conf']
+            config_files = ['/etc/nova/nova.conf', '/etc/vmthunder/vmthunder.conf']
         else:
             config_files = ['/etc/vmthunder/vmthunder.conf']
         CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
@@ -73,6 +74,7 @@ class Compute():
                 self.heartbeat()
             except Exception, e:
                 LOG.error("VMThudner: heartbeat failed due to %s" % e)
+                LOG.error("VMThunder: traceback is : %s" % traceback.print_exc())
         LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):
@@ -83,8 +85,8 @@ class Compute():
         LOG.debug("VMThunder: heartbeat start @ %s" % time.asctime())
         to_delete_sessions = []
         for each_key in self.sessions:
-            LOG.debug("VMThunder: session_name = %s, instances in session = " % self.sessions[each_key].volume_name)
-            LOG.debug(self.sessions[each_key].vm)
+            LOG.debug("VMThunder: session_name = %s, instances in session = %s" %
+                      (self.sessions[each_key].volume_name, self.sessions[each_key].vm))
             if not self.sessions[each_key].has_vm():
                 if self.sessions[each_key].destroy():
                     to_delete_sessions.append(each_key)

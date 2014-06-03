@@ -223,13 +223,13 @@ class Session(object):
         #Rebuild multipath device
         disks = [self.paths[key].device_path for key in self.paths
                  if key not in keys_to_remove and self.paths[key].connected]
-        if self.has_multipath:
-            self._reload_multipath(disks)
-        else:
-            self._create_multipath(disks)
-
-        #TODO:fix here, wait for multipath device ready
-        time.sleep(2)
+        if len(disks) > 0:
+            if self.has_multipath:
+                self._reload_multipath(disks)
+            else:
+                self._create_multipath(disks)
+            #TODO:fix here, wait for multipath device ready
+            time.sleep(2)
 
         #Disconnect path to remove
         for key in keys_to_remove:

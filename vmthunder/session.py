@@ -10,6 +10,7 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
+from vmthunder.chain import AtomicChain
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.enum import Enum
@@ -32,6 +33,7 @@ class Session(object):
         self.volume_name = volume_name
         self.root = {}
         self.paths = {}
+        self.iqn = ''
         self.cached_path = ''
         self.has_multipath = False
         self.has_cache = False
@@ -45,6 +47,7 @@ class Session(object):
         self.target_id = 0
         self.__status = STATUS.empty
         self.status_lock = threading.Lock()
+        self.build_lock = threading.Lock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -110,54 +113,35 @@ class Session(object):
         if image_path.connection['target_portal'].find(CONF.host_ip) >= 0:
             self.is_local = True
 
-        if len(self.paths) == 0:
-            LOG.debug("VMThunder: begin to rebuild paths")
-            if self.is_local:
-                self.rebuild_paths([image_connection])
-            else:
-                parent_list = self._get_parent()
-                self.rebuild_paths(parent_list)
-            LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
-        if not self.has_cache:
-            #TODO: NEED to fix here
-            LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
-            self.cached_path = self._create_cache(self.multipath_path)
-            LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
-
-        if not self.has_origin:
-            LOG.debug("VMThunder: start to create origin, cache path = %s" % self.cached_path)
-            self._create_origin(self.cached_path)
-            LOG.debug("VMThunder: create origin complete, cache path = %s" % self.cached_path)
-
-        LOG.debug("VMThunder: create target is an option!!!")
-
-        if not self.has_target:
-            LOG.debug("VMThunder: start to create target, cache path = %s" % self.cached_path)
-            iqn = image_connection['target_iqn']
-            self._create_target(iqn, self.cached_path)
-            LOG.debug("VMThunder: create target complete, cache path = %s" % self.cached_path)
-
+        self.iqn = image_connection['target_iqn']
+        build_chain = AtomicChain(self.build_lock)
+        build_chain.add_step(lambda: self.build_paths(image_connection), lambda: self._delete_multipath())
+        build_chain.add_step(lambda: self._create_cache(), lambda: self._delete_cache())
+        build_chain.add_step(lambda: self._create_origin(), lambda: self._delete_origin())
+        build_chain.add_step(lambda: self._create_target(), lambda: self._delete_target())
+        build_chain.add_step(lambda: self._login_volt(), lambda: self._logout_volt())
+        build_chain.do()
         return self.origin_path
 
     def destroy(self):
+        with self.build_lock:
+            return self._destroy()
+
+    def _destroy(self):
         LOG.debug("VMThunder: destroy session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
         assert not self.has_vm(), 'Destroy session %s failed, still has vm' % self.volume_name
-        if self.is_login is True:
-            LOG.debug("VMThunder: logout volt session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
-            volt.logout(self.volume_name, peer_id=self.peer_id)
-            self.is_login = False
+        self._logout_volt()
         if self.has_target:
             if iscsi.is_connected(self.target_id):
                 return False
             else:
                 self._delete_target()
-
         if self.has_origin:
             self._delete_origin()
+        #TODO: fix this time.sleep
         time.sleep(1)
-        multipath = self.multipath_path
         if not self.has_origin and not self.has_target:
-            self._delete_cache(multipath)
+            self._delete_cache()
         if not self.has_cache:
             self._delete_multipath()
         if not self.has_multipath:
@@ -167,8 +151,9 @@ class Session(object):
         return True
 
     def adjust_for_heartbeat(self, parent_list):
-        self.rebuild_paths(parent_list)
-        LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parent_list)
+        with self.build_lock:
+            self.rebuild_paths(parent_list)
+            LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parent_list)
 
     def has_vm(self):
         if len(self.vm) > 0:
@@ -187,6 +172,16 @@ class Session(object):
             self.vm.remove(vm_name)
         except ValueError:
             LOG.error("remove vm failed. VM %s does not existed" % vm_name)
+
+    def build_paths(self, image_connection):
+        if len(self.paths) == 0:
+            LOG.debug("VMThunder: begin to rebuild paths")
+            if self.is_local:
+                self.rebuild_paths([image_connection])
+            else:
+                parent_list = self._get_parent()
+                self.rebuild_paths(parent_list)
+            LOG.debug("VMThunder: rebuild paths completed, multipath = %s" % self.multipath_path)
 
     def rebuild_paths(self, parents_list):
         #Reform connections
@@ -281,25 +276,36 @@ class Session(object):
             new_connections.append(self.reform_connection(connection))
         return new_connections
 
-    def _create_target(self, iqn, path):
-        if iscsi.exists(iqn):
-            self.has_target = True
-        else:
-            self.target_id = iscsi.create_iscsi_target(iqn, path)
-            LOG.debug("VMThunder: create a target and it's id is %s" % self.target_id)
-            self.has_target = True
-
+    def _login_volt(self):
         if self.is_local:
             return
-        #don't dynamic gain host_id and host_port
         host_ip = CONF.host_ip
         LOG.debug("VMThunder: try to login to master server")
-        #TODO: port? lun? what is info
         if not self.is_login:
+            iqn = self.iqn
             info = volt.login(session_name=self.volume_name, peer_id=self.peer_id,
                               host=host_ip, port='3260', iqn=iqn, lun='1')
-            LOG.debug("VMThunder: login to master server %s" % info)
-            self.is_login = True
+        LOG.debug("VMThunder: login to master server %s" % info)
+        self.is_login = True
+
+    def _logout_volt(self):
+        if self.is_login is True:
+            LOG.debug("VMThunder: logout volt session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
+            volt.logout(self.volume_name, peer_id=self.peer_id)
+            self.is_login = False
+
+    def _create_target(self):
+        if not self.has_target:
+            iqn = self.iqn
+            LOG.debug("VMThunder: start to create target, cache path = %s" % self.cached_path)
+            path = self.cached_path
+            if iscsi.exists(iqn):
+                self.has_target = True
+            else:
+                self.target_id = iscsi.create_iscsi_target(iqn, path)
+                LOG.debug("VMThunder: create a new target and it's id is %s" % self.target_id)
+                self.has_target = True
+            LOG.debug("VMThunder: create target complete, cache path = %s" % self.cached_path)
 
     def _delete_target(self):
         iscsi.remove_iscsi_target(0, 0, self.volume_name, self.volume_name)
@@ -323,26 +329,36 @@ class Session(object):
     def _reload_multipath(self, disks):
         dmsetup.reload_multipath(self.multipath_name, disks)
 
-    def _create_cache(self, multipath):
-        cached_path = fcg.add_disk(multipath)
-        self.has_cache = True
-        LOG.debug("VMThunder: create cache according to multipath %s" % multipath)
-        return cached_path
+    def _create_cache(self):
+        if not self.has_cache:
+            LOG.debug("VMThunder: create cache for base image %s" % self.volume_name)
+            multipath = self.multipath_path
+            LOG.debug("VMThunder: create cache according to multipath %s" % multipath)
+            cached_path = fcg.add_disk(multipath)
+            self.has_cache = True
+            self.cached_path = cached_path
+            LOG.debug("VMThunder: create cache completed, cache path = %s" % self.cached_path)
+            return cached_path
 
-    def _delete_cache(self, multipath):
+    def _delete_cache(self):
+        multipath = self.multipath_path
         fcg.rm_disk(multipath)
         self.has_cache = False
         LOG.debug("VMThunder: delete cache according to multipath %s " % multipath)
 
-    def _create_origin(self, origin_dev):
-        origin_name = self.origin_name
-        if self.has_origin:
-            origin_path = self.origin_path
-        else:
-            origin_path = dmsetup.origin(origin_name, origin_dev)
-            LOG.debug("VMThunder: create origin on %s" % origin_dev)
-            self.has_origin = True
-        return origin_path
+    def _create_origin(self):
+        origin_dev = self.cached_path
+        if not self.has_origin:
+            LOG.debug("VMThunder: start to create origin, cache path = %s" % self.cached_path)
+            origin_name = self.origin_name
+            if self.has_origin:
+                origin_path = self.origin_path
+            else:
+                origin_path = dmsetup.origin(origin_name, origin_dev)
+                LOG.debug("VMThunder: create origin on %s" % origin_dev)
+                self.has_origin = True
+            LOG.debug("VMThunder: create origin complete, cache path = %s" % self.cached_path)
+            return origin_path
 
     def _delete_origin(self):
         origin_name = self.origin_name

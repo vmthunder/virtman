@@ -57,6 +57,8 @@ class Compute():
             config_files = ['/etc/vmthunder/vmthunder.conf']
         CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
+        self.global_lock = threading.Lock()
+
         self.heartbeat_event = threading.Event()
         self.heartbeat_thread = threading.Thread(target=self.heartbeat_clock)
         self.heartbeat_thread.daemon = True
@@ -77,6 +79,10 @@ class Compute():
         LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):
+        with self.global_lock:
+            self._heartbeat()
+
+    def _heartbeat(self):
         LOG.debug("VMThunder: heartbeat start @ %s" % time.asctime())
         to_delete_sessions = []
         for each_key in self.sessions:
@@ -99,6 +105,10 @@ class Compute():
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
     def destroy(self, vm_name):
+        with self.global_lock:
+            self._destroy(vm_name)
+
+    def _destroy(self, vm_name):
         LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
@@ -117,6 +127,10 @@ class Compute():
         return build_list_object(self.instances)
 
     def create(self, volume_name, vm_name, image_connection, snapshot):
+        with self.global_lock:
+            return self._create(self, volume_name, vm_name, image_connection, snapshot)
+
+    def _create(self, volume_name, vm_name, image_connection, snapshot):
         #TODO: roll back if failed
         LOG.debug("VMThunder: -----PID = %s" % os.getpid())
         if vm_name not in self.instances.keys():
@@ -128,8 +142,8 @@ class Compute():
                 self.instances[vm_name] = StackBDImage(session, vm_name, snapshot)
             else:
                 self.instances[vm_name] = BDImage(session, vm_name, snapshot)
+
             origin_path = session.deploy_image(image_connection)
-            LOG.debug("origin is %s" % origin_path)
             self.instances[vm_name].config_volume(origin_path)
             LOG.debug("VMThunder: create vm completed, volume_name = %s, vm_name = %s, snapshot = %s" %
                       (volume_name, vm_name, self.instances[vm_name].snapshot_path))

@@ -10,7 +10,7 @@ import threading
 from oslo.config import cfg
 
 from vmthunder.openstack.common import log as logging
-from vmthunder.chain import AtomicChain
+from vmthunder.chain import Chain
 from vmthunder.path import connection_to_str
 from vmthunder.path import Path
 from vmthunder.enum import Enum
@@ -47,7 +47,6 @@ class Session(object):
         self.target_id = 0
         self.__status = STATUS.empty
         self.status_lock = threading.Lock()
-        self.build_lock = threading.Lock()
         LOG.debug("VMThunder: create a session of volume_name %s" % self.volume_name)
 
     @property
@@ -114,7 +113,7 @@ class Session(object):
             self.is_local = True
 
         self.iqn = image_connection['target_iqn']
-        build_chain = AtomicChain(self.build_lock)
+        build_chain = Chain()
         build_chain.add_step(lambda: self.build_paths(image_connection), lambda: self._delete_multipath())
         build_chain.add_step(lambda: self._create_cache(), lambda: self._delete_cache())
         build_chain.add_step(lambda: self._create_origin(), lambda: self._delete_origin())
@@ -124,10 +123,6 @@ class Session(object):
         return self.origin_path
 
     def destroy(self):
-        with self.build_lock:
-            return self._destroy()
-
-    def _destroy(self):
         LOG.debug("VMThunder: destroy session = %s, peer_id = %s" % (self.volume_name, self.peer_id))
         assert not self.has_vm(), 'Destroy session %s failed, still has vm' % self.volume_name
         self._logout_volt()
@@ -151,9 +146,8 @@ class Session(object):
         return True
 
     def adjust_for_heartbeat(self, parent_list):
-        with self.build_lock:
-            self.rebuild_paths(parent_list)
-            LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parent_list)
+        self.rebuild_paths(parent_list)
+        LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parent_list)
 
     def has_vm(self):
         if len(self.vm) > 0:

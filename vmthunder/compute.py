@@ -51,7 +51,6 @@ class Compute():
         self.instances = {}
         if not fcg.is_valid():
             fcg.create_group()
-        self.lock = threading.Lock()
         if self.openstack_compatible:
             config_files = ['/etc/nova/nova.conf', '/etc/vmthunder/vmthunder.conf']
         else:
@@ -78,10 +77,6 @@ class Compute():
         LOG.debug("VMThunder: stop heartbeat timer")
 
     def heartbeat(self):
-        with self.lock:
-            self._heartbeat()
-
-    def _heartbeat(self):
         LOG.debug("VMThunder: heartbeat start @ %s" % time.asctime())
         to_delete_sessions = []
         for each_key in self.sessions:
@@ -104,10 +99,6 @@ class Compute():
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
     def destroy(self, vm_name):
-        with self.lock:
-            self._destroy(vm_name)
-
-    def _destroy(self, vm_name):
         LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
         if self.instances.has_key(vm_name):
             instance = self.instances[vm_name]
@@ -116,10 +107,6 @@ class Compute():
         LOG.debug("VMThunder: destroy vm completed, vm_name = %s" % vm_name)
 
     def list(self):
-        with self.lock:
-            return self._list()
-
-    def _list(self):
         def build_list_object(instances):
             instance_list = []
             for instance in instances.keys():
@@ -129,11 +116,7 @@ class Compute():
 
         return build_list_object(self.instances)
 
-    def create(self, volume_name, vm_name, image_connection, snapshot_link):
-        with self.lock:
-            return self._create(volume_name, vm_name, image_connection, snapshot_link)
-
-    def _create(self, volume_name, vm_name, image_connection, snapshot):
+    def create(self, volume_name, vm_name, image_connection, snapshot):
         #TODO: roll back if failed
         LOG.debug("VMThunder: -----PID = %s" % os.getpid())
         if vm_name not in self.instances.keys():

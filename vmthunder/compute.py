@@ -128,7 +128,7 @@ class Compute():
 
     def create(self, volume_name, vm_name, image_connection, snapshot):
         with self.global_lock:
-            return self._create(self, volume_name, vm_name, image_connection, snapshot)
+            return self._create(volume_name, vm_name, image_connection, snapshot)
 
     def _create(self, volume_name, vm_name, image_connection, snapshot):
         #TODO: roll back if failed

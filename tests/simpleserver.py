@@ -19,12 +19,12 @@ class SimpleCompute(object):
             'target_iqn' : target_iqn,
             'target_lun' : target_lun,
         }
-        cn = Compute()
+        cn = Compute(openstack_compatible=False)
         cn.create(volume_name, vm_name, image_connection, snapshot_dev)
 
     @staticmethod
     def destroy(vm_name):
-        cn = Compute()
+        cn = Compute(openstack_compatible=False)
         cn.destroy(vm_name)
 
 server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)

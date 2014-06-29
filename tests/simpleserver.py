@@ -30,3 +30,4 @@ class SimpleCompute(object):
 server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)
 server.register_introspection_functions()
 server.register_instance(SimpleCompute)
+server.serve_forever()

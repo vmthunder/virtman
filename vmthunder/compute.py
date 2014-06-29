@@ -147,4 +147,3 @@ class Compute():
             self.instances[vm_name].config_volume(origin_path)
             LOG.debug("VMThunder: create vm completed, volume_name = %s, vm_name = %s, snapshot = %s" %
                       (volume_name, vm_name, self.instances[vm_name].snapshot_path))
-            return self.instances[vm_name].snapshot_link

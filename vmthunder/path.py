@@ -2,8 +2,8 @@
 from vmthunder.drivers import connector
 from vmthunder.openstack.common import log as logging
 
-
 LOG = logging.getLogger(__name__)
+
 iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
 
 
@@ -23,8 +23,7 @@ class Path(object):
         return connection_to_str(self.connection)
 
     def connect(self):
-        device_info = connector.connect_volume(self.connection)
-        self.device_info = device_info
+        self.device_info = connector.connect_volume(self.connection)
         self.device_path = self.device_info['path']
         self.connected = True
         LOG.debug("VMThunder: connect to path: %s", str(self))

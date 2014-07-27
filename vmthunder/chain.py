@@ -1,7 +1,8 @@
-import threading
-
 
 class Chain(object):
+    """
+    build chain, roll over if failed
+    """
     def __init__(self):
         self._chain = []
 
@@ -20,22 +21,9 @@ class Chain(object):
                     i -= 1
                 raise
 
-
-class AtomicChain(Chain):
-    def __init__(self, lock=None):
-        if not lock:
-            self._lock = threading.Lock()
-        else:
-            self._lock = lock
-        super(AtomicChain, self).__init__()
-
-    def do(self):
-        with self._lock:
-            super(AtomicChain, self).do()
-
 if __name__ == "__main__":
     " Test and demostrate Chain itself "
-    c = AtomicChain()
+    c = Chain()
     def asdf(n): print(n)
     def qwer(n): raise OverflowError()
     c.add_step(lambda: asdf(1), lambda: asdf(-1))

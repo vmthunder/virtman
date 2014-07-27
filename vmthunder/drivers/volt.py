@@ -30,16 +30,13 @@ def login(session_name, peer_id, host, port, iqn, lun):
                                      iqn=iqn,
                                      lun=lun)
 
-
-def get(session_name, host):
-    volt_client = VoltClient()
-    return volt_client.volumes.get(session_name=session_name, host=host)
-
-
 def logout(session_name, peer_id):
     volt_client = VoltClient()
     return volt_client.volumes.logout(session_name, peer_id=peer_id)
 
+def get(session_name, host):
+    volt_client = VoltClient()
+    return volt_client.volumes.get(session_name=session_name, host=host)
 
 def heartbeat():
     volt_client = VoltClient()

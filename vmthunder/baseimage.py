@@ -28,17 +28,14 @@ ACTIONS = Enum(['build', 'destroy'])
 
 class BaseImage(object):
 
-    def __str__(self):
-        return self.image_path
+    def __init__(self):
+        pass
 
     def deploy_base_image(self):
         return NotImplementedError()
 
     def destroy_base_image(self):
         return NotImplementedError()
-
-    def get_image_path(self):
-        return self.image_path
 
 
 class BlockDeviceBaseImage(BaseImage):

@@ -2,12 +2,11 @@
 
 import os
 from oslo.config import cfg
-from vmthunder.openstack.common import log as logging
-from vmthunder.drivers import dmsetup
+
 from vmthunder.drivers import connector
 from vmthunder.drivers import fcg
-from vmthunder.drivers import commands
 
+from vmthunder.openstack.common import log as logging
 
 snapshot_opts = [
     cfg.BoolOpt('snapshot_with_cache',
@@ -25,17 +24,11 @@ class Snapshot(object):
     def __init__(self):
         self.snapshot_with_cache = CONF.snapshot_with_cache
 
-    def __str__(self):
-        return self.snapshot_path
-
     def create_snapshot(self):
         return NotImplementedError()
 
     def destroy_snapshot(self):
         return NotImplementedError()
-
-    def get_snapshot_path(self):
-        return self.snapshot_path
 
     def _create_cache(self, snapshot):
         cached_path = fcg.add_disk(snapshot)
@@ -43,6 +36,7 @@ class Snapshot(object):
 
     def _delete_cache(self, snapshot):
         fcg.rm_disk(snapshot)
+        return True
 
 
 class LocalSnapshot(Snapshot):
@@ -100,6 +94,7 @@ class BlockDeviceSnapshot(Snapshot):
         if self.snapshot_with_cache:
             self._delete_cache(self.snapshot_dev)
         connector.disconnect_volume(self.connection, self.device_info)
+        return True
 
 
 class QCOW2Snapshot(Snapshot):

@@ -7,17 +7,17 @@ import threading
 import traceback
 from oslo.config import cfg
 
-from vmthunder.image import LocalImage
-from vmthunder.image import BlockDeviceImage
-from vmthunder.singleton import singleton
 from vmthunder.drivers import fcg
 from vmthunder.drivers import volt
+from vmthunder.singleton import singleton
+from vmthunder.image import LocalImage
+from vmthunder.image import BlockDeviceImage
 
 from vmthunder.openstack.common import log as logging
 
 host_opts = [
     cfg.StrOpt('host_ip',
-               default='10.107.11.120',
+               default='192.168.137.101',
                help='localhost ip provide VMThunder service'),
     cfg.StrOpt('host_port',
                default='8001',
@@ -33,32 +33,36 @@ compute_opts = [
 ]
 
 CONF = cfg.CONF
-CONF.register_opts(compute_opts)
 CONF.register_opts(host_opts)
+CONF.register_opts(compute_opts)
 
 logging.setup('vmthunder')
 
 LOG = logging.getLogger(__name__)
 
+
 class Compute(object):
 
     def __init__(self):
+        pass
+
+    def create(self, instance_name, image_name, image_connection, snapshot):
         return NotImplementedError()
 
-    def create(self, vm_name, image_name,image_connection, snapshot):
+    def destroy(self, instance_name):
         return NotImplementedError()
 
-    def destroy(self, vm_name):
+    def list(self):
         return NotImplementedError()
-
 
 @singleton
 class VMThunderCompute(Compute):
+
     def __init__(self, openstack_compatible=True):
         LOG.info("VMThunder: start to create a VMThunder Compute_node")
         self.openstack_compatible = openstack_compatible
         self.images = {}
-        self.vm_names = {}
+        self.instance_names = {}
         self.lock = threading.Lock()
         if not fcg.is_valid():
             fcg.create_group()
@@ -106,46 +110,52 @@ class VMThunderCompute(Compute):
                     break
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
-    def create(self, vm_name, image_name, image_connections, snapshot):
+    def create(self, instance_name, image_name, image_connections, snapshot):
         """
-        :param vm_name: string
+        :param instance_name: string
         :param image_name: string
         :param image_connections: list or tuple or single dict, like ({},..) or [{},..] or {}
                                   and each dict make of {'target_portal':..,'target_iqn':..,'target_lun':.., ..}
         :param snapshot: snapshot_connection or snapshot_dev
         """
+        # multiple roots for creating
+        if isinstance(image_connections, tuple) or isinstance(image_connections, list):
+            image_connections = list(image_connections)
+        else:
+            image_connections = [image_connections]
+
         with self.lock:
-            if self.vm_names.has_key(vm_name):
-                LOG.debug("VMThunder: the vm_name \'%s\' already exists!" % (vm_name))
+            if self.instance_names.has_key(instance_name):
+                LOG.debug("VMThunder: the instance_name \'%s\' already exists!" % (instance_name))
                 return
             else:
-                self.vm_names[vm_name] = image_name
+                self.instance_names[instance_name] = image_name
             if not self.images.has_key(image_name):
-                if self.openstack_compatible:
-                    self.images[image_name] = BlockDeviceImage(image_name, image_connections)
-                else:
+                if not self.openstack_compatible:
                     self.images[image_name] = LocalImage(image_name, image_connections)
+                else:
+                    self.images[image_name] = BlockDeviceImage(image_name, image_connections)
             self.images[image_name].has_instance = True
         LOG.debug("VMThunder: -----PID = %s" % os.getpid())
-        LOG.debug("VMThunder: create vm started, vm_name = %s, image_name = %s" % (vm_name, image_name))
-        instance_path = self.images[image_name].create_instance(vm_name, snapshot)
-        LOG.debug("VMThunder: create vm completed, vm_name = %s, image_name = %s, instance_path = %s" % (vm_name, image_name, instance_path))
+        LOG.debug("VMThunder: create VM started, instance_name = %s, image_name = %s" % (instance_name, image_name))
+        instance_path = self.images[image_name].create_instance(instance_name, snapshot)
+        LOG.debug("VMThunder: create VM completed, instance_name = %s, image_name = %s, instance_path = %s" % (instance_name, image_name, instance_path))
         return instance_path
 
-    def destroy(self, vm_name):
-        LOG.debug("VMThunder: destroy vm started, vm_name = %s" % (vm_name))
-        if not self.vm_names.has_key(vm_name):
-            LOG.debug("VMThunder: the vm_name \'%s\' does not exist!" % (vm_name))
+    def destroy(self, instance_name):
+        LOG.debug("VMThunder: destroy VM started, instance_name = %s" % (instance_name))
+        if not self.instance_names.has_key(instance_name):
+            LOG.debug("VMThunder: the instance_name \'%s\' does not exist!" % (instance_name))
             return
         else:
-            image_name = self.vm_names[vm_name]
-            if self.images[image_name].destroy_instance(vm_name):
+            image_name = self.instance_names[instance_name]
+            if self.images[image_name].destroy_instance(instance_name):
                 with self.lock:
-                    del self.vm_names[vm_name]
-        LOG.debug("VMThunder: destroy vm completed, vm_name = %s, ret = %s" % (vm_name, ret))
+                    del self.instance_names[instance_name]
+        LOG.debug("VMThunder: destroy VM completed, instance_name = %s, ret = %s" % (instance_name))
 
     def list(self):
-        vm_list = []
-        for vm_name, image_name in self.vm_names.items():
-            vm_list.append(vm_name+':'+image_name)
-        return vm_list
+        instance_list = []
+        for instance_name, image_name in self.instance_names.items():
+            instance_list.append(instance_name+':'+image_name)
+        return instance_list

@@ -1,21 +1,29 @@
 
 import os
 
-from vmthunder.snapshot import BlockDeviceSnapshot
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import commands
+from vmthunder.snapshot import LocalSnapshot
+from vmthunder.snapshot import BlockDeviceSnapshot
+
+from vmthunder.openstack.common import log as logging
+
+LOG = logging.getLogger(__name__)
+
 
 class Instance(object):
+
     def __init__(self):
         pass
 
+
 class LocalInstance(Instance):
-    def __init__(self, origin_path, vm_name, snapshot_dev):
+    def __init__(self, origin_path, instance_name, snapshot_dev):
         self.instance_path = None
-        self.instance_name = vm_name
+        self.instance_name = instance_name
         self.origin_path = origin_path
         self.snapshot = LocalSnapshot(snapshot_dev)
-        self.snapshot_name = "snapshot_" + vm_name
+        self.snapshot_name = "snapshot_" + instance_name
 
     def create(self):
         snapshot_path = self.snapshot.create_snapshot()
@@ -25,18 +33,19 @@ class LocalInstance(Instance):
     def destroy(self):
         dmsetup.remove_table(self.snapshot_name)
         self.snapshot.destroy_snapshot()
+        return True
 
 
 class BlockDeviceInstance(Instance):
     """
     Block device instance for OpenStack
     """
-    def __init__(self, origin_path, vm_name, snapshot_connection):
+    def __init__(self, origin_path, instance_name, snapshot_connection):
         self.instance_path = None
-        self.instance_name = vm_name
+        self.instance_name = instance_name
         self.origin_path = origin_path
         self.snapshot = BlockDeviceSnapshot(snapshot_connection)
-        self.snapshot_name = "snapshot_" + vm_name
+        self.snapshot_name = "snapshot_" + instance_name
         self.snapshot_link = None
 
     def create(self):
@@ -56,6 +65,7 @@ class BlockDeviceInstance(Instance):
             commands.unlink(self.snapshot_link)
         dmsetup.remove_table(self.snapshot_name)
         self.snapshot.destroy_snapshot()
+        return True
 
 
 

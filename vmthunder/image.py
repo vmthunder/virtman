@@ -20,7 +20,6 @@ class Image(object):
         self.base_image = None
         self.instances = {}
         self.has_instance = None
-        self.peer_id = None
         self.lock = threading.Lock()
         # deploy image only once
         self.origin_path = self._deploy_image()

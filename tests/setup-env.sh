@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 mkdir -p /root/blocks
-dd if=/dev/zero of=/root/blocks/cache.blk bs=1M count=15k
+dd if=/dev/zero of=/root/blocks/cache.blk bs=1M count=1k
 losetup /dev/loop1 /root/blocks/cache.blk
 
 echo "create snapshot devices"

@@ -39,6 +39,7 @@ class BaseImage(object):
 
 
 class BlockDeviceBaseImage(BaseImage):
+
     def __init__(self, image_name, image_connections):
         if not image_name.startswith("image-"):
             image_name = "image-" + image_name
@@ -124,7 +125,7 @@ class BlockDeviceBaseImage(BaseImage):
                 found = connection
                 break
         if found is not None:
-            self.image_connections = found
+            self.image_connections = [found]
             self.is_local_has_image = True
 
         #Reform connections
@@ -134,6 +135,11 @@ class BlockDeviceBaseImage(BaseImage):
         self._create_origin()
         self._create_target()
         self._login_master()
+
+        print "target_id = ", self.target_id
+        print "origin_path = ", self.origin_path, " origin_name = ", self.origin_name
+        print "cached_path = ", self.cached_path, " No name"
+        print "multipath_path = ", self.multipath_path, "multipath_name = ", self.multipath_name
 
         return self.origin_path
 
@@ -244,7 +250,7 @@ class BlockDeviceBaseImage(BaseImage):
     def _create_origin(self):
         if not self.has_origin:
             LOG.debug("VMThunder: start to create origin, cache path = %s" % self.cached_path)
-            self.origin_path = dmsetup.origin(self.origin_name, self.origin_path)
+            self.origin_path = dmsetup.origin(self.origin_name, self.cached_path)
             self.has_origin = True
             LOG.debug("VMThunder: create origin complete, origin path = %s" % self.origin_path)
         return self.origin_path

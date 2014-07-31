@@ -1,5 +1,6 @@
 192.168.137.101 vm1 /dev/loop2
 192.168.137.101 vm2 /dev/loop3
+192.168.137.102 instance-haha /dev/loop4
 192.168.137.102 instance1 /dev/loop2
 192.168.137.102 instance2 /dev/loop3
 192.168.137.103 vm1 /dev/loop2

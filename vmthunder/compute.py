@@ -103,9 +103,7 @@ class VMThunderCompute(Compute):
             if not self.images[name].has_instance:
                 if self.images[name].destroy_image():
                     del self.images[name]
-        print "1.1"
         info = volt.heartbeat()
-        print "1.2"
         for name in self.images.keys():
             for image in info:
                 if self.images[name].base_image.peer_id == image['peer_id']:
@@ -126,12 +124,11 @@ class VMThunderCompute(Compute):
             return self._create(instance_name, image_name, image_connections, snapshot)
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
-
         if isinstance(image_connections, tuple) or isinstance(image_connections, list):
             image_connections = list(image_connections)
         else:
             image_connections = [image_connections]
-        print "compute.py: 1"
+        print "VMThunder: begin!"
         #with self.lock:
         if self.instance_names.has_key(instance_name):
             LOG.debug("VMThunder: the instance_name \'%s\' already exists!" % (instance_name))
@@ -146,24 +143,29 @@ class VMThunderCompute(Compute):
         self.images[image_name].has_instance = True
         LOG.debug("VMThunder: -----PID = %s" % os.getpid())
         LOG.debug("VMThunder: create VM started, instance_name = %s, image_name = %s" % (instance_name, image_name))
-        print "compute.py: 2"
+        print "VMThunder: middle!"
         instance_path = self.images[image_name].create_instance(instance_name, snapshot)
         LOG.debug("VMThunder: create VM completed, instance_name = %s, image_name = %s, instance_path = %s" % (instance_name, image_name, instance_path))
         # instance_path is like '/dev/mapper/snapshot_vm1' in local deployment
-        print "compute.py: 3  instance_path = ", instance_path
+        print "VMThunder: end!  instance_path = ", instance_path
         return instance_path
 
     def destroy(self, instance_name):
+        with self.lock:
+            return self._destroy(instance_name)
+
+    def _destroy(self, instance_name):
         LOG.debug("VMThunder: destroy VM started, instance_name = %s" % (instance_name))
         if not self.instance_names.has_key(instance_name):
             LOG.debug("VMThunder: the instance_name \'%s\' does not exist!" % (instance_name))
-            return
+            return False
         else:
             image_name = self.instance_names[instance_name]
             if self.images[image_name].destroy_instance(instance_name):
-                with self.lock:
-                    del self.instance_names[instance_name]
-        LOG.debug("VMThunder: destroy VM completed, instance_name = %s, ret = %s" % (instance_name))
+                #with self.lock:
+                del self.instance_names[instance_name]
+            LOG.debug("VMThunder: destroy VM completed, instance_name = %s, ret = %s" % (instance_name))
+            return True
 
     def list(self):
         instance_list = []

@@ -15,4 +15,4 @@ with open("nodelist.txt") as f:
         print "Instance starts in", node, ", name =", instance_name, ", snap_dev is", snapshot_dev \
                 , ", serve node is", nodes[node]
         nodes[node].create(instance_name, image_id, image_server+":3260", image_iqn, 1, snapshot_dev)
-        print "A instance is OK!"
+        print "The instance is OK!"

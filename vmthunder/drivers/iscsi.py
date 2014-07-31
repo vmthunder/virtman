@@ -6,7 +6,6 @@ from vmthunder.singleton import singleton
 from vmthunder.drivers import rootwrap
 
 
-@singleton
 class TgtExecutor(TgtAdm):
     def __init__(self, root_helper='', volumes_dir='/etc/tgt/stack.d'):
         TgtAdm.__init__(self, root_helper, volumes_dir)

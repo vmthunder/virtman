@@ -2,22 +2,19 @@
 
 import eventlet
 import time
-import socket
-import fcntl
-import struct
 import threading
-
 from oslo.config import cfg
 
-from vmthunder.openstack.common import log as logging
-from vmthunder.path import connection_to_str
-from vmthunder.path import Path
-from vmthunder.enum import Enum
 from vmthunder.drivers import fcg
 from vmthunder.drivers import dmsetup
 from vmthunder.drivers import iscsi
 from vmthunder.drivers import volt
-from vmthunder.chain import Chain
+from vmthunder.path import connection_to_str
+from vmthunder.path import Path
+from vmthunder.utils import utils
+from vmthunder.utils.enum import Enum
+
+from vmthunder.openstack.common import log as logging
 
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
@@ -44,7 +41,7 @@ class BlockDeviceBaseImage(BaseImage):
         if not image_name.startswith("image-"):
             image_name = "image-" + image_name
         self.image_name = image_name
-        self.image_connections = self.reform_connections(image_connections)
+        self.image_connections = utils.reform_connections(image_connections)
         self.is_local_has_image = False
         self.paths = {}
         self.has_multipath = False
@@ -76,7 +73,8 @@ class BlockDeviceBaseImage(BaseImage):
 
     def adjust_for_heartbeat(self, parents):
         LOG.debug('VMThunder: adjust_for_heartbeat according to connections: %s ' % parents)
-        self.rebuild_multipath(parents)
+        parent_connections = utils.reform_connections(parents)
+        self.rebuild_multipath(parent_connections)
 
     def deploy_base_image(self):
         """
@@ -129,7 +127,7 @@ class BlockDeviceBaseImage(BaseImage):
             self.is_local_has_image = True
 
         #Reform connections
-        parent_connections = self.reform_connections(self._get_parent())
+        parent_connections = utils.reform_connections(self._get_parent())
         self.rebuild_multipath(parent_connections)
         self._create_cache()
         self._create_origin()
@@ -312,49 +310,6 @@ class BlockDeviceBaseImage(BaseImage):
                     continue
                 else:
                     raise Exception("VMThunder: Get parent info failed due to %s! " % e)
-
-    @staticmethod
-    def reform_connection(connection):
-        """
-        :return new_connection: a list includes 'target_portal', 'target_iqn' and 'target_lun'.
-        """
-        LOG.debug("old connection is :")
-        LOG.debug(connection)
-        if isinstance(connection, dict):
-            new_connection = {'target_portal': connection['target_portal'],
-                              'target_iqn': connection['target_iqn'],
-                              'target_lun': connection['target_lun'],
-            }
-        else:
-            new_connection = {
-                'target_portal': "%s:%s" % (connection.host, connection.port),
-                'target_iqn': connection.iqn,
-                'target_lun': connection.lun,
-            }
-        LOG.debug("new connection is :")
-        LOG.debug(new_connection)
-        return new_connection
-
-    def reform_connections(self, connections):
-        """
-        :param connections: a tuple or list
-        """
-        if not (isinstance(connections, list) or isinstance(connections, tuple)):
-            raise Exception('VMThunder: Unknown connections type: connection: {0:s}, type: {1:s}'.format(
-                connections, type(connections)))
-        new_connections = []
-        for connection in connections:
-            new_connections.append(self.reform_connection(connection))
-        return new_connections
-
-    @staticmethod
-    def _get_ip_address(ifname):
-        LOG.debug("acquire ip address of %s" % ifname)
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        return socket.inet_ntoa(fcntl.ioctl(
-            s.fileno(),
-            0x8915,
-            struct.pack('256s', ifname[:15]))[20:24])
 
 
 class Qcow2BaseImage(BaseImage):

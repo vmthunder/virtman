@@ -24,7 +24,6 @@ CONF = cfg.CONF
 CONF.register_opts(fcg_opts)
 
 
-@singleton
 class FcgExecutor(FCG):
     def __init__(self):
         FCG.__init__(self, CONF.fcg_name, root_helper=rootwrap.root_helper())
@@ -47,3 +46,4 @@ def add_disk(disk):
 
 def rm_disk(disk):
     return fcg_executor.rm_disk(disk)
+

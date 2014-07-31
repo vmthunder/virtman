@@ -20,8 +20,6 @@ class SimpleCompute(object):
             'target_lun': target_lun,
         }
         cn = VMThunderCompute(openstack_compatible=False)
-        if cn is None:
-            print "simpleserver.py: cn is None"
         cn.create(instance_name, image_name, image_connection, snapshot_dev)
 
     @staticmethod

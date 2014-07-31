@@ -8,6 +8,7 @@ from vmthunder.snapshot import BlockDeviceSnapshot
 
 from vmthunder.openstack.common import log as logging
 
+
 LOG = logging.getLogger(__name__)
 
 

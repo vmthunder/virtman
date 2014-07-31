@@ -8,6 +8,7 @@ from vmthunder.drivers import fcg
 
 from vmthunder.openstack.common import log as logging
 
+
 snapshot_opts = [
     cfg.BoolOpt('snapshot_with_cache',
                 default=False,

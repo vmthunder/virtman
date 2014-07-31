@@ -9,11 +9,12 @@ from oslo.config import cfg
 
 from vmthunder.drivers import fcg
 from vmthunder.drivers import volt
-from vmthunder.singleton import singleton
 from vmthunder.image import LocalImage
 from vmthunder.image import BlockDeviceImage
+from vmthunder.utils.singleton import singleton
 
 from vmthunder.openstack.common import log as logging
+
 
 host_opts = [
     cfg.StrOpt('host_ip',
@@ -149,7 +150,7 @@ class VMThunderCompute(Compute):
         instance_path = self.images[image_name].create_instance(instance_name, snapshot)
         LOG.debug("VMThunder: create VM completed, instance_name = %s, image_name = %s, instance_path = %s" % (instance_name, image_name, instance_path))
         # instance_path is like '/dev/mapper/snapshot_vm1' in local deployment
-        print "compute.py: 3 instance_path = ", instance_path
+        print "compute.py: 3  instance_path = ", instance_path
         return instance_path
 
     def destroy(self, instance_name):

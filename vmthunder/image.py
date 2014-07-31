@@ -5,7 +5,7 @@ import threading
 from vmthunder.baseimage import BlockDeviceBaseImage
 from vmthunder.instance import LocalInstance
 from vmthunder.instance import BlockDeviceInstance
-from vmthunder.lockutils import synchronized
+from vmthunder.utils.lockutils import synchronized
 
 from vmthunder.openstack.common import log as logging
 

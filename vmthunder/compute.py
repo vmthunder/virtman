@@ -37,7 +37,6 @@ CONF = cfg.CONF
 CONF.register_opts(host_opts)
 CONF.register_opts(compute_opts)
 
-logging.setup('vmthunder')
 
 LOG = logging.getLogger(__name__)
 
@@ -72,6 +71,7 @@ class VMThunderCompute(Compute):
             config_files = ['/etc/vmthunder/vmthunder.conf']
         CONF(sys.argv[1:], project='vmthunder', default_config_files=config_files)
 
+        logging.setup('vmthunder')
         if not fcg.is_valid():
             fcg.create_group()
 

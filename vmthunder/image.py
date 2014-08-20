@@ -1,155 +1,115 @@
 #!/usr/bin/env python
 
-import os
+import threading
 
-from oslo.config import cfg
+from vmthunder.baseimage import BlockDeviceBaseImage
+from vmthunder.instance import LocalInstance
+from vmthunder.instance import BlockDeviceInstance
+from vmthunder.utils.lockutils import synchronized
 
 from vmthunder.openstack.common import log as logging
-from vmthunder.drivers import dmsetup
-from vmthunder.drivers import connector
-from vmthunder.drivers import fcg
-from vmthunder.drivers import commands
-
-instance_opts = [
-    cfg.BoolOpt('snapshot_with_cache',
-                default=False,
-                help='Whether snapshot can have cache'),
-]
-CONF = cfg.CONF
-CONF.register_opts(instance_opts)
 
 LOG = logging.getLogger(__name__)
 
-iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
-
 
 class Image(object):
-    def __init__(self, session, name):
-        self._final_path = ''
 
-    def config_volume(self, location):
-        """ configure the instance's private delta volume, location is
-            the place where the instance's delta volume is or should be
-            placed. The delta volume is created on-demand.
+    def __init__(self, image_name, image_connections):
+        self.image_name = image_name
+        self.image_connections = image_connections
+        self.base_image = None
+        self.instances = {}
+        self.has_instance = None
+        self.lock = threading.Lock()
+        # deploy image only once
+        self.origin_path = self._deploy_image()
 
-            returns the path to access the final volume
-        """
+    def create_instance(self, instance_name, snapshot):
         return NotImplementedError()
 
-    def deconfig_volume(self):
-        """ close the instance's private delta volume
-        """
+    def destroy_instance(self, instance_name):
         return NotImplementedError()
 
-    def get_volume_path(self):
-        """ returns the path to access the final volume
-        """
-        return self._final_path
+
+class LocalImage(Image):
+
+    def __init__(self, image_name, image_connections):
+        super(LocalImage, self).__init__(image_name, image_connections)
+
+    def create_instance(self, instance_name, snapshot_dev):
+        LOG.debug("VMThunder: create VM instance started, instance_name = %s" % (instance_name))
+        self.instances[instance_name] = LocalInstance(self.origin_path, instance_name, snapshot_dev)
+        instance_path = self.instances[instance_name].create()
+        LOG.debug("VMThunder: create VM instance completed, instance_path = %s" % (instance_path))
+        return instance_path
+
+    def destroy_instance(self, instance_name):
+        LOG.debug("VMThunder: destroy VM instance started, instance_name = %s" % (instance_name))
+        ret = self.instances[instance_name].destroy()
+        if ret:
+            del self.instances[instance_name]
+            if len(self.instances) <= 0:
+                self.has_instance = False
+        LOG.debug("VMThunder: destroy VM instance completed, result = %s" % (ret))
+        return ret
+
+    @synchronized
+    def _deploy_image(self):
+        self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
+        return self.base_image.deploy_base_image()
+
+    @synchronized
+    def destroy_image(self):
+        return self.base_image.destroy_base_image()
+
+    def adjust_for_heartbeat(self, parents):
+        self.base_image.adjust_for_heartbeat(parents)
 
 
-class BDImage(Image):
-    """
-    Block device image
-    """
-    def __init__(self, session, name, snapshot_dev):
-        if not os.path.exists(snapshot_dev):
-            raise Exception("Could NOT find snapshot device %s!" % snapshot_dev)
-        super(BDImage, self).__init__(session, name)
-        self.vm_name = name
-        self.snapshot_dev = snapshot_dev
-        self.session = session
-        self.snapshot_with_cache = CONF.snapshot_with_cache
+class BlockDeviceImage(Image):
 
-    @property
-    def snapshot_name(self):
-        return 'snapshot_' + self.vm_name
+    def __init__(self, image_name, image_connections):
+        super(BlockDeviceImage, self).__init__(image_name, image_connections)
 
-    @property
-    def snapshot_path(self):
-        return dmsetup.prefix + self.snapshot_name
+    def create_instance(self, instance_name, snapshot_connection):
+        LOG.debug("VMThunder: create VM instance started, instance_name = %s" % (instance_name))
+        self.instances[instance_name] = BlockDeviceInstance(self.origin_path, instance_name, snapshot_connection)
+        instance_path = self.instances[instance_name].create()
+        LOG.debug("VMThunder: create VM instance completed, instance_path = %s" % (instance_path))
+        return instance_path
 
-    def config_volume(self, origin_path):
-        LOG.debug("VMThunder: start vm %s according origin_path %s" % (self.vm_name, origin_path))
-        self._create_snapshot(origin_path)
-        self.session.add_vm(self.vm_name)
-        return self.vm_name
+    def destroy_instance(self, instance_name):
+        LOG.debug("VMThunder: destroy VM instance started, instance_name = %s" % (instance_name))
+        ret = self.instances[instance_name].destroy()
+        if ret:
+            del self.instances[instance_name]
+            if len(self.instances) <= 0:
+                self.has_instance = False
+        LOG.debug("VMThunder: destroy VM instance completed, result = %s" % (ret))
+        return ret
 
-    def deconfig_volume(self):
-        LOG.debug("VMThunder: come to instanceSnapCache to delete vm %s" % self.vm_name)
-        self._delete_snapshot()
-        self.session.rm_vm(self.vm_name)
+    @synchronized
+    def _deploy_image(self):
+        self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
+        return self.base_image.deploy_base_image()
 
-    def _create_cache(self):
-        cached_path = fcg.add_disk(self.snapshot_dev)
-        return cached_path
+    @synchronized
+    def destroy_image(self):
+        return self.base_image.destroy_base_image()
 
-    def _delete_cache(self):
-        fcg.rm_disk(self.snapshot_dev)
-
-    def _create_snapshot(self, origin_path):
-        if self.snapshot_with_cache:
-            snap_path = self._create_cache()
-        else:
-            snap_path = self.snapshot_dev
-        snapshot_name = self.snapshot_name
-        snapshot_path = dmsetup.snapshot(origin_path, snapshot_name, snap_path)
-        self._final_path = snapshot_path
-        return snapshot_path
-
-    def _delete_snapshot(self):
-        snapshot_name = self.snapshot_name
-        dmsetup.remove_table(snapshot_name)
-        if self.snapshot_with_cache:
-            self._delete_cache()
+    def adjust_for_heartbeat(self, parents):
+        self.base_image.adjust_for_heartbeat(parents)
 
 
-class StackBDImage(BDImage):
-    """
-    Block device image suite for OpenStack
-    """
-    def __init__(self, session, name, snapshot_connection):
-        self.connection = snapshot_connection
-        snapshot_info = connector.connect_volume(snapshot_connection)
-        snapshot_link = snapshot_info['path']
-        if os.path.exists(snapshot_link):
-            self.snapshot_link = snapshot_link
-        else:
-            raise Exception("Could NOT find snapshot link file %s!" % snapshot_link)
-
-        snapshot_dev = os.path.realpath(self.snapshot_link)
-        if os.path.exists(snapshot_dev) or snapshot_dev == snapshot_link:
-            super(StackBDImage, self).__init__(session, name, snapshot_dev)
-        else:
-            raise Exception("Could NOT find snapshot device %s!" % snapshot_dev)
-
-    def config_volume(self, origin_path):
-        super(StackBDImage, self).config_volume(origin_path)
-        self._link_snapshot()
-
-    def deconfig_volume(self):
-        super(StackBDImage, self).deconfig_volume()
-        self._unlink_snapshot()
-
-    def _link_snapshot(self):
-        target_dev = self.snapshot_link
-        commands.unlink(target_dev)
-        if not os.path.exists(target_dev):
-            commands.link(self._final_path, target_dev)
-
-    def _unlink_snapshot(self):
-        target_dev = self.snapshot_link
-        if os.path.exists(target_dev):
-            commands.unlink(target_dev)
-            
 class QCOW2Image(Image):
     """
-    QCOW2 image, with 
+    QCOW2 image, with
     """
     pass
 
-class RAWImage(BDImage):
+
+class RAWImage(Image):
     """
     RAW file image, with loop and dm-snapshoting
     """
     pass
-

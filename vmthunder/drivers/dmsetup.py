@@ -5,7 +5,6 @@ from vmthunder.singleton import singleton
 from vmthunder.drivers import rootwrap
 
 
-@singleton
 class DmExecutor(dmsetup.Dmsetup):
     def __init__(self):
         dmsetup.Dmsetup.__init__(self, root_helper=rootwrap.root_helper())

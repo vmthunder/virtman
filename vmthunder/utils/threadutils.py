@@ -2,7 +2,7 @@
 import threading
 import eventlet
 
-from vmthunder.enum import Enum
+from vmthunder.utils.enum import Enum
 
 THREAD_MODULES = Enum(['eventlet', 'threading'])
 

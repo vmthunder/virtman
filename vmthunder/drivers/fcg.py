@@ -24,26 +24,26 @@ CONF = cfg.CONF
 CONF.register_opts(fcg_opts)
 
 
-@singleton
 class FcgExecutor(FCG):
     def __init__(self):
         FCG.__init__(self, CONF.fcg_name, root_helper=rootwrap.root_helper())
 
 
+fcg_executor = FcgExecutor()
+
+
 def is_valid():
-    fcg_executor = FcgExecutor()
     return fcg_executor.is_valid()
 
+
 def create_group():
-    fcg_executor = FcgExecutor()
     return fcg_executor.create_group(CONF.fcg_ssds, CONF.fcg_blocksize, CONF.fcg_pattern)
 
 
 def add_disk(disk):
-    fcg_executor = FcgExecutor()
     return fcg_executor.add_disk(disk)
 
 
 def rm_disk(disk):
-    fcg_executor = FcgExecutor()
     return fcg_executor.rm_disk(disk)
+

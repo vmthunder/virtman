@@ -1,10 +1,9 @@
 #!/usr/bin/env python
-#!/usr/bin/env python
 
 from SimpleXMLRPCServer import SimpleXMLRPCServer
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
-from vmthunder.compute import Compute
+from vmthunder.compute import VMThunderCompute
 
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
@@ -12,20 +11,21 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 
 
 class SimpleCompute(object):
-    @staticmethod
-    def create(volume_name, vm_name, target_portal, target_iqn, target_lun, snapshot_dev):
-        image_connection = {
-            'target_portal' : target_portal,
-            'target_iqn' : target_iqn,
-            'target_lun' : target_lun,
-        }
-        cn = Compute(openstack_compatible=False)
-        cn.create(volume_name, vm_name, image_connection, snapshot_dev)
 
     @staticmethod
-    def destroy(vm_name):
-        cn = Compute(openstack_compatible=False)
-        cn.destroy(vm_name)
+    def create(instance_name, image_name, target_portal, target_iqn, target_lun, snapshot_dev):
+        image_connection = {
+            'target_portal': target_portal,
+            'target_iqn': target_iqn,
+            'target_lun': target_lun,
+        }
+        cn = VMThunderCompute(openstack_compatible=False)
+        cn.create(instance_name, image_name, image_connection, snapshot_dev)
+
+    @staticmethod
+    def destroy(instance_name):
+        cn = VMThunderCompute(openstack_compatible=False)
+        cn.destroy(instance_name)
 
 server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)
 server.register_introspection_functions()

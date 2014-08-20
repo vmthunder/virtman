@@ -6,7 +6,6 @@ from vmthunder.singleton import singleton
 from vmthunder.drivers import rootwrap
 
 
-@singleton
 class ISCSIExecutor(ISCSIConnector):
     def __init__(self):
         ISCSIConnector.__init__(self, root_helper=rootwrap.root_helper())

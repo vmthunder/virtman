@@ -38,8 +38,8 @@ class BaseImage(object):
 class BlockDeviceBaseImage(BaseImage):
 
     def __init__(self, image_name, image_connections):
-        if not image_name.startswith("image-"):
-            image_name = "image-" + image_name
+        if not image_name.startswith("volume-"):
+            image_name = "volume-" + image_name
         self.image_name = image_name
         self.image_connections = utils.reform_connections(image_connections)
         self.is_local_has_image = False

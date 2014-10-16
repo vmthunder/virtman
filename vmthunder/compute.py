@@ -7,8 +7,10 @@ import threading
 import traceback
 from oslo.config import cfg
 
+from vmthunder import blockservice
 from vmthunder.drivers import fcg
 from vmthunder.drivers import volt
+from vmthunder.drivers import iscsi
 from vmthunder.image import LocalImage
 from vmthunder.image import BlockDeviceImage
 from vmthunder.utils.singleton import singleton
@@ -64,6 +66,7 @@ class VMThunderCompute(Compute):
         self.images = {}
         self.instance_names = {}
         self.lock = threading.Lock()
+        self.image_target_id = 0
 
         if self.openstack_compatible:
             config_files = ['/etc/nova/nova.conf', '/etc/vmthunder/vmthunder.conf']
@@ -111,10 +114,10 @@ class VMThunderCompute(Compute):
                     break
         LOG.debug("VMThunder: heartbeat end @ %s" % time.asctime())
 
-    def create(self, instance_name, image_name, image_connections, snapshot):
+    def create(self, instance_name, image_name, image_connections, snapshot=None):
         """
         :param instance_name: string
-        :param image_name: string. image_id is also ok! It better not use 'iqn', but is also ok!
+        :param image_name: string. It is 'iqn', likes "iqn.2010-10.org.openstack:vol_id"
         :param image_connections: list or tuple or single dict, like ({},..) or [{},..] or {}
                                   and each dict make of {'target_portal':..,'target_iqn':..,'target_lun':.., ..}
         :param snapshot: snapshot_connection or snapshot_dev
@@ -124,25 +127,31 @@ class VMThunderCompute(Compute):
             return self._create(instance_name, image_name, image_connections, snapshot)
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
+        LOG.debug("VMThunder: Begin! ----- PID = %s" % os.getpid())
+        print "VMThunder: begin!"
+        # Just support for openstack
+        if not image_name.startswith("volume-"):
+            image_name = "volume-" + image_name
+        # for multi image server
         if isinstance(image_connections, tuple) or isinstance(image_connections, list):
             image_connections = list(image_connections)
         else:
             image_connections = [image_connections]
-        print "VMThunder: begin!"
         #with self.lock:
         if self.instance_names.has_key(instance_name):
             LOG.debug("VMThunder: the instance_name \'%s\' already exists!" % (instance_name))
-            return
+            return ''
         else:
+        #TODO: try: exception
             self.instance_names[instance_name] = image_name
+        LOG.debug("VMThunder: create VM started, instance_name = %s, image_name = %s" % (instance_name, image_name))
         if not self.images.has_key(image_name):
+            LOG.debug("VMThunder: now need to create image first!")
             if not self.openstack_compatible:
                 self.images[image_name] = LocalImage(image_name, image_connections)
             else:
                 self.images[image_name] = BlockDeviceImage(image_name, image_connections)
         self.images[image_name].has_instance = True
-        LOG.debug("VMThunder: -----PID = %s" % os.getpid())
-        LOG.debug("VMThunder: create VM started, instance_name = %s, image_name = %s" % (instance_name, image_name))
         print "VMThunder: middle!"
         instance_path = self.images[image_name].create_instance(instance_name, snapshot)
         LOG.debug("VMThunder: create VM completed, instance_name = %s, image_name = %s, instance_path = %s" % (instance_name, image_name, instance_path))
@@ -164,7 +173,7 @@ class VMThunderCompute(Compute):
             if self.images[image_name].destroy_instance(instance_name):
                 #with self.lock:
                 del self.instance_names[instance_name]
-            LOG.debug("VMThunder: destroy VM completed, instance_name = %s, ret = %s" % (instance_name))
+            LOG.debug("VMThunder: destroy VM completed, instance_name = %s" % (instance_name))
             return True
 
     def list(self):
@@ -172,3 +181,23 @@ class VMThunderCompute(Compute):
         for instance_name, image_name in self.instance_names.items():
             instance_list.append(instance_name+':'+image_name)
         return instance_list
+
+    def create_image_target(self, image_name, file_path, loop_dev, iqn_prefix):
+        LOG.debug("VMThunder: Image Target Service: create image target started! image_name = %s, "
+                  "file_path = %s" % (image_name, file_path))
+        if not image_name.startswith("volume-"):
+            image_name = "volume-" + image_name
+        blockservice.unlinkloop(loop_dev)
+        blockservice.linkloop(loop_dev, file_path)
+        self.image_target_id = iscsi.create_iscsi_target(iqn_prefix + image_name, loop_dev)
+        LOG.debug("VMThunder: Image Target Service: create image target completed! image_target_id = %s"
+                  % self.image_target_id )
+        return self.image_target_id
+
+    def destroy_image_target(self, image_name):
+        LOG.debug("VMThunder: Image Target Service: remove image target started! image_name = %s" % image_name)
+        if not image_name.startswith("volume-"):
+            image_name = "volume-" + image_name
+        nothing = iscsi.remove_iscsi_target(self.image_target_id, 1, image_name, image_name)
+        LOG.debug("VMThunder: Image Target Service: remove image target completed!")
+        return nothing

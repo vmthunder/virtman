@@ -3,11 +3,11 @@
 import os
 from oslo.config import cfg
 
+from vmthunder import blockservice
 from vmthunder.drivers import connector
 from vmthunder.drivers import fcg
 
 from vmthunder.openstack.common import log as logging
-
 
 snapshot_opts = [
     cfg.BoolOpt('snapshot_with_cache',
@@ -21,7 +21,6 @@ LOG = logging.getLogger(__name__)
 
 
 class Snapshot(object):
-
     def __init__(self):
         self.snapshot_with_cache = CONF.snapshot_with_cache
 
@@ -41,28 +40,33 @@ class Snapshot(object):
 
 
 class LocalSnapshot(Snapshot):
-
-    def __init__(self, snapshot_dev):
+    def __init__(self, snapshot_dev=None):
         super(LocalSnapshot, self).__init__()
-        if not os.path.exists(snapshot_dev):
-            raise Exception("ERROR! Could NOT find snapshot device %s!" % snapshot_dev)
         self.snapshot_path = None
         self.snapshot_dev = snapshot_dev
 
     def create_snapshot(self):
+        LOG.debug("VMThunder: creating a snapshot for the VM instance")
+        if self.snapshot_dev is None:
+            self.snapshot_dev = blockservice.findloop()
+        blockservice.try_linkloop(self.snapshot_dev)
         if self.snapshot_with_cache:
             self.snapshot_path = self._create_cache(self.snapshot_dev)
         else:
             self.snapshot_path = self.snapshot_dev
+        LOG.debug("VMThunder: success! snapshot_path = %s" % self.snapshot_path)
         return self.snapshot_path
 
     def destroy_snapshot(self):
+        LOG.debug("VMThunder: deleting the snapshot for the VM instance")
         if self.snapshot_with_cache:
             self._delete_cache(self.snapshot_dev)
+        blockservice.unlinkloop(self.snapshot_dev)
+        LOG.debug("VMThunder: succeed to delete snapshot!")
+        return True
 
 
 class BlockDeviceSnapshot(Snapshot):
-
     def __init__(self, snapshot_connection):
         super(BlockDeviceSnapshot, self).__init__()
         self.snapshot_path = None
@@ -87,7 +91,8 @@ class BlockDeviceSnapshot(Snapshot):
             self.snapshot_path = self._create_cache(self.snapshot_dev)
         else:
             self.snapshot_path = self.snapshot_dev
-
+        LOG.debug(
+            "VMThunder: success! snapshot_path = %s snapshot_link = %s" % (self.snapshot_path, self.snapshot_link))
         return self.snapshot_path, self.snapshot_link
 
     def destroy_snapshot(self):
@@ -95,6 +100,7 @@ class BlockDeviceSnapshot(Snapshot):
         if self.snapshot_with_cache:
             self._delete_cache(self.snapshot_dev)
         connector.disconnect_volume(self.connection, self.device_info)
+        LOG.debug("VMThunder: success!")
         return True
 
 

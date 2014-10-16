@@ -27,13 +27,17 @@ class LocalInstance(Instance):
         self.snapshot_name = "snapshot_" + instance_name
 
     def create(self):
+        LOG.debug("VMThunder: start VM instance %s according origin_path %s" %(self.instance_name, self.origin_path))
         snapshot_path = self.snapshot.create_snapshot()
         self.instance_path = dmsetup.snapshot(self.origin_path, self.snapshot_name, snapshot_path)
+        LOG.debug("VMThunder: success! instance_path = %s" % self.instance_path)
         return self.instance_path
 
     def destroy(self):
+        LOG.debug("VMThunder: destroy VM instance %s according snapshot_name %s" %(self.instance_name, self.snapshot_name))
         dmsetup.remove_table(self.snapshot_name)
         self.snapshot.destroy_snapshot()
+        LOG.debug("VMThunder: succeed to destroy the VM instance!")
         return True
 
 
@@ -57,15 +61,17 @@ class BlockDeviceInstance(Instance):
         commands.unlink(self.snapshot_link)
         if not os.path.exists(self.snapshot_link):
             commands.link(self.instance_path, self.snapshot_link)
+        LOG.debug("VMThunder: success! snapshot_link = %s" % self.snapshot_link)
         return self.snapshot_link
 
     def destroy(self):
-        LOG.debug("VMThunder: destroy VM instance %s according origin_path %s" %(self.instance_name, self.origin_path))
+        LOG.debug("VMThunder: destroy VM instance %s according snapshot_name %s" %(self.instance_name, self.snapshot_name))
         #unlink snapshot
         if os.path.exists(self.snapshot_link):
             commands.unlink(self.snapshot_link)
         dmsetup.remove_table(self.snapshot_name)
         self.snapshot.destroy_snapshot()
+        LOG.debug("VMThunder: success!")
         return True
 
 

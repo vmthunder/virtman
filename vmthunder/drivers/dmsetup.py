@@ -2,7 +2,7 @@ from pydm import dmsetup
 from pydm.blockdev import Blockdev
 
 from vmthunder.singleton import singleton
-from vmthunder.drivers import rootwrap
+from vmthunder.utils import rootwrap
 
 
 class DmExecutor(dmsetup.Dmsetup):

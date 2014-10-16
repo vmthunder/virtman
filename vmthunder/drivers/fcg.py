@@ -2,14 +2,14 @@ from libfcg.fcg import FCG
 from oslo.config import cfg
 
 from vmthunder.singleton import singleton
-from vmthunder.drivers import rootwrap
+from vmthunder.utils import rootwrap
 
 fcg_opts = [
     cfg.StrOpt('fcg_name',
                default='fcg',
                help='The name of the Flashcache Group'),
     cfg.ListOpt('fcg_ssds',
-                default=['/dev/loop1'],
+                default=['/dev/loop0'],
                 help='The devices of SSDs to use to create the FCG, '
                      'the parameter of \'ssds\' can fill in one '
                      'or more, splited by \',\''),

@@ -38,8 +38,6 @@ class BaseImage(object):
 class BlockDeviceBaseImage(BaseImage):
 
     def __init__(self, image_name, image_connections):
-        if not image_name.startswith("volume-"):
-            image_name = "volume-" + image_name
         self.image_name = image_name
         self.image_connections = utils.reform_connections(image_connections)
         self.is_local_has_image = False
@@ -108,7 +106,7 @@ class BlockDeviceBaseImage(BaseImage):
         """
         deploy image in compute node, return the origin path to create snapshot
         :param image_connection: the connection towards to the base image
-        :return: origin path to create snapshot
+        :returns: origin path to create snapshot
         """
         LOG.debug("VMThunder: in deploy_base_image, image name = %s, has multipath = %s, has origin = %s, has cache = %s, "
                   "is_login = %s" % (self.image_name, self.has_multipath, self.has_origin, self.has_cache, self.is_login))
@@ -125,9 +123,15 @@ class BlockDeviceBaseImage(BaseImage):
         if found is not None:
             self.image_connections = [found]
             self.is_local_has_image = True
+        LOG.debug("VMThunder: my host_ip = %s, is_local_has_image = %s!, now image_connections = %s"
+                  % (CONF.host_ip, self.is_local_has_image, self.image_connections))
 
         #Reform connections
-        parent_connections = utils.reform_connections(self._get_parent())
+        if self.is_local_has_image:
+            parent_connections = []
+        else:
+            parent_connections = utils.reform_connections(self._get_parent())
+        LOG.debug("VMThunder: parents for volt is %s" % parent_connections)
         self.rebuild_multipath(parent_connections)
         self._create_cache()
         self._create_origin()
@@ -146,7 +150,7 @@ class BlockDeviceBaseImage(BaseImage):
         self._logout_master()
         if self.has_target:
             if iscsi.is_connected(self.target_id):
-                LOG.debug("VMThunder: destroy base image failed! base_image = %s, peer_id = %s" % (self.image_name, self.peer_id))
+                LOG.debug("VMThunder: destroy base image Failed! base_image = %s, peer_id = %s" % (self.image_name, self.peer_id))
                 return False
             else:
                 self._delete_target()
@@ -161,7 +165,7 @@ class BlockDeviceBaseImage(BaseImage):
             for key in self.paths.keys():
                 self.paths[key].disconnect()
                 del self.paths[key]
-            LOG.debug("VMThunder: destroy base image success! base_image = %s, peer_id = %s" % (self.image_name, self.peer_id))
+            LOG.debug("VMThunder: destroy base image SUCCESS! base_image = %s, peer_id = %s" % (self.image_name, self.peer_id))
             return True
         return False
 
@@ -173,6 +177,7 @@ class BlockDeviceBaseImage(BaseImage):
         #If it has image on the local node or no path to connect, connect to root
         if self.is_local_has_image or len(parent_connections) == 0:
             parent_connections = self.image_connections
+            LOG.debug("VMThunder: the parents were modified! now parents = %s" % parent_connections)
 
         #Get keys of paths to remove, and add new paths
         paths_to_remove = []
@@ -227,9 +232,10 @@ class BlockDeviceBaseImage(BaseImage):
         dmsetup.reload_multipath(self.multipath_name, disks)
 
     def _delete_multipath(self):
+        LOG.debug("VMThunder: delete multipath %s start!" % self.multipath_name)
         dmsetup.remove_table(self.multipath_name)
         self.has_multipath = False
-        LOG.debug("VMThunder: delete multipath of %s" % self.multipath_name)
+        LOG.debug("VMThunder: delete multipath %s completed  !" % self.multipath_name)
 
     def _create_cache(self):
         if not self.has_cache:
@@ -241,9 +247,10 @@ class BlockDeviceBaseImage(BaseImage):
         return self.cached_path
 
     def _delete_cache(self):
+        LOG.debug("VMThunder: start to delete cache according to multipath %s " % self.multipath_path)
         fcg.rm_disk(self.multipath_path)
         self.has_cache = False
-        LOG.debug("VMThunder: delete cache according to multipath %s " % self.multipath_path)
+        LOG.debug("VMThunder: delete cache according to multipath %s completed" % self.multipath_path)
 
     def _create_origin(self):
         if not self.has_origin:
@@ -254,9 +261,10 @@ class BlockDeviceBaseImage(BaseImage):
         return self.origin_path
 
     def _delete_origin(self):
+        LOG.debug("VMThunder: start to remove origin %s " % self.origin_name)
         dmsetup.remove_table(self.origin_name)
         self.has_origin = False
-        LOG.debug("VMThunder: remove origin %s " % self.origin_name)
+        LOG.debug("VMThunder: remove origin %s completed" % self.origin_name)
 
     def _create_target(self):
         if self.is_local_has_image:
@@ -271,7 +279,7 @@ class BlockDeviceBaseImage(BaseImage):
                 LOG.debug("VMThunder: create target complete, target id = %s" % self.target_id)
 
     def _delete_target(self):
-        iscsi.remove_iscsi_target(0, 0, self.image_name, self.image_name)
+        iscsi.remove_iscsi_target(self.target_id, 1, self.image_name, self.image_name)
         self.has_target = False
         LOG.debug("VMThunder: successful remove target %s " % self.target_id)
 

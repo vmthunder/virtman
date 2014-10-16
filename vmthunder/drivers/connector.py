@@ -3,7 +3,9 @@ import os
 from brick.initiator.connector import ISCSIConnector
 
 from vmthunder.singleton import singleton
-from vmthunder.drivers import rootwrap
+from vmthunder.utils import rootwrap
+
+from vmthunder.openstack.common import processutils as putils
 
 
 class ISCSIExecutor(ISCSIConnector):
@@ -18,5 +20,6 @@ def connect_volume(connection):
 
 def disconnect_volume(connection, device_info):
     #TODO: Fix this problem
-    cmd = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
-    os.popen(cmd)
+    #cmd = "iscsiadm -m node -T " + connection['target_iqn'] + " -p " + connection['target_portal'][:-5] + " --logout"
+    putils.execute("iscsiadm", '-m', 'node', '-T', connection['target_iqn'], '-p', connection['target_portal'],
+                   '--logout', run_as_root=True, root_helper=rootwrap.root_helper())

@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = vmthunder
-omit = vmthunder/tests/*,vmthunder/openstack/*
+source = virtman
+omit = virtman/tests/*,virtman/openstack/*
 
 [report]
 ignore-errors = True

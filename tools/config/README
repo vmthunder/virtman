@@ -1,5 +1,5 @@
 #
-#Command:  bash generate_sample.sh -b /root/develop/VMThunder -p vmthunder bin -o /root/develop/VMThunder/etc
+#Command:  bash generate_sample.sh -b /root/packages/virtman -p virtman bin -o /root/packages/virtman/etc
 #
 
 This generate_sample.sh tool is used to generate sample config files

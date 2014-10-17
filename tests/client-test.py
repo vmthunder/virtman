@@ -2,14 +2,14 @@
 
 import requests
 #import json
-from vmthunder.openstack.common import jsonutils
+from virtman.openstack.common import jsonutils
 
 
 class Client(object):
 
-    USER_AGENT = 'python-vmthunderclient'
+    USER_AGENT = 'python-virtmanclient'
 
-    def __init__(self, name='vmthunder'):
+    def __init__(self, name='virtman'):
         self.name = name
 
     def requests(self, url, method, **kwargs):

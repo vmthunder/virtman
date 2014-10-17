@@ -1,0 +1,5 @@
+#
+#Command (execute this command in /tools/config directory, the detail is also in the directory):
+#   bash generate_sample.sh -b /root/develop/virtman -p virtman bin -o /root/develop/virtman/etc
+#
+

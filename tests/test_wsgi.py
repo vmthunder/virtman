@@ -1,6 +1,6 @@
 __author__ = 'anzigly'
 
-"""Unit test for `vmthunder.wsgi`"""
+"""Unit test for `virtman.wsgi`"""
 
 import mock
 import os.path
@@ -12,10 +12,10 @@ import testtools
 import webob
 import webob.dec
 
-from vmthunder.common import exception
-from vmthunder.openstack.common import gettextutils
-from vmthunder import test
-from vmthunder.common import wsgi
+from virtman.common import exception
+from virtman.openstack.common import gettextutils
+from virtman import test
+from virtman.common import wsgi
 
 CONF = cfg.CONF
 

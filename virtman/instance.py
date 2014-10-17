@@ -1,8 +1,8 @@
 
 import os
 
+from virtman.utils import commands
 from virtman.drivers import dmsetup
-from virtman.drivers import commands
 from virtman.snapshot import LocalSnapshot
 from virtman.snapshot import BlockDeviceSnapshot
 

@@ -2,7 +2,7 @@ import os
 
 from brick.initiator.connector import ISCSIConnector
 
-from virtman.singleton import singleton
+from virtman.utils import singleton
 from virtman.utils import rootwrap
 
 from virtman.openstack.common import processutils as putils

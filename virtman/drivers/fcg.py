@@ -1,7 +1,7 @@
 from libfcg.fcg import FCG
 from oslo.config import cfg
 
-from virtman.singleton import singleton
+from virtman.utils import singleton
 from virtman.utils import rootwrap
 
 fcg_opts = [

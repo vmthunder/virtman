@@ -1,9 +1,8 @@
-import os
 
 from brick.iscsi.iscsi import TgtAdm
 
-from virtman.singleton import singleton
 from virtman.utils import rootwrap
+from virtman.utils import singleton
 
 from virtman.openstack.common import processutils as putils
 

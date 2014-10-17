@@ -1,7 +1,7 @@
 from pydm import dmsetup
 from pydm.blockdev import Blockdev
 
-from virtman.singleton import singleton
+from virtman.utils import singleton
 from virtman.utils import rootwrap
 
 

@@ -3,6 +3,7 @@
 import eventlet
 import time
 import threading
+from functools import partial
 from oslo.config import cfg
 
 from virtman.drivers import fcg
@@ -13,6 +14,8 @@ from virtman.path import connection_to_str
 from virtman.path import Path
 from virtman.utils import utils
 from virtman.utils.enum import Enum
+from virtman.utils.chain import Chain
+
 
 from virtman.openstack.common import log as logging
 
@@ -133,10 +136,21 @@ class BlockDeviceBaseImage(BaseImage):
             parent_connections = utils.reform_connections(self._get_parent())
         LOG.debug("Virtman: parents for volt is %s" % parent_connections)
         self.rebuild_multipath(parent_connections)
-        self._create_cache()
-        self._create_origin()
-        self._create_target()
-        self._login_master()
+        build_chain = Chain()
+        build_chain.add_step(partial(self._create_cache),
+                             partial(self._delete_cache))
+        build_chain.add_step(partial(self._create_origin),
+                             partial(self._delete_origin))
+        build_chain.add_step(partial(self._create_target),
+                             partial(self._delete_target))
+        build_chain.add_step(partial(self._login_master),
+                             partial(self._logout_master))
+        build_chain.do()
+
+        # self._create_cache()
+        # self._create_origin()
+        # self._create_target()
+        # self._login_master()
 
         #print "target_id = ", self.target_id
         #print "origin_path = ", self.origin_path, " origin_name = ", self.origin_name
@@ -147,6 +161,8 @@ class BlockDeviceBaseImage(BaseImage):
 
     def destroy_base_image(self):
         LOG.debug("Virtman: destroy base_image = %s, peer_id = %s" % (self.image_name, self.peer_id))
+        if self.is_local_has_image:
+            return False
         self._logout_master()
         if self.has_target:
             if iscsi.is_connected(self.target_id):
@@ -279,9 +295,10 @@ class BlockDeviceBaseImage(BaseImage):
                 LOG.debug("Virtman: create target complete, target id = %s" % self.target_id)
 
     def _delete_target(self):
-        iscsi.remove_iscsi_target(self.target_id, 1, self.image_name, self.image_name)
+        LOG.debug("Virtman: start to remove target %s (%s)" % (self.target_id, self.image_name))
+        iscsi.remove_iscsi_target(self.image_name, self.image_name)
         self.has_target = False
-        LOG.debug("Virtman: successful remove target %s " % self.target_id)
+        LOG.debug("Virtman: successful remove target %s (%s)" % (self.target_id, self.image_name))
 
     def _login_master(self):
         if self.is_local_has_image:
@@ -300,7 +317,7 @@ class BlockDeviceBaseImage(BaseImage):
             LOG.debug("Virtman: logout master session = %s, peer_id = %s" % (self.image_name, self.peer_id))
 
     def _get_parent(self):
-        max_try_count = 10
+        max_try_count = 120
         host_ip = CONF.host_ip
         try_times = 0
         while True:
@@ -308,12 +325,14 @@ class BlockDeviceBaseImage(BaseImage):
                 self.peer_id, parent_list = volt.get(session_name=self.image_name, host=host_ip)
                 LOG.debug(
                     "Virtman: in get_parent function, peer_id = %s, parent_list = %s:" % (self.peer_id, parent_list))
+                if len(parent_list) == 1 and parent_list[0].peer_id is None:
+                    raise Exception("parents is in pending")
                 return parent_list
             except Exception, e:
                 LOG.debug(
                     "Virtman: get parent info from volt server failed due to %s, tried %d times" % (e, try_times))
                 if try_times < max_try_count:
-                    time.sleep(3)
+                    time.sleep(5)
                     try_times += 1
                     continue
                 else:

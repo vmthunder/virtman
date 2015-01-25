@@ -10,7 +10,8 @@ from virtman.openstack.common import processutils as putils
 
 class ISCSIExecutor(ISCSIConnector):
     def __init__(self):
-        ISCSIConnector.__init__(self, root_helper=rootwrap.root_helper())
+        ISCSIConnector.__init__(self, device_scan_attempts=5,
+                                root_helper=rootwrap.root_helper())
 
 iscsi_connector = ISCSIExecutor()
 

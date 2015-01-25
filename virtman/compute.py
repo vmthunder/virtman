@@ -125,6 +125,7 @@ class Virtman(Compute):
             "1:info" specifies WARNING, info indicates instance_name exists
         """
         # multiple roots for creating
+        LOG.debug("Virtman: wait for unlock")
         with self.lock:
             return self._create(instance_name, image_name, image_connections, snapshot)
 
@@ -197,3 +198,4 @@ class Virtman(Compute):
 
     def list_image_target(self):
         return imageservice.list_image_target()
+

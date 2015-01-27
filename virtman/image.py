@@ -53,12 +53,12 @@ class LocalImage(Image):
         LOG.debug("Virtman: destroy VM instance completed, result = %s" % (ret))
         return ret
 
-    @synchronized
+    @synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
         return self.base_image.deploy_base_image()
 
-    @synchronized
+    @synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
 
@@ -88,12 +88,12 @@ class BlockDeviceImage(Image):
         LOG.debug("Virtman: destroy VM instance completed, result = %s" % (ret))
         return ret
 
-    @synchronized
+    @synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
         return self.base_image.deploy_base_image()
 
-    @synchronized
+    @synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
 

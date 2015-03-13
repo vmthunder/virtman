@@ -22,6 +22,7 @@ CONF = cfg.CONF
 TEST_VAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                'var'))
 
+
 class TestLoaderNothingExists(test.TestCase):
     """Loader tests where os.path.exists always returns False."""
 
@@ -94,8 +95,8 @@ class TestWSGIServer(test.TestCase):
                       "Test requires an IPV6 configured interface")
     def test_start_random_port_with_ipv6(self):
         server = wsgi.Server("test_random_port",
-                                    None,
-                                    host="::1")
+                             None,
+                             host="::1")
         server.start()
         self.assertEqual("::1", server.host)
         self.assertNotEqual(0, server.port)
@@ -156,9 +157,9 @@ class TestWSGIServer(test.TestCase):
             return greetings
 
         server = wsgi.Server("test_app",
-                                    hello_world,
-                                    host="::1",
-                                    port=0)
+                             hello_world,
+                             host="::1",
+                             port=0)
         server.start()
 
         response = urllib2.urlopen('https://[::1]:%d/' % server.port)

@@ -37,7 +37,8 @@ def is_valid():
 
 
 def create_group():
-    return fcg_executor.create_group(CONF.fcg_ssds, CONF.fcg_blocksize, CONF.fcg_pattern)
+    return fcg_executor.create_group(CONF.fcg_ssds, CONF.fcg_blocksize,
+                                     CONF.fcg_pattern)
 
 
 def add_disk(disk):

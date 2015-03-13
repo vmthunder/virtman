@@ -15,7 +15,8 @@ class SimpleCompute(object):
     @staticmethod
     def create(instance_name, image_name, image_connection, snapshot_dev):
         cn = Virtman(openstack_compatible=False)
-        return cn.create(instance_name, image_name, image_connection, snapshot_dev)
+        return cn.create(instance_name, image_name, image_connection,
+                         snapshot_dev)
 
     @staticmethod
     def destroy(instance_name):
@@ -30,7 +31,8 @@ class SimpleCompute(object):
     @staticmethod
     def create_image_target(image_name, file_path, loop_dev, iqn_prefix):
         cn = Virtman(openstack_compatible=False)
-        return cn.create_image_target(image_name, file_path, loop_dev, iqn_prefix)
+        return cn.create_image_target(image_name, file_path, loop_dev,
+                                      iqn_prefix)
 
     @staticmethod
     def destroy_image_target(image_name):

@@ -27,14 +27,17 @@ class LocalInstance(Instance):
         self.snapshot_name = "snapshot_" + instance_name
 
     def create(self):
-        LOG.debug("Virtman: start VM instance %s according origin_path %s" %(self.instance_name, self.origin_path))
+        LOG.debug("Virtman: start VM instance %s according origin_path %s" %
+                  (self.instance_name, self.origin_path))
         snapshot_path = self.snapshot.create_snapshot()
-        self.instance_path = dmsetup.snapshot(self.origin_path, self.snapshot_name, snapshot_path)
+        self.instance_path = dmsetup.snapshot(self.origin_path,
+                                              self.snapshot_name, snapshot_path)
         LOG.debug("Virtman: success! instance_path = %s" % self.instance_path)
         return self.instance_path
 
     def destroy(self):
-        LOG.debug("Virtman: destroy VM instance %s according snapshot_name %s" %(self.instance_name, self.snapshot_name))
+        LOG.debug("Virtman: destroy VM instance %s according "
+                  "snapshot_name %s" % (self.instance_name, self.snapshot_name))
         dmsetup.remove_table(self.snapshot_name)
         self.snapshot.destroy_snapshot()
         LOG.debug("Virtman: succeed to destroy the VM instance!")
@@ -54,10 +57,13 @@ class BlockDeviceInstance(Instance):
         self.snapshot_link = None
 
     def create(self):
-        LOG.debug("Virtman: start VM instance %s according origin_path %s" %(self.instance_name, self.origin_path))
+        LOG.debug("Virtman: start VM instance %s according origin_path %s" %
+                  (self.instance_name, self.origin_path))
         snapshot_path, self.snapshot_link = self.snapshot.create_snapshot()
-        self.instance_path = dmsetup.snapshot(self.origin_path, self.snapshot_name, snapshot_path)
-        #change link for OpenStack
+        self.instance_path = dmsetup.snapshot(self.origin_path,
+                                              self.snapshot_name,
+                                              snapshot_path)
+        # change link for OpenStack
         commands.unlink(self.snapshot_link)
         if not os.path.exists(self.snapshot_link):
             commands.link(self.instance_path, self.snapshot_link)
@@ -65,8 +71,9 @@ class BlockDeviceInstance(Instance):
         return self.snapshot_link
 
     def destroy(self):
-        LOG.debug("Virtman: destroy VM instance %s according snapshot_name %s" %(self.instance_name, self.snapshot_name))
-        #unlink snapshot
+        LOG.debug("Virtman: destroy VM instance %s according "
+                  "snapshot_name %s" % (self.instance_name, self.snapshot_name))
+        # unlink snapshot
         if os.path.exists(self.snapshot_link):
             commands.unlink(self.snapshot_link)
         dmsetup.remove_table(self.snapshot_name)

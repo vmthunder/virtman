@@ -10,7 +10,9 @@ iscsi_disk_format = "ip-%s-iscsi-%s-lun-%s"
 
 
 def connection_to_str(connection):
-    return iscsi_disk_format % (connection['target_portal'], connection['target_iqn'], connection['target_lun'])
+    return iscsi_disk_format % (connection['target_portal'],
+                                connection['target_iqn'],
+                                connection['target_lun'])
 
 
 class Path(object):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import requests
-#import json
+# import json
 from virtman.openstack.common import jsonutils
 
 
@@ -14,7 +14,7 @@ class Client(object):
 
     def requests(self, url, method, **kwargs):
         resp = requests.request(method, url, **kwargs)
-        #body = json.loads(resp.text) 
+        # body = json.loads(resp.text)
         body = 'Is Body'
         return resp, body
              
@@ -30,6 +30,7 @@ class Client(object):
     def delete(self, url, **kwargs):
         return self.requests(url, 'DELETE', **kwargs)
 
+
 def test4():
     url4 = 'http://127.0.0.1:8001/list'
     r4 = requests.get(url4)
@@ -38,10 +39,10 @@ def test4():
     url5 = 'http://127.0.0.1:8001/create'
 
     body = {
-        'image_id':'123456',
-        'vm_name':'vm6',
-        'connections':[],
-        'snapshot_dev':'/dev/loop8'
+        'image_id': '123456',
+        'vm_name': 'vm6',
+        'connections': [],
+        'snapshot_dev': '/dev/loop8'
     }
     kwargs = {}
     kwargs.setdefault('headers', kwargs.get('headers', {}))
@@ -74,6 +75,7 @@ def test1():
     print c.put(url)
     print c.delete(url)
 
+
 def test2():
 
     url1 = 'http://127.0.0.1:8001'
@@ -94,11 +96,12 @@ def test2():
     print requests.post(url2).text
     print requests.post(url3).text
     
-    #import webob
-    #from webob import Response
-    #r = Response()
-    #r = requests.get(url3)
-    #print r
+    # import webob
+    # from webob import Response
+    # r = Response()
+    # r = requests.get(url3)
+    # print r
+
 
 def test3():
     url2 = 'http://127.0.0.1:8001/show'
@@ -110,17 +113,18 @@ def test3():
     print r3.headers, '\n', 
     print jsonutils.loads(r3.content)
 '''
-    url = 'http://127.0.0.1:8001/start?image_id=image-100&vm_name=vm-200&connections=ss'
+    url = 'http://127.0.0.1:8001/start?image_id=image-100&vm_name=\
+vm-200&connections=ss'
     r = requests.get(url)
     print r.headers
     print r.text
 '''
 
 
-if __name__ == '__main__' :
-    #test1()
-    #test2()
-    #test3()
+if __name__ == '__main__':
+    # test1()
+    # test2()
+    # test3()
     test4()
 
 

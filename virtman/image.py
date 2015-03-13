@@ -46,25 +46,32 @@ class LocalImage(Image):
         super(LocalImage, self).__init__(image_name, image_connections)
 
     def create_instance(self, instance_name, snapshot_dev):
-        LOG.debug("Virtman: create VM instance started, instance_name = %s" % (instance_name))
-        self.instances[instance_name] = LocalInstance(self.origin_path, instance_name, snapshot_dev)
+        LOG.debug("Virtman: create VM instance started, instance_name = %s" %
+                  (instance_name))
+        self.instances[instance_name] = LocalInstance(self.origin_path,
+                                                      instance_name,
+                                                      snapshot_dev)
         instance_path = self.instances[instance_name].create()
-        LOG.debug("Virtman: create VM instance completed, instance_path = %s" % (instance_path))
+        LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
+                  (instance_path))
         return instance_path
 
     def destroy_instance(self, instance_name):
-        LOG.debug("Virtman: destroy VM instance started, instance_name = %s" % (instance_name))
+        LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
+                  (instance_name))
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
             if len(self.instances) <= 0:
                 self.has_instance = False
-        LOG.debug("Virtman: destroy VM instance completed, result = %s" % (ret))
+        LOG.debug("Virtman: destroy VM instance completed, result = %s" %
+                  (ret))
         return ret
 
     @synchronized('deploy_image')
     def _deploy_image(self):
-        self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
+        self.base_image = BlockDeviceBaseImage(self.image_name,
+                                               self.image_connections)
         return self.base_image.deploy_base_image()
 
     @synchronized('deploy_image')
@@ -81,25 +88,32 @@ class BlockDeviceImage(Image):
         super(BlockDeviceImage, self).__init__(image_name, image_connections)
 
     def create_instance(self, instance_name, snapshot_connection):
-        LOG.debug("Virtman: create VM instance started, instance_name = %s" % (instance_name))
-        self.instances[instance_name] = BlockDeviceInstance(self.origin_path, instance_name, snapshot_connection)
+        LOG.debug("Virtman: create VM instance started, instance_name = %s" %
+                  (instance_name))
+        self.instances[instance_name] = BlockDeviceInstance(self.origin_path,
+                                                            instance_name,
+                                                            snapshot_connection)
         instance_path = self.instances[instance_name].create()
-        LOG.debug("Virtman: create VM instance completed, instance_path = %s" % (instance_path))
+        LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
+                  (instance_path))
         return instance_path
 
     def destroy_instance(self, instance_name):
-        LOG.debug("Virtman: destroy VM instance started, instance_name = %s" % (instance_name))
+        LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
+                  (instance_name))
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
             if len(self.instances) <= 0:
                 self.has_instance = False
-        LOG.debug("Virtman: destroy VM instance completed, result = %s" % (ret))
+        LOG.debug("Virtman: destroy VM instance completed, result = %s" %
+                  (ret))
         return ret
 
     @synchronized('deploy_image')
     def _deploy_image(self):
-        self.base_image = BlockDeviceBaseImage(self.image_name, self.image_connections)
+        self.base_image = BlockDeviceBaseImage(self.image_name,
+                                               self.image_connections)
         return self.base_image.deploy_base_image()
 
     @synchronized('deploy_image')

@@ -9,9 +9,10 @@ from oslo.config import cfg
 from virtman import compute
 from virtman.openstack.common import log as logging
 
-#TODO: Auto determine host ip if not filled in conf file
+# TODO: Auto determine host ip if not filled in conf file
 
 CONF = cfg.CONF
+
 
 def start():
     cn = compute.Compute()
@@ -26,7 +27,7 @@ def start():
                 LOG.debug("At %s heartbeat once" % time.asctime())
                 cn.heartbeat()
                 time.sleep(CONF.heartbeat_interval)
-                #TODO: the max depth of recursion
+                # TODO: the max depth of recursion
                 clock()
             clock()
     heartbeat = HeartBeater('heartbeat')
@@ -34,6 +35,7 @@ def start():
 
 if __name__ == '__main__':
     CONF(sys.argv[1:], project='virtman',
-         default_config_files = ['/root/packages/virtman/etc/virtman/virtman.conf'])
+         default_config_files=
+         ['/root/packages/virtman/etc/virtman/virtman.conf'])
     logging.setup('virtman')
     start()

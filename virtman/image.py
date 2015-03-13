@@ -30,6 +30,15 @@ class Image(object):
     def destroy_instance(self, instance_name):
         return NotImplementedError()
 
+    def _deploy_image(self):
+        return NotImplementedError()
+
+    def destroy_image(self):
+        return NotImplementedError()
+
+    def adjust_for_heartbeat(self, parents):
+        return NotImplementedError()
+
 
 class LocalImage(Image):
 

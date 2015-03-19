@@ -163,13 +163,12 @@ class BlockDeviceBaseImage(BaseImage):
         # self._create_target()
         # self._login_master()
 
-        # print "target_id = ", self.target_id
-        # print "origin_path = ", self.origin_path, " origin_name = ",
-        # self.origin_name
-        # print "cached_path = ", self.cached_path, " No name"
-        # print "multipath_path = ", self.multipath_path, "multipath_name =
-        # ", self.multipath_name
-        print "Virtman: baseimage OK!"
+        LOG.debug("Virtman: baseimage OK!\n"
+                  "target_id =  %s, origin_path = %s, origin_name = %s, "
+                  "cached_path = %s, multipath_path = %s, multipath_name = %s" %
+                  (self.target_id, self.origin_path, self.origin_name,
+                   self.cached_path, self.multipath_path, self.multipath_name))
+
         return self.origin_path
 
     def destroy_base_image(self):

@@ -17,6 +17,12 @@ class Instance(object):
     def __init__(self):
         pass
 
+    def create(self):
+        return NotImplementedError()
+
+    def destroy(self):
+        return NotImplementedError()
+
 
 class LocalInstance(Instance):
     def __init__(self, origin_path, instance_name, snapshot_dev):

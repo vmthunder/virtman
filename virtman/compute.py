@@ -7,7 +7,6 @@ import threading
 import traceback
 from oslo.config import cfg
 
-from virtman import imageservice
 from virtman.drivers import fcg
 from virtman.drivers import volt
 from virtman.image import LocalImage
@@ -126,14 +125,13 @@ class Virtman(Compute):
             "1:info" specifies WARNING, info indicates instance_name exists
         """
         # multiple roots for creating
-        LOG.debug("Virtman: wait for unlock")
+        LOG.debug("Virtman: create wait for unlock")
         with self.lock:
             return self._create(instance_name, image_name, image_connections,
                                 snapshot)
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
-        LOG.debug("Virtman: Begin! ----- PID = %s" % os.getpid())
-        print "Virtman: begin!"
+        LOG.info("Virtman: Begin! ----- PID = %s" % os.getpid())
         # Just support for openstack
         if not image_name.startswith("volume-"):
             image_name = "volume-" + image_name
@@ -163,14 +161,14 @@ class Virtman(Compute):
                 self.images[image_name] = BlockDeviceImage(image_name,
                                                            image_connections)
         self.images[image_name].has_instance = True
-        print "Virtman: middle!"
+        LOG.info("Virtman: middle!")
         instance_path = self.images[image_name].create_instance(instance_name,
                                                                 snapshot)
         LOG.debug("Virtman: create VM completed, instance_name = %s, "
                   "image_name = %s, instance_path = %s" %
                   (instance_name, image_name, instance_path))
         # instance_path is like '/dev/mapper/snapshot_vm1' in local deployment
-        print "Virtman: end!  instance_path = ", instance_path
+        LOG.info("Virtman: end!  instance_path = %s" % instance_path)
         return "0:" + instance_path
 
     def destroy(self, instance_name):

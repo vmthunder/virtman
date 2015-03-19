@@ -56,7 +56,7 @@ class BlockDeviceBaseImage(BaseImage):
         # TODO: all virtual machines called image
         self.peer_id = ''
         self.target_id = 0
-        self.__status = STATUS.empty
+        self.status = STATUS.empty
         self.status_lock = threading.Lock()
         LOG.debug("Virtman: creating a base image of image_name %s" %
                   self.image_name)
@@ -64,8 +64,8 @@ class BlockDeviceBaseImage(BaseImage):
     def change_status(self, src_status, dst_status):
         with self.status_lock:
             flag = False
-            if self.__status == src_status:
-                self.__status = dst_status
+            if self.status == src_status:
+                self.status = dst_status
                 flag = True
             LOG.debug("Virtman: source status = %s, dst status = %s, "
                       "flag = %s" % (src_status, dst_status, flag))
@@ -94,7 +94,7 @@ class BlockDeviceBaseImage(BaseImage):
         """
         success = self.change_status(STATUS.empty, STATUS.building)
         if not success:
-            while self.__status == STATUS.building:
+            while self.status == STATUS.building:
                 LOG.debug("Virtman: in deploy_base_image, sleep 3 seconds "
                           "waiting for build completed")
                 eventlet.sleep(3)
@@ -259,8 +259,8 @@ class BlockDeviceBaseImage(BaseImage):
         if not self.has_multipath:
             self.multipath_path = dmsetup.multipath(self.multipath_name, disks)
             self.has_multipath = True
-            LOG.debug("Virtman: create multipath according connection :")
-            LOG.debug(disks)
+            LOG.debug("Virtman: create multipath according connection %s:" %
+                      disks)
         return self.multipath_path
 
     def _reload_multipath(self, disks):
@@ -276,10 +276,9 @@ class BlockDeviceBaseImage(BaseImage):
 
     def _create_cache(self):
         if not self.has_cache:
-            LOG.debug("Virtman: create cache for base image %s" %
-                      self.image_name)
-            LOG.debug("Virtman: create cache according to multipath %s" %
-                      self.multipath_path)
+            LOG.debug("Virtman: create cache for base image %s according to "
+                      "multipath %s" %
+                      (self.image_name, self.multipath_path))
             self.cached_path = fcg.add_disk(self.multipath_path)
             self.has_cache = True
             LOG.debug("Virtman: create cache completed, cache path = %s" %

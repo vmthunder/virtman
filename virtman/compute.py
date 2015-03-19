@@ -11,6 +11,7 @@ from virtman.drivers import fcg
 from virtman.drivers import volt
 from virtman.image import LocalImage
 from virtman.image import BlockDeviceImage
+from virtman.baseimage import STATUS
 from virtman.utils.singleton import singleton
 
 from virtman.openstack.common import log as logging
@@ -123,6 +124,7 @@ class Virtman(Compute):
         :returns : string
             "0:info" specifies SUCCESS, info=instance_path
             "1:info" specifies WARNING, info indicates instance_name exists
+            "2:info" specifies FAILURE, info create instance failed
         """
         # multiple roots for creating
         LOG.debug("Virtman: create wait for unlock")
@@ -160,16 +162,19 @@ class Virtman(Compute):
             else:
                 self.images[image_name] = BlockDeviceImage(image_name,
                                                            image_connections)
-        self.images[image_name].has_instance = True
-        LOG.info("Virtman: middle!")
-        instance_path = self.images[image_name].create_instance(instance_name,
-                                                                snapshot)
-        LOG.debug("Virtman: create VM completed, instance_name = %s, "
-                  "image_name = %s, instance_path = %s" %
-                  (instance_name, image_name, instance_path))
-        # instance_path is like '/dev/mapper/snapshot_vm1' in local deployment
-        LOG.info("Virtman: end!  instance_path = %s" % instance_path)
-        return "0:" + instance_path
+        if self.images[image_name].base_image.status is STATUS.ok:
+            self.images[image_name].has_instance = True
+            LOG.info("Virtman: middle!")
+            instance_path = self.images[image_name].create_instance(
+                instance_name, snapshot)
+            LOG.debug("Virtman: create VM completed, instance_name = %s, "
+                      "image_name = %s, instance_path = %s" %
+                      (instance_name, image_name, instance_path))
+            # instance_path is like '/dev/mapper/snapshot_vm1'
+            LOG.info("Virtman: end!  instance_path = %s" % instance_path)
+            return "0:" + instance_path
+        LOG.debug("Virtman: create instance \'%s\' failed" % instance_name)
+        return "2:" + "Virtman: create instance \'%s\' failed" % instance_name
 
     def destroy(self, instance_name):
         """
@@ -177,6 +182,7 @@ class Virtman(Compute):
             "0:info" specifies SUCCESS, info=""
             "1:info" specifies WARNING, info indicates instance_name not exists
         """
+        LOG.debug("Virtman: destroy wait for unlock")
         with self.lock:
             return self._destroy(instance_name)
 

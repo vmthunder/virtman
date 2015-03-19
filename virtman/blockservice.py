@@ -31,11 +31,13 @@ def try_linkloop(loop_dev):
 
 
 def is_looped(loop_dev):
-    import commands
-    if commands.getoutput("losetup " + loop_dev).startswith(loop_dev):
-        return True
-    else:
+    try:
+        putils.execute("losetup", loop_dev, run_as_root=True,
+                       root_helper=rootwrap.root_helper())
+    except putils.ProcessExecutionError:
         return False
+    else:
+        return True
 
 
 def linkloop(loop_dev, path):

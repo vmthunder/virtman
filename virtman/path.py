@@ -29,7 +29,6 @@ class Path(object):
     def connect(self):
         self.device_info = connector.connect_volume(self.connection)
         self.device_path = self.device_info['path']
-        print "Virtman: Path OK!  device_path = ", self.device_path
         self.connected = True
         LOG.debug("Virtman: connect to path: %s", str(self))
         return self.device_path

@@ -38,12 +38,10 @@ CONF = cfg.CONF
 CONF.register_opts(host_opts)
 CONF.register_opts(compute_opts)
 
-
 LOG = logging.getLogger(__name__)
 
 
 class Compute(object):
-
     def __init__(self):
         pass
 
@@ -59,7 +57,6 @@ class Compute(object):
 
 @singleton
 class Virtman(Compute):
-
     def __init__(self, openstack_compatible=True):
         LOG.info("Virtman: start to create a Virtman Compute_node")
         self.openstack_compatible = openstack_compatible
@@ -150,7 +147,7 @@ class Virtman(Compute):
         if instance_name in self.instance_names:
             LOG.debug("Virtman: the instance_name \'%s\' already exists!" %
                       instance_name)
-            return "1:" + "Virtman: the instance_name \'%s\' already exists!" %\
+            return "1:" + "Virtman: the instance_name \'%s\' already exists!" % \
                           instance_name
         else:
             # TODO: try: exception
@@ -205,16 +202,6 @@ class Virtman(Compute):
     def list(self):
         instance_list = []
         for instance_name, image_name in self.instance_names.items():
-            instance_list.append(instance_name+':'+image_name)
+            instance_list.append(instance_name + ':' + image_name)
         return instance_list
-
-    def create_image_target(self, image_name, file_path, loop_dev, iqn_prefix):
-        return imageservice.create_image_target(image_name, file_path,
-                                                loop_dev, iqn_prefix)
-
-    def destroy_image_target(self, image_name):
-        return imageservice.destroy_image_target(image_name)
-
-    def list_image_target(self):
-        return imageservice.list_image_target()
 

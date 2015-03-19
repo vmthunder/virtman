@@ -4,6 +4,7 @@ from SimpleXMLRPCServer import SimpleXMLRPCServer
 from SimpleXMLRPCServer import SimpleXMLRPCRequestHandler
 
 from virtman.compute import Virtman
+from virtman import imageservice
 
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
@@ -30,19 +31,16 @@ class SimpleCompute(object):
 
     @staticmethod
     def create_image_target(image_name, file_path, loop_dev, iqn_prefix):
-        cn = Virtman(openstack_compatible=False)
-        return cn.create_image_target(image_name, file_path, loop_dev,
-                                      iqn_prefix)
+        return imageservice.create_image_target(image_name, file_path, loop_dev,
+                                                iqn_prefix)
 
     @staticmethod
     def destroy_image_target(image_name):
-        cn = Virtman(openstack_compatible=False)
-        return cn.destroy_image_target(image_name)
+        return imageservice.destroy_image_target(image_name)
 
     @staticmethod
     def list_image_target():
-        cn = Virtman(openstack_compatible=False)
-        return cn.list_image_target()
+        return imageservice.list_image_target()
 
 
 server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)

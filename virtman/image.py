@@ -5,7 +5,7 @@ import threading
 from virtman.baseimage import BlockDeviceBaseImage
 from virtman.instance import LocalInstance
 from virtman.instance import BlockDeviceInstance
-from virtman.utils.lockutils import synchronized
+from oslo.concurrency import lockutils
 
 from virtman.openstack.common import log as logging
 
@@ -68,13 +68,13 @@ class LocalImage(Image):
                   (ret))
         return ret
 
-    @synchronized('deploy_image')
+    @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
         return self.base_image.deploy_base_image()
 
-    @synchronized('deploy_image')
+    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
 
@@ -110,13 +110,13 @@ class BlockDeviceImage(Image):
                   (ret))
         return ret
 
-    @synchronized('deploy_image')
+    @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
         return self.base_image.deploy_base_image()
 
-    @synchronized('deploy_image')
+    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
 

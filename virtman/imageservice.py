@@ -24,13 +24,13 @@ def create_image_target(image_name, file_path, loop_dev, iqn_prefix):
     if not image_name.startswith("volume-"):
         image_name = "volume-" + image_name
     if image_name in targetlist:
-        LOG.debug("Virtman: Image Service: Warning! image_name = %s exists! "
+        LOG.warn("Virtman: Image Service: Warning! image_name = %s exists! "
                   "Please use another name" % image_name)
         return "1:" + "Virtman: Image Service: Warning! " \
                       "image_name = %s exists! Please use another name" \
                       % image_name
     if not os.path.exists(file_path):
-        LOG.debug("Virtman: Image Service: Warning! "
+        LOG.warn("Virtman: Image Service: Warning! "
                   "image file_path = %s not exists! Please use another "
                   "image file" % file_path)
         return "2:" + "Virtman: Image Service: Warning!" \
@@ -60,7 +60,7 @@ def destroy_image_target(image_name):
     if not image_name.startswith("volume-"):
         image_name = "volume-" + image_name
     if image_name not in targetlist:
-        LOG.debug("Virtman: Image Service: Warning! "
+        LOG.warn("Virtman: Image Service: Warning! "
                   "image_name = %s not exists!" % image_name)
         return "1:" + "Virtman: Image Service: Warning! " \
                       "image_name = %s not exists!" % image_name

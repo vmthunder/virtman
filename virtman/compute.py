@@ -129,8 +129,13 @@ class Virtman(Compute):
         # multiple roots for creating
         LOG.debug("Virtman: create wait for unlock")
         with self.lock:
-            return self._create(instance_name, image_name, image_connections,
-                                snapshot)
+            try:
+                ret = self._create(instance_name, image_name, image_connections,
+                                   snapshot)
+            except Exception as e:
+                LOG.error("Virtman: create instance failed, due to %s" % e)
+                return "2:" + "Virtman: create instance failed"
+            return ret
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
         LOG.info("Virtman: Begin! ----- PID = %s" % os.getpid())
@@ -145,12 +150,11 @@ class Virtman(Compute):
             image_connections = [image_connections]
         # with self.lock:
         if instance_name in self.instance_names:
-            LOG.debug("Virtman: the instance_name \'%s\' already exists!" %
+            LOG.warn("Virtman: the instance_name \'%s\' already exists!" %
                       instance_name)
             return "1:" + "Virtman: the instance_name \'%s\' already exists!" % \
                           instance_name
         else:
-            # TODO: try: exception
             self.instance_names[instance_name] = image_name
         LOG.debug("Virtman: create VM started, instance_name = %s, "
                   "image_name = %s" % (instance_name, image_name))
@@ -173,24 +177,28 @@ class Virtman(Compute):
             # instance_path is like '/dev/mapper/snapshot_vm1'
             LOG.info("Virtman: end!  instance_path = %s" % instance_path)
             return "0:" + instance_path
-        LOG.debug("Virtman: create instance \'%s\' failed" % instance_name)
-        return "2:" + "Virtman: create instance \'%s\' failed" % instance_name
 
     def destroy(self, instance_name):
         """
         :returns : string
             "0:info" specifies SUCCESS, info=""
             "1:info" specifies WARNING, info indicates instance_name not exists
+            "2:info" specifies FAILURE, info destroy instance failed
         """
         LOG.debug("Virtman: destroy wait for unlock")
         with self.lock:
-            return self._destroy(instance_name)
+            try:
+                ret = self._destroy(instance_name)
+            except Exception as e:
+                LOG.error("Virtman: destroy instance failed, due to %s" % e)
+                return "2:" + "Virtman: destroy instance failed"
+            return ret
 
     def _destroy(self, instance_name):
         LOG.debug("Virtman: destroy VM started, instance_name = %s" %
                   instance_name)
         if instance_name not in self.instance_names:
-            LOG.debug("Virtman: the instance_name \'%s\' does not exist!" %
+            LOG.warn("Virtman: the instance_name \'%s\' does not exist!" %
                       instance_name)
             return "1:" + "Virtman: the instance_name \'%s\' does not exist!" \
                           % instance_name

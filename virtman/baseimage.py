@@ -101,7 +101,7 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug("Virtman: ..........begin to deploy base image")
         try:
             origin_path = self._deploy_base_image()
-        except Exception, e:
+        except Exception as e:
             LOG.error(e)
             self.change_status(STATUS.building, STATUS.error)
             raise
@@ -368,15 +368,14 @@ class BlockDeviceBaseImage(BaseImage):
                     raise Exception("parents is in pending")
                 return parent_list
             except Exception, e:
-                LOG.debug("Virtman: get parent info from volt server failed "
+                LOG.warn("Virtman: get parent info from volt server failed "
                           "due to %s, tried %d times" % (e, try_times))
                 if try_times < max_try_count:
                     time.sleep(5)
                     try_times += 1
                     continue
                 else:
-                    raise Exception("Virtman: Get parent info failed "
-                                    "due to %s! " % e)
+                    raise Exception("get parent info timeout")
 
 
 class Qcow2BaseImage(BaseImage):

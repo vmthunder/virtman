@@ -103,7 +103,7 @@ class BlockDeviceSnapshot(Snapshot):
         if self.snapshot_with_cache:
             self._delete_cache(self.snapshot_dev)
         connector.disconnect_volume(self.connection, self.device_info)
-        LOG.debug("Virtman: success!")
+        LOG.debug("Virtman: succeed to delete snapshot!")
         return True
 
 

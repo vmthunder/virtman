@@ -1,5 +1,5 @@
 
-from virtman.openstack.common import processutils as putils
+from oslo_concurrency import processutils as putils
 from virtman.utils import rootwrap
 
 

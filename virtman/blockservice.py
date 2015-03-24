@@ -5,7 +5,7 @@ import os
 from virtman.utils import rootwrap
 
 from virtman.openstack.common import log as logging
-from virtman.openstack.common import processutils as putils
+from oslo_concurrency import processutils as putils
 
 LOG = logging.getLogger(__name__)
 

@@ -5,7 +5,7 @@ from brick.initiator.connector import ISCSIConnector
 from virtman.utils import singleton
 from virtman.utils import rootwrap
 
-from virtman.openstack.common import processutils as putils
+from oslo_concurrency import processutils as putils
 
 
 class ISCSIExecutor(ISCSIConnector):

@@ -29,14 +29,14 @@ class Singleton:
         """ Delegate access to implementation """
         return setattr(self.__instance, attr, value)
 
+if __name__ == '__main__':
+    # Test it
+    s1 = Singleton()
+    print id(s1), s1.spam()
 
-# Test it
-s1 = Singleton()
-print id(s1), s1.spam()
+    s2 = Singleton()
+    print id(s2), s2.spam()
 
-s2 = Singleton()
-print id(s2), s2.spam()
-
-# Sample output, the second (inner) id is constant:
-# 8172684 8176268
-# 8168588 8176268
+    # Sample output, the second (inner) id is constant:
+    # 8172684 8176268
+    # 8168588 8176268

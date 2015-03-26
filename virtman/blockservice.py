@@ -31,18 +31,25 @@ def try_linkloop(loop_dev):
 
 
 def is_looped(loop_dev):
-    try:
-        putils.execute("losetup", loop_dev, run_as_root=True,
-                       root_helper=rootwrap.root_helper())
-    except putils.ProcessExecutionError:
-        return False
-    else:
+    (out, err) = putils.execute("losetup", '-a',  loop_dev, run_as_root=True,
+                                root_helper=rootwrap.root_helper())
+    looped_list = [line.split()[0].rstrip(":")
+                   for line in out.strip().split('\n')]
+    if loop_dev in looped_list:
         return True
+    return False
+    # try:
+    #     putils.execute("losetup", loop_dev, run_as_root=True,
+    #                    root_helper=rootwrap.root_helper())
+    # except putils.ProcessExecutionError:
+    #     return False
+    # else:
+    #     return True
 
 
 def linkloop(loop_dev, path):
-    putils.execute('losetup', loop_dev, path,
-                   run_as_root=True, root_helper=rootwrap.root_helper())
+        putils.execute('losetup', loop_dev, path,
+                       run_as_root=True, root_helper=rootwrap.root_helper())
 
 
 def unlinkloop(loop_dev):

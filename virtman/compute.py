@@ -12,6 +12,7 @@ from virtman.drivers import volt
 from virtman.image import LocalImage
 from virtman.image import BlockDeviceImage
 from virtman.baseimage import STATUS
+from virtman.utils import exception
 from virtman.utils.singleton import singleton
 
 from virtman.openstack.common import log as logging
@@ -133,7 +134,7 @@ class Virtman(Compute):
                 ret = self._create(instance_name, image_name, image_connections,
                                    snapshot)
             except Exception as e:
-                LOG.error("Virtman: create instance failed, due to %s" % e)
+                LOG.error("Virtman: create VM instance failed, due to %s" % e)
                 return "2:" + "Virtman: create instance failed"
             return ret
 
@@ -169,8 +170,14 @@ class Virtman(Compute):
         if self.images[image_name].base_image.status is STATUS.ok:
             self.images[image_name].has_instance = True
             LOG.info("Virtman: middle!")
-            instance_path = self.images[image_name].create_instance(
-                instance_name, snapshot)
+            try:
+                instance_path = self.images[image_name].create_instance(
+                    instance_name, snapshot)
+            except exception as ex:
+                LOG.error("Virtman: create instance(snapshot) failed, due to "
+                          "%s" % ex)
+                raise exception.CreateInstanceFailed(
+                    instance=self.instance_names)
             LOG.debug("Virtman: create VM completed, instance_name = %s, "
                       "image_name = %s, instance_path = %s" %
                       (instance_name, image_name, instance_path))
@@ -191,7 +198,7 @@ class Virtman(Compute):
                 ret = self._destroy(instance_name)
             except Exception as e:
                 LOG.error("Virtman: destroy instance failed, due to %s" % e)
-                return "2:" + "Virtman: destroy instance failed"
+                return "2:" + "Virtman: destroy VM instance failed"
             return ret
 
     def _destroy(self, instance_name):

@@ -48,3 +48,11 @@ class VirtmanException(Exception):
 
     def __unicode__(self):
         return unicode(self.msg)
+
+
+class CreateBaseImageFailed(VirtmanException):
+    message = _("create baseimage \'%(baseimage)s\' failed.")
+
+
+class CreateInstanceFailed(VirtmanException):
+    message = _("create instance(snapshot) \'%(instance)s\' failed.")

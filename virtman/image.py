@@ -5,6 +5,7 @@ import threading
 from virtman.baseimage import BlockDeviceBaseImage
 from virtman.instance import LocalInstance
 from virtman.instance import BlockDeviceInstance
+from virtman.utils import exception
 from oslo.concurrency import lockutils
 
 from virtman.openstack.common import log as logging
@@ -22,13 +23,22 @@ class Image(object):
         self.has_instance = None
         self.lock = threading.Lock()
         # deploy image only once
-        self.origin_path = self._deploy_image()
+        self.origin_path = self.deploy_image()
 
     def create_instance(self, instance_name, snapshot):
         return NotImplementedError()
 
     def destroy_instance(self, instance_name):
         return NotImplementedError()
+
+    def deploy_image(self):
+        try:
+            origin_path = self._deploy_image()
+        except Exception as ex:
+            LOG.error("Virtman: create baseimage failed, due to %s" % ex)
+            raise exception.CreateBaseImageFailed(baseimage=self.image_name)
+        else:
+            return origin_path
 
     def _deploy_image(self):
         return NotImplementedError()
@@ -47,32 +57,33 @@ class LocalImage(Image):
 
     def create_instance(self, instance_name, snapshot_dev):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
-                  (instance_name))
+                  instance_name)
         self.instances[instance_name] = LocalInstance(self.origin_path,
                                                       instance_name,
                                                       snapshot_dev)
         instance_path = self.instances[instance_name].create()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
-                  (instance_path))
+                  instance_path)
         return instance_path
 
     def destroy_instance(self, instance_name):
         LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
-                  (instance_name))
+                  instance_name)
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
             if len(self.instances) <= 0:
                 self.has_instance = False
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
-                  (ret))
+                  ret)
         return ret
 
     @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        return self.base_image.deploy_base_image()
+        origin_path = self.base_image.deploy_base_image()
+        return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
@@ -114,7 +125,8 @@ class BlockDeviceImage(Image):
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        return self.base_image.deploy_base_image()
+        origin_path = self.base_image.deploy_base_image()
+        return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):

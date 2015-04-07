@@ -64,11 +64,11 @@ def destroy_image_target(image_name):
                   "image_name = %s not exists!" % image_name)
         return "1:" + "Virtman: Image Service: Warning! " \
                       "image_name = %s not exists!" % image_name
-    nothing = iscsi.remove_iscsi_target(image_name, image_name)
+    iscsi.remove_iscsi_target(image_name, image_name)
     blockservice.unlinkloop(targetlist[image_name].split(':')[1])
     del targetlist[image_name]
     LOG.debug("Virtman: Image Service: remove image target completed!")
-    return "0:" + str(nothing)
+    return "0:"
 
 
 def list_image_target():

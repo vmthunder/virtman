@@ -32,24 +32,44 @@ class TestImageService(base.TestCase):
         self.mock_object(os.path, 'exists', mock.Mock(return_value=False))
         self.mock_object(blockservice, 'is_looped',
                          mock.Mock(return_value=False))
+        expected_result = '2:Virtman: Image Service: Warning!image file_path' \
+                          ' = /blocks/image1 not exists! Please use another ' \
+                          'image file'
         result = imageservice.create_image_target('image1', '/blocks/image1',
                                                   '/dev/loop2', test_iqn_prefix)
-        print result
+        self.assertEqual(expected_result, result)
 
+        expected_result = '0:1:/dev/loop2'
         self.mock_object(os.path, 'exists', mock.Mock(return_value=True))
         result = imageservice.create_image_target('image1', '/blocks/image1',
                                                   '/dev/loop2', test_iqn_prefix)
-        print result
+        self.assertEqual(expected_result, result)
 
+        expected_result = '1:Virtman: Image Service: Warning! image_name = ' \
+                          'volume-image1 exists! Please use another name'
         result = imageservice.create_image_target('image1', '/blocks/image1',
                                                   '/dev/loop2', test_iqn_prefix)
-        print result
+        self.assertEqual(expected_result, result)
 
     def test_destroy_image_target(self):
-        pass
+        self.mock_object(iscsi, 'remove_iscsi_target',
+                         mock.Mock(return_value=None))
+        self.mock_object(blockservice, 'is_looped',
+                         mock.Mock(return_value=True))
+
+        imageservice.targetlist = {'volume-image1': '1:/dev/loop1',
+                                   'volume-image2': '1:/dev/loop2'}
+        expected_result = '1:Virtman: Image Service: Warning! image_name = ' \
+                          'volume-image3 not exists!'
+        result = imageservice.destroy_image_target('image3')
+        self.assertEqual(expected_result, result)
+
+        expected_result = '0:'
+        result = imageservice.destroy_image_target('image2')
+        self.assertEqual(expected_result, result)
 
     def test_list_image_target(self):
         imageservice.targetlist = {'volume-image1': '1:/dev/loop1',
-                                   'volume-image2': '1:/dev/loop2' }
+                                   'volume-image2': '1:/dev/loop2'}
         result = imageservice.list_image_target()
         self.assertEqual(imageservice.targetlist, result)

@@ -78,21 +78,24 @@ class BlockDeviceSnapshot(Snapshot):
     def create_snapshot(self):
         LOG.debug("Virtman: creating a snapshot for the VM instance")
         self.device_info = connector.connect_volume(self.connection)
-        #snapshot_link is a symlink, like /dev/disk/by-path/xxx
+        # snapshot_link is a symlink, like /dev/disk/by-path/xxx
         self.snapshot_link = self.device_info['path']
         if not os.path.exists(self.snapshot_link):
-            raise Exception("ERROR! Could NOT find snapshot path file %s!" % self.snapshot_link)
-        #snapshot_dev: like /dev/sd*, mounted from remote volume, like Cinder Volume
+            raise Exception("ERROR! Could NOT find snapshot path file %s!" %
+                            self.snapshot_link)
+        # snapshot_dev: like /dev/sd*, mounted from remote volume,
+        # like Cinder Volume
         self.snapshot_dev = os.path.realpath(self.snapshot_link)
         if not os.path.exists(self.snapshot_dev):
-            raise Exception("ERROR! Could NOT find snapshot device %s!" % self.snapshot_dev)
+            raise Exception("ERROR! Could NOT find snapshot device %s!" %
+                            self.snapshot_dev)
 
         if self.snapshot_with_cache:
             self.snapshot_path = self._create_cache(self.snapshot_dev)
         else:
             self.snapshot_path = self.snapshot_dev
-        LOG.debug(
-            "Virtman: success! snapshot_path = %s snapshot_link = %s" % (self.snapshot_path, self.snapshot_link))
+        LOG.debug("Virtman: success! snapshot_path = %s snapshot_link = %s" %
+                  (self.snapshot_path, self.snapshot_link))
         return self.snapshot_path, self.snapshot_link
 
     def destroy_snapshot(self):
@@ -100,7 +103,7 @@ class BlockDeviceSnapshot(Snapshot):
         if self.snapshot_with_cache:
             self._delete_cache(self.snapshot_dev)
         connector.disconnect_volume(self.connection, self.device_info)
-        LOG.debug("Virtman: success!")
+        LOG.debug("Virtman: succeed to delete snapshot!")
         return True
 
 

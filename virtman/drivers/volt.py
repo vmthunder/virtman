@@ -21,6 +21,7 @@ CONF.register_opts(master_opts)
 def singleton(cls):
     lock = threading.Lock()
     instances = {}
+
     def _singleton(*args, **kwargs):
         if cls not in instances:
             with lock:
@@ -33,7 +34,8 @@ def singleton(cls):
 @singleton
 class VoltClient(client.Client):
     def __init__(self):
-        client.Client.__init__(self, 'http://%s:%s' % (CONF.master_ip, CONF.master_port))
+        client.Client.__init__(self, 'http://%s:%s' %
+                               (CONF.master_ip, CONF.master_port))
 
 
 def login(session_name, peer_id, host, port, iqn, lun):

@@ -7,11 +7,12 @@ import threading
 import traceback
 from oslo.config import cfg
 
-from virtman import imageservice
 from virtman.drivers import fcg
 from virtman.drivers import volt
 from virtman.image import LocalImage
 from virtman.image import BlockDeviceImage
+from virtman.baseimage import STATUS
+from virtman.utils import exception
 from virtman.utils.singleton import singleton
 
 from virtman.openstack.common import log as logging
@@ -38,12 +39,10 @@ CONF = cfg.CONF
 CONF.register_opts(host_opts)
 CONF.register_opts(compute_opts)
 
-
 LOG = logging.getLogger(__name__)
 
 
 class Compute(object):
-
     def __init__(self):
         pass
 
@@ -59,7 +58,6 @@ class Compute(object):
 
 @singleton
 class Virtman(Compute):
-
     def __init__(self, openstack_compatible=True):
         LOG.info("Virtman: start to create a Virtman Compute_node")
         self.openstack_compatible = openstack_compatible
@@ -113,87 +111,116 @@ class Virtman(Compute):
                     break
         LOG.debug("Virtman: heartbeat end @ %s" % time.asctime())
 
-    def create(self, instance_name, image_name, image_connections, snapshot=None):
+    def create(self, instance_name, image_name, image_connections,
+               snapshot=None):
         """
         :param instance_name: string
-        :param image_name: string. It is 'iqn', likes "iqn.2010-10.org.openstack:vol_id"
-        :param image_connections: list or tuple or single dict, like ({},..) or [{},..] or {}
-                                  and each dict make of {'target_portal':..,'target_iqn':..,'target_lun':.., ..}
+        :param image_name: string. It is 'iqn', likes
+                           "iqn.2010-10.org.openstack:vol_id"
+        :param image_connections: list or tuple or single dict, like ({},..) or
+                                  [{},..] or {} and each dict make of {
+                                  'target_portal':..,'target_iqn':..,
+                                  'target_lun':.., ..}
         :param snapshot: snapshot_connection or snapshot_dev
         :returns : string
             "0:info" specifies SUCCESS, info=instance_path
             "1:info" specifies WARNING, info indicates instance_name exists
+            "2:info" specifies FAILURE, info create instance failed
         """
         # multiple roots for creating
+        LOG.debug("Virtman: create wait for unlock")
         with self.lock:
-            return self._create(instance_name, image_name, image_connections, snapshot)
+            try:
+                ret = self._create(instance_name, image_name, image_connections,
+                                   snapshot)
+            except Exception as e:
+                LOG.error("Virtman: create VM instance failed, due to %s" % e)
+                return "2:" + "Virtman: create instance failed"
+            return ret
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
-        LOG.debug("Virtman: Begin! ----- PID = %s" % os.getpid())
-        print "Virtman: begin!"
+        LOG.info("Virtman: Begin! ----- PID = %s" % os.getpid())
         # Just support for openstack
         if not image_name.startswith("volume-"):
             image_name = "volume-" + image_name
         # for multi image server
-        if isinstance(image_connections, tuple) or isinstance(image_connections, list):
+        if isinstance(image_connections, tuple) or \
+                isinstance(image_connections, list):
             image_connections = list(image_connections)
         else:
             image_connections = [image_connections]
-        #with self.lock:
-        if self.instance_names.has_key(instance_name):
-            LOG.debug("Virtman: the instance_name \'%s\' already exists!" % instance_name)
-            return "1:" + "Virtman: the instance_name \'%s\' already exists!" % instance_name
+        # with self.lock:
+        if instance_name in self.instance_names:
+            LOG.warn("Virtman: the instance_name \'%s\' already exists!" %
+                      instance_name)
+            return "1:" + "Virtman: the instance_name \'%s\' already exists!" % \
+                          instance_name
         else:
-        #TODO: try: exception
             self.instance_names[instance_name] = image_name
-        LOG.debug("Virtman: create VM started, instance_name = %s, image_name = %s" % (instance_name, image_name))
-        if not self.images.has_key(image_name):
+        LOG.debug("Virtman: create VM started, instance_name = %s, "
+                  "image_name = %s" % (instance_name, image_name))
+        if image_name not in self.images:
             LOG.debug("Virtman: now need to create image first!")
             if not self.openstack_compatible:
-                self.images[image_name] = LocalImage(image_name, image_connections)
+                self.images[image_name] = LocalImage(image_name,
+                                                     image_connections)
             else:
-                self.images[image_name] = BlockDeviceImage(image_name, image_connections)
-        self.images[image_name].has_instance = True
-        print "Virtman: middle!"
-        instance_path = self.images[image_name].create_instance(instance_name, snapshot)
-        LOG.debug("Virtman: create VM completed, instance_name = %s, image_name = %s, instance_path = %s" % (instance_name, image_name, instance_path))
-        # instance_path is like '/dev/mapper/snapshot_vm1' in local deployment
-        print "Virtman: end!  instance_path = ", instance_path
-        return "0:" + instance_path
+                self.images[image_name] = BlockDeviceImage(image_name,
+                                                           image_connections)
+        if self.images[image_name].base_image.status is STATUS.ok:
+            self.images[image_name].has_instance = True
+            LOG.info("Virtman: middle!")
+            try:
+                instance_path = self.images[image_name].create_instance(
+                    instance_name, snapshot)
+            except exception as ex:
+                LOG.error("Virtman: create instance(snapshot) failed, due to "
+                          "%s" % ex)
+                raise exception.CreateInstanceFailed(
+                    instance=self.instance_names)
+            LOG.debug("Virtman: create VM completed, instance_name = %s, "
+                      "image_name = %s, instance_path = %s" %
+                      (instance_name, image_name, instance_path))
+            # instance_path is like '/dev/mapper/snapshot_vm1'
+            LOG.info("Virtman: end!  instance_path = %s" % instance_path)
+            return "0:" + instance_path
 
     def destroy(self, instance_name):
         """
         :returns : string
             "0:info" specifies SUCCESS, info=""
             "1:info" specifies WARNING, info indicates instance_name not exists
+            "2:info" specifies FAILURE, info destroy instance failed
         """
+        LOG.debug("Virtman: destroy wait for unlock")
         with self.lock:
-            return self._destroy(instance_name)
+            try:
+                ret = self._destroy(instance_name)
+            except Exception as e:
+                LOG.error("Virtman: destroy instance failed, due to %s" % e)
+                return "2:" + "Virtman: destroy VM instance failed"
+            return ret
 
     def _destroy(self, instance_name):
-        LOG.debug("Virtman: destroy VM started, instance_name = %s" % instance_name)
-        if not self.instance_names.has_key(instance_name):
-            LOG.debug("Virtman: the instance_name \'%s\' does not exist!" % instance_name)
-            return "1:" + "Virtman: the instance_name \'%s\' does not exist!" % instance_name
+        LOG.debug("Virtman: destroy VM started, instance_name = %s" %
+                  instance_name)
+        if instance_name not in self.instance_names:
+            LOG.warn("Virtman: the instance_name \'%s\' does not exist!" %
+                      instance_name)
+            return "1:" + "Virtman: the instance_name \'%s\' does not exist!" \
+                          % instance_name
         else:
             image_name = self.instance_names[instance_name]
             if self.images[image_name].destroy_instance(instance_name):
-                #with self.lock:
+                # with self.lock:
                 del self.instance_names[instance_name]
-            LOG.debug("Virtman: destroy VM completed, instance_name = %s" % instance_name)
+            LOG.debug("Virtman: destroy VM completed, instance_name = %s" %
+                      instance_name)
             return "0:"
 
     def list(self):
         instance_list = []
         for instance_name, image_name in self.instance_names.items():
-            instance_list.append(instance_name+':'+image_name)
+            instance_list.append(instance_name + ':' + image_name)
         return instance_list
 
-    def create_image_target(self, image_name, file_path, loop_dev, iqn_prefix):
-        return imageservice.create_image_target(image_name, file_path, loop_dev, iqn_prefix)
-
-    def destroy_image_target(self, image_name):
-        return imageservice.destroy_image_target(image_name)
-
-    def list_image_target(self):
-        return imageservice.list_image_target()

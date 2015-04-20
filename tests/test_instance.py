@@ -13,7 +13,7 @@ from oslo_concurrency import processutils as putils
 test_snapshot_connection = {
     'target_portal': '10.0.0.1:3260',
     'target_iqn': 'iqn.2010-10.org.openstack:volume-shanpshot',
-    'target_lun': 1}
+    'target_lun': '1'}
 
 
 class TestLocalInstance(base.TestCase):

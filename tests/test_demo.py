@@ -28,3 +28,7 @@ class TestDemo(base.TestCase):
                          mock.Mock(side_effect=lambda: (1, None)))
         result = self.fun.cmd()
         self.assertEqual(1, result)
+
+    def test_fake_class(self):
+
+        pass

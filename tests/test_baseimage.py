@@ -6,7 +6,7 @@ import string
 from tests import base
 from oslo_concurrency import processutils as putils
 from virtman import baseimage
-from virtman.path import connection_to_str
+from virtman.path import Path
 
 test_image_connections = [{
     'target_portal': '10.0.0.1:3260',
@@ -35,7 +35,7 @@ class FakePath():
         self.device_path = ''
 
     def __str__(self):
-        return connection_to_str(self.connection)
+        return Path.connection_to_str(self.connection)
 
     def connect(self):
         self.device_info = fake_connect(self.connection)

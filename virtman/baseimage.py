@@ -10,7 +10,6 @@ from virtman.drivers import fcg
 from virtman.drivers import dmsetup
 from virtman.drivers import iscsi
 from virtman.drivers import volt
-from virtman.path import connection_to_str
 from virtman.path import Path
 from virtman.utils import utils
 from virtman.utils.enum import Enum
@@ -217,7 +216,7 @@ class BlockDeviceBaseImage(BaseImage):
         for key in self.paths.keys():
             found = False
             for connection in parent_connections:
-                if key == connection_to_str(connection):
+                if key == Path.connection_to_str(connection):
                     found = True
                     break
             if not found:
@@ -226,7 +225,7 @@ class BlockDeviceBaseImage(BaseImage):
             if not isinstance(connection, dict):
                 raise (Exception("Unknown %s type of %s " %
                                  (type(connection), connection)))
-            key = connection_to_str(connection)
+            key = Path.connection_to_str(connection)
             if key not in self.paths:
                 self.paths[key] = Path(connection)
 

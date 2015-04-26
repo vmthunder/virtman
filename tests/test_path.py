@@ -8,7 +8,7 @@ from virtman.drivers import connector
 test_connection = {
     'target_portal': '10.0.0.1:3260',
     'target_iqn': 'iqn.2010-10.org.openstack:volume-00000001',
-    'target_lun': 1
+    'target_lun': '1'
 }
 
 
@@ -28,16 +28,22 @@ class TestPath(base.TestCase):
         super(TestPath, self).setUp()
         self.path = path.Path(test_connection)
 
+    def test_str(self):
+        expected = 'ip-10.0.0.1:3260-iscsi-iqn.2010-10.org.' \
+                   'openstack:volume-00000001-lun-1'
+        result = '%s' % self.path
+        self.assertEqual(expected, result)
+
     def test_connect(self):
         expected = '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.2010-10.' \
                    'org.openstack:volume-00000001-lun-1'
         self.mock_object(connector, 'connect_volume',
                          mock.Mock(side_effect=fake_connect))
-        result = self.path.connect()
+        result = path.Path.connect(self.path)
         self.assertEqual(expected, result)
         self.assertEqual(True, self.path.connected)
 
     def test_disconnect(self):
         self.mock_object(connector, 'disconnect_volume', mock.Mock())
-        self.path.disconnect()
+        path.Path.disconnect(self.path)
         self.assertEqual(False, self.path.connected)

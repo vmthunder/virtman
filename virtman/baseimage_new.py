@@ -377,3 +377,103 @@ class BlockDeviceBaseImage(BaseImage):
 
 class Qcow2BaseImage(BaseImage):
     pass
+
+
+class Cache(object):
+    def create_cache(multipath_path):
+        LOG.debug("Virtman: create cache for baseimage according to "
+                  "multipath %s" % multipath_path)
+        try:
+            cached_path = fcg.add_disk(multipath_path)
+        except Exception:
+            raise
+        LOG.debug("Virtman: create cache completed, cache path = %s" %
+                  cached_path)
+        return cached_path
+
+    def delete_cache(multipath_path):
+        LOG.debug("Virtman: start to delete cache according to multipath %s " %
+                  multipath_path)
+        try:
+            fcg.rm_disk(multipath_path)
+        except Exception:
+            raise
+        LOG.debug("Virtman: delete cache according to multipath %s completed" %
+                  multipath_path)
+
+
+class Origin(object):
+    @staticmethod
+    def create_origin(origin_name, cached_path):
+        LOG.debug("Virtman: start to create origin, cache path = %s" %
+                  cached_path)
+        try:
+            origin_path = dmsetup.origin(origin_name,
+                                         cached_path)
+        except Exception:
+            raise
+        LOG.debug("Virtman: create origin complete, origin path = %s" %
+                  origin_path)
+        return origin_path
+
+    @staticmethod
+    def delete_origin(origin_name):
+        LOG.debug("Virtman: start to remove origin %s " % origin_name)
+        try:
+            dmsetup.remove_table(origin_name)
+        except Exception:
+            raise
+        LOG.debug("Virtman: remove origin %s completed" % origin_name)
+
+
+class Target(object):
+    @staticmethod
+    def create_target(iqn, cached_path):
+        LOG.debug("Virtman: start to create target, cache path = %s" %
+                  cached_path)
+        if iscsi.exists(iqn):
+            return
+        else:
+            try:
+                target_id = iscsi.create_iscsi_target(iqn, cached_path)
+            except Exception:
+                raise
+        LOG.debug("Virtman: create target complete, target id = %s" %
+                  target_id)
+        return target_id
+
+    @staticmethod
+    def delete_target(target_id, image_name):
+        LOG.debug("Virtman: start to remove target %s (%s)" %
+                  (target_id, image_name))
+        try:
+            iscsi.remove_iscsi_target(image_name, image_name)
+        except Exception:
+            raise
+        LOG.debug("Virtman: successful remove target %s (%s)" %
+                  (target_id, image_name))
+
+
+class Master(object):
+    @staticmethod
+    def login_master(image_name, peer_id, iqn):
+        LOG.debug("Virtman: try to login to master server")
+        try:
+            info = volt.login(session_name=image_name,
+                              peer_id=peer_id,
+                              host=CONF.host_ip,
+                              port='3260',
+                              iqn=iqn,
+                              lun='1')
+        except Exception:
+            raise
+        LOG.debug("Virtman: login to master server %s" % info)
+
+    @staticmethod
+    def logout_master(image_name, peer_id):
+        LOG.debug("Virtman: logout master session = %s, peer_id = %s" %
+                  (image_name, peer_id))
+        try:
+            volt.logout(session_name=image_name, peer_id=peer_id)
+        except Exception:
+            raise

@@ -5,6 +5,9 @@ from oslo_concurrency import processutils as putils
 
 
 class FunDemo():
+    def show(self):
+        print 'funDemo'
+
     def add(self, a, b):
         return a + b
 
@@ -12,6 +15,11 @@ class FunDemo():
         (out , err) = putils.execute(*cmd, **kwargs)
         print out, err
         return out
+
+
+class FakeDemo():
+    def show(self):
+        print 'FakeDemo'
 
 
 class TestDemo(base.TestCase):
@@ -29,6 +37,3 @@ class TestDemo(base.TestCase):
         result = self.fun.cmd()
         self.assertEqual(1, result)
 
-    def test_fake_class(self):
-
-        pass

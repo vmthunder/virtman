@@ -97,7 +97,7 @@ class Paths(object):
         # Connect new paths
         for key in paths.keys():
             if key not in paths_to_remove and not paths[key].connected:
-                paths[key].connect()
+                Path.connect(paths[key])
 
         # Rebuild multipath device
         disks = [paths[key].device_path for key in paths.keys()
@@ -107,7 +107,6 @@ class Paths(object):
         if len(disks) > 0:
             if not has_multipath:
                 multipath_path = Paths.create_multipath(multipath_name, disks)
-                has_multipath = True
             else:
                 Paths.reload_multipath(multipath_name, disks)
             # TODO:fix here, wait for multipath device ready
@@ -116,7 +115,7 @@ class Paths(object):
         # Disconnect paths to remove
         for key in paths_to_remove:
             if paths[key].connected:
-                paths[key].disconnect()
+                Path.disconnect(paths[key])
             del paths[key]
 
         return multipath_path
@@ -129,7 +128,6 @@ class Paths(object):
         :rtype : str
         """
         multipath_path = dmsetup.multipath(multipath_name, disks)
-        has_multipath = True
         LOG.debug("Virtman: create multipath according connection %s:" %
                   disks)
         return multipath_path

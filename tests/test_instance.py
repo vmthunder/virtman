@@ -29,15 +29,16 @@ class TestLocalInstance(base.TestCase):
                          mock.Mock(return_value='dev/loop1'))
         self.mock_object(dmsetup, 'snapshot',
                          mock.Mock(return_value='/dev/mapper/snapshot'))
+        expected_result = '/dev/mapper/snapshot'
         result = self.instance.create()
-        print result
+        self.assertEqual(expected_result, result)
 
     def test_destroy(self):
         self.mock_object(dmsetup, 'remove_table', mock.Mock())
         self.mock_object(snapshot.LocalSnapshot, 'destroy_snapshot',
                          mock.Mock())
         result = self.instance.destroy()
-        print result
+        self.assertEqual(True, result)
 
 
 class TestBlockDeviceInstance(base.TestCase):
@@ -67,9 +68,17 @@ class TestBlockDeviceInstance(base.TestCase):
         self.mock_object(dmsetup, 'snapshot',
                          mock.Mock(return_value='/dev/mapper/snapshot'))
         self.mock_object(os.path, 'exists', mock.Mock(return_value=False))
+        expected_result = '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.' \
+                          '2010-10.org.openstack:volume-snapshot1'
+        expected_cmds = ['rm -f /dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.'
+                         '2010-10.org.openstack:volume-snapshot1',
+                         'ln -s /dev/mapper/snapshot /dev/disk/by-path/'
+                         'ip-10.0.0.1:3260-iscsi-iqn.2010-10.org.'
+                         'openstack:volume-snapshot1']
         result = self.instance.create()
-        print result
-        print self.cmds
+
+        self.assertEqual(expected_result, result)
+        self.assertEqual(expected_cmds, self.cmds)
 
     def test_destroy(self):
         self.mock_object(os.path, 'exists', mock.Mock(return_value=True))
@@ -79,7 +88,10 @@ class TestBlockDeviceInstance(base.TestCase):
         self.instance.snapshot_link = \
             '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.' \
             '2010-10.org.openstack:volume-snapshot1'
+        expected_cmds = ['rm -f '
+                          '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.'
+                          '2010-10.org.openstack:volume-snapshot1']
         result = self.instance.destroy()
-        print result
-        print self.cmds
+        self.assertEqual(True, result)
+        self.assertEqual(expected_cmds, self.cmds)
 

@@ -31,8 +31,8 @@ def create_image_target(image_name, file_path, loop_dev, iqn_prefix):
                       % image_name
     if not os.path.exists(file_path):
         LOG.warn("Virtman: Image Service: Warning! "
-                  "image file_path = %s not exists! Please use another "
-                  "image file" % file_path)
+                 "image file_path = %s not exists! Please use another "
+                 "image file" % file_path)
         return "2:" + "Virtman: Image Service: Warning!" \
                       "image file_path = %s not exists! Please use " \
                       "another image file" % file_path

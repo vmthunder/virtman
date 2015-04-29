@@ -26,13 +26,14 @@ class TestLocalSnapshot(base.TestCase):
         self.mock_object(blockservice, 'findloop',
                          mock.Mock(return_value='/dev/loop1'))
         self.mock_object(blockservice, 'try_linkloop', mock.Mock())
+        expected_result = '/dev/loop1'
         result = self.snapshot.create_snapshot()
-        print result
+        self.assertEqual(expected_result, result)
 
     def test_destroy_snapshot(self):
          self.mock_object(blockservice, 'unlinkloop', mock.Mock())
          result = self.snapshot.destroy_snapshot()
-         print result
+         self.assertEqual(True, result)
 
 class TestBlockDeviceSnapshot(base.TestCase):
     def setUp(self):
@@ -46,10 +47,13 @@ class TestBlockDeviceSnapshot(base.TestCase):
         self.mock_object(os.path, 'exists', mock.Mock(return_value=True))
         self.mock_object(os.path, 'realpath', mock.Mock(
             return_value='/dev/dm1'))
+        expected_result = ('/dev/dm1', '/dev/disk/by-path/ip-10.0.0.1:'
+                                       '3260-iscsi-iqn.2010-10.org.openstack:'
+                                       'volume-snapshot1')
         result = self.snapshot.create_snapshot()
-        print result
+        self.assertEqual(expected_result, result)
 
     def test_destroy_snapshot(self):
         self.mock_object(connector, 'disconnect_volume', mock.Mock())
         result = self.snapshot.destroy_snapshot()
-        print result
+        self.assertEqual(True, result)

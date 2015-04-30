@@ -55,12 +55,12 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug('Virtman: adjust_for_heartbeat according to '
                   'connections: %s ' % parents)
         parent_connections = utils.reform_connections(parents)
-        base_image.rebuild_multipath(base_image, parent_connections)
+        BlockDeviceBaseImage.rebuild_multipath(base_image, parent_connections)
 
     @staticmethod
     def deploy_base_image(base_image):
         try:
-            origin_path = base_image.deploy(base_image)
+            origin_path = BlockDeviceBaseImage.deploy(base_image)
         except Exception as e:
             LOG.error(e)
             raise
@@ -96,10 +96,10 @@ class BlockDeviceBaseImage(BaseImage):
                   "has multipath = %s, has origin = %s, has cache = %s, "
                   "is_login = %s" %
                   (base_image.image_name, base_image.has_multipath,
-                   base_image.has_origin,base_image.has_cache,
+                   base_image.has_origin, base_image.has_cache,
                    base_image.is_login))
         # Check if it had origin or not!
-        if base_image.has_origin:
+        if base_image.origin_path:
             return base_image.origin_path
 
         # save the base_image paths
@@ -111,16 +111,23 @@ class BlockDeviceBaseImage(BaseImage):
         else:
             parent_connections = \
                 utils.reform_connections(base_image.get_parent())
+
+        # rebuild multipath
         base_image.rebuild_multipath(parent_connections)
+
         build_chain = Chain()
-        build_chain.add_step(partial(base_image.create_cache, base_image),
-                             partial(base_image.delete_cache, base_image))
-        build_chain.add_step(partial(base_image.create_origin, base_image),
-                             partial(base_image.delete_origin, base_image))
-        build_chain.add_step(partial(base_image.create_target, base_image),
-                             partial(base_image.delete_target, base_image))
-        build_chain.add_step(partial(base_image.login_master, base_image),
-                             partial(base_image.logout_master, base_image))
+        build_chain.add_step(
+            partial(BlockDeviceBaseImage.create_cache, base_image),
+            partial(BlockDeviceBaseImage.delete_cache, base_image))
+        build_chain.add_step(
+            partial(BlockDeviceBaseImage.create_origin, base_image),
+            partial(BlockDeviceBaseImage.delete_origin, base_image))
+        build_chain.add_step(
+            partial(BlockDeviceBaseImage.create_target, base_image),
+            partial(BlockDeviceBaseImage.delete_target, base_image))
+        build_chain.add_step(
+            partial(BlockDeviceBaseImage.login_master, base_image),
+            partial(BlockDeviceBaseImage.logout_master, base_image))
         build_chain.do()
 
         # self._create_cache()
@@ -141,25 +148,49 @@ class BlockDeviceBaseImage(BaseImage):
     def destroy_base_image(base_image):
         LOG.debug("Virtman: destroy base_image = %s, peer_id = %s" %
                   (base_image.image_name, base_image.peer_id))
-        if base_image.is_local_has_image:
-            return False
-        base_image.logout_master(base_image)
+        # if base_image.is_local_has_image:
+        #     return False
+        if base_image.is_login:
+            BlockDeviceBaseImage.logout_master(base_image)
+
         if base_image.has_target:
             if iscsi.is_connected(base_image.target_id):
-                LOG.debug("Virtman: destroy base image Failed! base_image = "
-                          "%s, peer_id = %s" % (base_image.image_name,
-                                                base_image.peer_id))
+                LOG.debug("Virtman: destroy base image Failed! iscsi target "
+                          "for this base image is connected.")
                 return False
-            else:
-                base_image.delete_target(base_image)
-        if base_image.has_origin:
-            base_image.delete_origin(base_image)
+            try:
+                BlockDeviceBaseImage.delete_target(base_image)
+            except Exception as ex:
+                LOG.debug("Virtman: delete target for base image %s fail, "
+                          "due to %s" % (base_image.image_name, ex))
+                return False
+
+        if base_image.origin_path:
+            try:
+                BlockDeviceBaseImage.delete_origin(base_image)
+            except Exception as ex:
+                LOG.debug("Virtman: delete origin for base image %s fail, "
+                          "due to %s" % (base_image.image_name, ex))
+                return False
+
         time.sleep(1)
-        if not base_image.has_origin and not base_image.has_target:
-            base_image.delete_cache(base_image)
-        if not base_image.has_cache:
-            base_image.delete_multipath(base_image)
-        if not base_image.has_multipath:
+
+        if base_image.cached_path:
+            try:
+                BlockDeviceBaseImage.delete_cache(base_image)
+            except Exception as ex:
+                LOG.debug("Virtman: delete cache for base image %s fail, "
+                          "due to %s" % (base_image.image_name, ex))
+                return False
+
+        if base_image.multipath_path:
+            try:
+                BlockDeviceBaseImage.delete_multipath(base_image)
+            except Exception as ex:
+                LOG.debug("Virtman: delete multipath for base image %s fail, "
+                          "due to %s" % (base_image.image_name, ex))
+                return False
+        try:
             for key in base_image.paths.keys():
                 base_image.paths[key].disconnect()
                 del base_image.paths[key]
@@ -167,7 +198,11 @@ class BlockDeviceBaseImage(BaseImage):
                       "peer_id = %s" % (base_image.image_name,
                                         base_image.peer_id))
             return True
-        return False
+        except Exception as ex:
+            LOG.debug("Virtman: destroy base image base %s fail, due to %s" %
+                      (base_image.image_name, ex))
+            return False
+
 
     @staticmethod
     def rebuild_multipath(base_image, parent_connections):
@@ -246,7 +281,7 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug("Virtman: delete multipath %s start!" %
                   base_image.multipath_name)
         dmsetup.remove_table(base_image.multipath_name)
-        base_image.has_multipath = False
+        base_image.multipath_path = None
         LOG.debug("Virtman: delete multipath %s completed  !" %
                   base_image.multipath_name)
 
@@ -267,7 +302,7 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug("Virtman: start to delete cache according to multipath %s " %
                   base_image.multipath_path)
         fcg.rm_disk(base_image.multipath_path)
-        base_image.has_cache = False
+        base_image.cached_path = None
         LOG.debug("Virtman: delete cache according to multipath %s completed" %
                   base_image.multipath_path)
 
@@ -288,7 +323,7 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug("Virtman: start to remove origin %s " %
                   base_image.origin_name)
         dmsetup.remove_table(base_image.origin_name)
-        base_image.has_origin = False
+        base_image.origin_path = None
         LOG.debug("Virtman: remove origin %s completed" %
                   base_image.origin_name)
 

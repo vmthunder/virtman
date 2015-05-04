@@ -2,7 +2,7 @@
 
 import threading
 
-from virtman.baseimage import BlockDeviceBaseImage
+from virtman.baseimage_new import BlockDeviceBaseImage
 from virtman.instance import LocalInstance
 from virtman.instance import BlockDeviceInstance
 from virtman.utils import exception
@@ -82,15 +82,18 @@ class LocalImage(Image):
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        origin_path = self.base_image.deploy_base_image()
+        # origin_path = self.base_image.deploy_base_image()
+        origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        return self.base_image.destroy_base_image()
+        # return self.base_image.destroy_base_image()
+        return BlockDeviceBaseImage.deploy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
-        self.base_image.adjust_for_heartbeat(parents)
+        # self.base_image.adjust_for_heartbeat(parents)
+        BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
 
 class BlockDeviceImage(Image):
@@ -100,40 +103,43 @@ class BlockDeviceImage(Image):
 
     def create_instance(self, instance_name, snapshot_connection):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
-                  (instance_name))
+                  instance_name)
         self.instances[instance_name] = BlockDeviceInstance(self.origin_path,
                                                             instance_name,
                                                             snapshot_connection)
         instance_path = self.instances[instance_name].create()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
-                  (instance_path))
+                  instance_path)
         return instance_path
 
     def destroy_instance(self, instance_name):
         LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
-                  (instance_name))
+                  instance_name)
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
             if len(self.instances) <= 0:
                 self.has_instance = False
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
-                  (ret))
+                  ret)
         return ret
 
     @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        origin_path = self.base_image.deploy_base_image()
+        # origin_path = self.base_image.deploy_base_image()
+        origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        return self.base_image.destroy_base_image()
+        # return self.base_image.destroy_base_image()
+        return BlockDeviceBaseImage.deploy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
-        self.base_image.adjust_for_heartbeat(parents)
+        # self.base_image.adjust_for_heartbeat(parents)
+        BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
 
 class QCOW2Image(Image):

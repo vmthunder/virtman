@@ -12,6 +12,7 @@ recordtype>=1.1
 urlparse2>=1.1.1
 six>=1.6.1
 oslo.config>=1.2.0
+taskflow>=0.6
 pydm>=0.3.3
 flashcachegroup>=0.6.7
 oslo.concurrency>=1.4.1

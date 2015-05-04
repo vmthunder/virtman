@@ -6,7 +6,7 @@ from virtman.drivers import fcg
 from virtman.drivers import dmsetup
 from virtman.drivers import iscsi
 from virtman.drivers import volt
-from virtman.path import Path
+from virtman.path import Paths
 from virtman.utils import utils
 from virtman.utils.chain import Chain
 
@@ -219,86 +219,21 @@ class BlockDeviceBaseImage(BaseImage):
     def rebuild_multipath(base_image, parent_connections):
         """
         :type base_image: BlockDeviceBaseImage
-        :param parent_connections: list
+        :type parent_connections: list
         """
-        LOG.debug("Virtman: begin to rebuild multipath...")
-        # Get keys of paths to remove, and add new paths
-        paths_to_remove = []
-        for key in base_image.paths.keys():
-            found = False
-            for connection in parent_connections:
-                if key == Path.connection_to_str(connection):
-                    found = True
-                    break
-            if not found:
-                paths_to_remove.append(key)
-        for connection in parent_connections:
-            if not isinstance(connection, dict):
-                raise (Exception("Unknown %s type of %s " %
-                                 (type(connection), connection)))
-            key = Path.connection_to_str(connection)
-            if key not in base_image.paths:
-                base_image.paths[key] = Path(connection)
-
-        # Connect new paths
-        for key in base_image.paths.keys():
-            if key not in paths_to_remove and \
-                    not base_image.paths[key].connected:
-                # base_image.paths[key].connect()
-                Path.connect(base_image.paths[key])
-
-        # Rebuild multipath device
-        disks = [base_image.paths[key].device_path for key in
-                 base_image.paths.keys() if key not in paths_to_remove and
-                 base_image.paths[key].connected]
-        if len(disks) > 0:
-            if not base_image.multipath_path:
-                BlockDeviceBaseImage.create_multipath(base_image, disks)
-            else:
-                BlockDeviceBaseImage.reload_multipath(base_image, disks)
-            # TODO:fix here, wait for multipath device ready
-            time.sleep(2)
-
-        # Disconnect paths to remove
-        for key in paths_to_remove:
-            if base_image.paths[key].connected:
-                # base_image.paths[key].disconnect()
-                Path.disconnect(base_image.paths[key])
-            del base_image.paths[key]
-
-        LOG.debug("Virtman: rebuild multipath completed, multipath = %s" %
-                  base_image.multipath_path)
-
-    @staticmethod
-    def create_multipath(base_image, disks):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if not base_image.multipath_path:
-            base_image.multipath_path = \
-                dmsetup.multipath(base_image.multipath_name, disks)
-            LOG.debug("Virtman: create multipath according connection %s:" %
-                      disks)
-        return base_image.multipath_path
-
-    @staticmethod
-    def reload_multipath(base_image, disks):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        dmsetup.reload_multipath(base_image.multipath_name, disks)
+        base_image.multipath_path = \
+            Paths.rebuild_multipath(base_image.paths, parent_connections,
+                                    base_image.multipath_name,
+                                    base_image.multipath_path)
 
     @staticmethod
     def delete_multipath(base_image):
         """
         :type base_image: BlockDeviceBaseImage
         """
-        LOG.debug("Virtman: delete multipath %s start!" %
-                  base_image.multipath_name)
-        dmsetup.remove_table(base_image.multipath_name)
-        base_image.multipath_path = None
-        LOG.debug("Virtman: delete multipath %s completed  !" %
-                  base_image.multipath_name)
+        if base_image.multipath_path:
+            Paths.delete_multipath(base_image.multipath_name)
+
 
     @staticmethod
     def create_cache(base_image):

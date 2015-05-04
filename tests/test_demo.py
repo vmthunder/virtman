@@ -12,7 +12,7 @@ class FunDemo():
         return a + b
 
     def cmd(self, *cmd, **kwargs):
-        (out , err) = putils.execute(*cmd, **kwargs)
+        (out, err) = putils.execute(*cmd, **kwargs)
         print out, err
         return out
 

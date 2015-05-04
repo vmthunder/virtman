@@ -138,6 +138,8 @@ class Paths(object):
         :type multipath_name: str
         :type disks: list
         """
+        LOG.debug("Virtman: reload multipath according connection %s:" %
+                  disks)
         dmsetup.reload_multipath(multipath_name, disks)
 
     @staticmethod

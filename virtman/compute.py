@@ -11,7 +11,6 @@ from virtman.drivers import fcg
 from virtman.drivers import volt
 from virtman.image import LocalImage
 from virtman.image import BlockDeviceImage
-from virtman.baseimage import STATUS
 from virtman.utils import exception
 from virtman.utils.singleton import singleton
 
@@ -167,7 +166,7 @@ class Virtman(Compute):
             else:
                 self.images[image_name] = BlockDeviceImage(image_name,
                                                            image_connections)
-        if self.images[image_name].base_image.status is STATUS.ok:
+        if self.images[image_name].base_image.origin_path:
             self.images[image_name].has_instance = True
             LOG.info("Virtman: middle!")
             try:

@@ -89,7 +89,7 @@ class LocalImage(Image):
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         # return self.base_image.destroy_base_image()
-        return BlockDeviceBaseImage.deploy_base_image(self.base_image)
+        return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
         # self.base_image.adjust_for_heartbeat(parents)
@@ -135,7 +135,7 @@ class BlockDeviceImage(Image):
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         # return self.base_image.destroy_base_image()
-        return BlockDeviceBaseImage.deploy_base_image(self.base_image)
+        return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
         # self.base_image.adjust_for_heartbeat(parents)

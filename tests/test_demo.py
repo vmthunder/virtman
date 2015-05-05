@@ -2,6 +2,7 @@ import os
 import mock
 from tests import base
 from oslo_concurrency import processutils as putils
+from virtman.utils import exception
 
 
 class FunDemo():
@@ -36,4 +37,7 @@ class TestDemo(base.TestCase):
                          mock.Mock(side_effect=lambda: (1, None)))
         result = self.fun.cmd()
         self.assertEqual(1, result)
+
+    def test_exception(self):
+        raise exception.CreateBaseImageFailed(baseimage='test_image')
 

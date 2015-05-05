@@ -31,7 +31,7 @@ def try_linkloop(loop_dev):
 
 
 def is_looped(loop_dev):
-    (out, err) = putils.execute("losetup", '-a',  loop_dev, run_as_root=True,
+    (out, err) = putils.execute("losetup", '-a', run_as_root=True,
                                 root_helper=rootwrap.root_helper())
     looped_list = [line.split()[0].rstrip(":")
                    for line in out.strip().split('\n')]

@@ -1,6 +1,9 @@
 import time
-from functools import partial
 from oslo.config import cfg
+from taskflow.types import failure as ft
+from taskflow import engines
+from taskflow.patterns import linear_flow
+from taskflow import task
 
 from virtman.drivers import fcg
 from virtman.drivers import dmsetup
@@ -8,7 +11,6 @@ from virtman.drivers import iscsi
 from virtman.drivers import volt
 from virtman.path import Paths
 from virtman.utils import utils
-from virtman.utils.chain import Chain
 
 from virtman.openstack.common import log as logging
 
@@ -65,12 +67,12 @@ class BlockDeviceBaseImage(BaseImage):
         :type base_image: BlockDeviceBaseImage
         """
         try:
-            origin_path = BlockDeviceBaseImage.deploy(base_image)
-        except Exception as e:
-            LOG.error(e)
+            BlockDeviceBaseImage.deploy(base_image)
+        except Exception as ex:
+            LOG.error('Virtman: fail to deploy base image, duo to %s' % ex)
             raise
         else:
-            return origin_path
+            return base_image.origin_path
 
     @staticmethod
     def check_local_image(base_image):
@@ -95,7 +97,7 @@ class BlockDeviceBaseImage(BaseImage):
         """
         deploy image in compute node, return the origin path to create snapshot
         :type base_image: BlockDeviceBaseImage
-        :returns: origin path to create snapshot
+        :returns origin_path: origin path to create snapshot
         """
         LOG.debug("Virtman: in deploy_base_image, image name = %s, "
                   "multipath_path = %s, origin_path = %s, cached_path = %s, "
@@ -124,25 +126,30 @@ class BlockDeviceBaseImage(BaseImage):
         # rebuild multipath
         BlockDeviceBaseImage.rebuild_multipath(base_image, parent_connections)
 
-        build_chain = Chain()
-        build_chain.add_step(
-            partial(Cache.create_cache, base_image),
-            partial(Cache.delete_cache, base_image))
-        build_chain.add_step(
-            partial(Origin.create_origin, base_image),
-            partial(Origin.delete_origin, base_image))
-        build_chain.add_step(
-            partial(Target.create_target, base_image),
-            partial(Target.delete_target, base_image))
-        build_chain.add_step(
-            partial(Register.login_master, base_image),
-            partial(Register.logout_master, base_image))
-        build_chain.do()
+        # build_chain = Chain()
+        # build_chain.add_step(
+        #     partial(Cache.create_cache, base_image),
+        #     partial(Cache.delete_cache, base_image))
+        # build_chain.add_step(
+        #     partial(Origin.create_origin, base_image),
+        #     partial(Origin.delete_origin, base_image))
+        # build_chain.add_step(
+        #     partial(Target.create_target, base_image),
+        #     partial(Target.delete_target, base_image))
+        # build_chain.add_step(
+        #     partial(Register.login_master, base_image),
+        #     partial(Register.logout_master, base_image))
+        # build_chain.do()
+        wf = linear_flow.Flow("base_image_flow")
+        wf.add(CreateCacheTask(),
+               CreateOriginTask(),
+               CreateTargetTask(),
+               LoginMasterTask()
+               )
 
-        # self._create_cache()
-        # self._create_origin()
-        # self._create_target()
-        # self._login_master()
+        dict_for_task = dict(base_image=base_image)
+        en = engines.load(wf, store=dict_for_task)
+        en.run()
 
         LOG.debug("Virtman: baseimage OK!\n"
                   "target_id =  %s, origin_path = %s, origin_name = %s, "
@@ -150,8 +157,6 @@ class BlockDeviceBaseImage(BaseImage):
                   (base_image.target_id, base_image.origin_path,
                    base_image.origin_name, base_image.cached_path,
                    base_image.multipath_path, base_image.multipath_name))
-
-        return base_image.origin_path
 
     @staticmethod
     def destroy_base_image(base_image):
@@ -235,123 +240,6 @@ class BlockDeviceBaseImage(BaseImage):
             Paths.delete_multipath(base_image.multipath_name)
 
     @staticmethod
-    def create_cache(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if not base_image.cached_path:
-            LOG.debug("Virtman: create cache for base image %s according to "
-                      "multipath %s" %
-                      (base_image.image_name, base_image.multipath_path))
-            base_image.cached_path = fcg.add_disk(base_image.multipath_path)
-            LOG.debug("Virtman: create cache completed, cache path = %s" %
-                      base_image.cached_path)
-        return base_image.cached_path
-
-    @staticmethod
-    def delete_cache(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        LOG.debug("Virtman: start to delete cache according to multipath %s " %
-                  base_image.multipath_path)
-        if base_image.multipath_path:
-            fcg.rm_disk(base_image.multipath_path)
-            base_image.cached_path = None
-        LOG.debug("Virtman: delete cache according to multipath %s completed" %
-                  base_image.multipath_path)
-
-    @staticmethod
-    def create_origin(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if not base_image.origin_path:
-            LOG.debug("Virtman: start to create origin, cache path = %s" %
-                      base_image.cached_path)
-            base_image.origin_path = dmsetup.origin(base_image.origin_name,
-                                                    base_image.cached_path)
-            LOG.debug("Virtman: create origin complete, origin path = %s" %
-                      base_image.origin_path)
-        return base_image.origin_path
-
-    @staticmethod
-    def delete_origin(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        LOG.debug("Virtman: start to remove origin %s " %
-                  base_image.origin_name)
-        if base_image.origin_path:
-            dmsetup.remove_table(base_image.origin_name)
-            base_image.origin_path = None
-        LOG.debug("Virtman: remove origin %s completed" %
-                  base_image.origin_name)
-
-    @staticmethod
-    def create_target(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if base_image.is_local_has_image:
-            return
-        if not base_image.has_target:
-            LOG.debug("Virtman: start to create target, cache path = %s" %
-                      base_image.cached_path)
-            if iscsi.exists(base_image.iqn):
-                base_image.has_target = True
-            else:
-                base_image.target_id = \
-                    iscsi.create_iscsi_target(base_image.iqn,
-                                              base_image.cached_path)
-                base_image.has_target = True
-                LOG.debug("Virtman: create target complete, target id = %s" %
-                          base_image.target_id)
-
-    @staticmethod
-    def delete_target(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        LOG.debug("Virtman: start to remove target %s (%s)" %
-                  (base_image.target_id, base_image.image_name))
-        if base_image.has_target:
-            iscsi.remove_iscsi_target(base_image.image_name,
-                                      base_image.image_name)
-            base_image.has_target = False
-        LOG.debug("Virtman: successful remove target %s (%s)" %
-                  (base_image.target_id, base_image.image_name))
-
-    @staticmethod
-    def login_master(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if base_image.is_local_has_image:
-            return
-        LOG.debug("Virtman: try to login to master server")
-        if not base_image.is_login:
-            info = volt.login(session_name=base_image.image_name,
-                              peer_id=base_image.peer_id,
-                              host=CONF.host_ip,
-                              port='3260',
-                              iqn=base_image.iqn,
-                              lun='1')
-            LOG.debug("Virtman: login to master server %s" % info)
-            base_image.is_login = True
-
-    @staticmethod
-    def logout_master(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if base_image.is_login:
-            volt.logout(base_image.image_name, peer_id=base_image.peer_id)
-            base_image.is_login = False
-            LOG.debug("Virtman: logout master session = %s, peer_id = %s" %
-                      (base_image.image_name, base_image.peer_id))
-
-    @staticmethod
     def get_parent(base_image):
         """
         :type base_image: BlockDeviceBaseImage
@@ -397,7 +285,7 @@ class Cache(object):
             base_image.cached_path = fcg.add_disk(base_image.multipath_path)
             LOG.debug("Virtman: create cache completed, cache path = %s" %
                       base_image.cached_path)
-        return base_image.cached_path
+        # return base_image.cached_path
 
     @staticmethod
     def delete_cache(base_image):
@@ -507,3 +395,43 @@ class Register(object):
             base_image.is_login = False
             LOG.debug("Virtman: logout master session = %s, peer_id = %s" %
                       (base_image.image_name, base_image.peer_id))
+
+
+class CreateCacheTask(task.Task):
+    def execute(self, base_image, **kwargs):
+        Cache.create_cache(base_image)
+
+    def revert(self, base_image, result, **kwargs):
+        if isinstance(result, ft.Failure):
+            print result.exception_str
+        Cache.delete_cache(base_image)
+
+
+class CreateOriginTask(task.Task):
+    def execute(self, base_image, **kwargs):
+        Origin.create_origin(base_image)
+
+    def revert(self, base_image, result, **kwargs):
+        if isinstance(result, ft.Failure):
+            print result.exception_str
+        Origin.delete_origin(base_image)
+
+
+class CreateTargetTask(task.Task):
+    def execute(self, base_image,  **kwargs):
+        Target.create_target(base_image)
+
+    def revert(self, base_image, result, **kwargs):
+        if isinstance(result, ft.Failure):
+            print result.exception_str
+        Target.delete_target(base_image)
+
+
+class LoginMasterTask(task.Task):
+    def execute(self, base_image, **kwargs):
+        Register.login_master(base_image)
+
+    def revert(self, base_image, result, **kwargs):
+        if isinstance(result, ft.Failure):
+            print result.exception_str
+        Register.logout_master(base_image)

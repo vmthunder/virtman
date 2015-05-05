@@ -126,17 +126,17 @@ class BlockDeviceBaseImage(BaseImage):
 
         build_chain = Chain()
         build_chain.add_step(
-            partial(BlockDeviceBaseImage.create_cache, base_image),
-            partial(BlockDeviceBaseImage.delete_cache, base_image))
+            partial(Cache.create_cache, base_image),
+            partial(Cache.delete_cache, base_image))
         build_chain.add_step(
-            partial(BlockDeviceBaseImage.create_origin, base_image),
-            partial(BlockDeviceBaseImage.delete_origin, base_image))
+            partial(Origin.create_origin, base_image),
+            partial(Origin.delete_origin, base_image))
         build_chain.add_step(
-            partial(BlockDeviceBaseImage.create_target, base_image),
-            partial(BlockDeviceBaseImage.delete_target, base_image))
+            partial(Target.create_target, base_image),
+            partial(Target.delete_target, base_image))
         build_chain.add_step(
-            partial(BlockDeviceBaseImage.login_master, base_image),
-            partial(BlockDeviceBaseImage.logout_master, base_image))
+            partial(Register.login_master, base_image),
+            partial(Register.logout_master, base_image))
         build_chain.do()
 
         # self._create_cache()
@@ -163,7 +163,7 @@ class BlockDeviceBaseImage(BaseImage):
         # if base_image.is_local_has_image:
         #     return False
         if base_image.is_login:
-            BlockDeviceBaseImage.logout_master(base_image)
+            Register.logout_master(base_image)
 
         if base_image.has_target:
             if iscsi.is_connected(base_image.target_id):
@@ -171,7 +171,7 @@ class BlockDeviceBaseImage(BaseImage):
                           "for this base image is connected.")
                 return False
             try:
-                BlockDeviceBaseImage.delete_target(base_image)
+                Target.delete_target(base_image)
             except Exception as ex:
                 LOG.debug("Virtman: delete target for base image %s fail, "
                           "due to %s" % (base_image.image_name, ex))
@@ -179,7 +179,7 @@ class BlockDeviceBaseImage(BaseImage):
 
         if base_image.origin_path:
             try:
-                BlockDeviceBaseImage.delete_origin(base_image)
+                Origin.delete_origin(base_image)
             except Exception as ex:
                 LOG.debug("Virtman: delete origin for base image %s fail, "
                           "due to %s" % (base_image.image_name, ex))
@@ -189,7 +189,7 @@ class BlockDeviceBaseImage(BaseImage):
 
         if base_image.cached_path:
             try:
-                BlockDeviceBaseImage.delete_cache(base_image)
+                Cache.delete_cache(base_image)
             except Exception as ex:
                 LOG.debug("Virtman: delete cache for base image %s fail, "
                           "due to %s" % (base_image.image_name, ex))
@@ -234,7 +234,6 @@ class BlockDeviceBaseImage(BaseImage):
         if base_image.multipath_path:
             Paths.delete_multipath(base_image.multipath_name)
 
-
     @staticmethod
     def create_cache(base_image):
         """
@@ -256,8 +255,9 @@ class BlockDeviceBaseImage(BaseImage):
         """
         LOG.debug("Virtman: start to delete cache according to multipath %s " %
                   base_image.multipath_path)
-        fcg.rm_disk(base_image.multipath_path)
-        base_image.cached_path = None
+        if base_image.multipath_path:
+            fcg.rm_disk(base_image.multipath_path)
+            base_image.cached_path = None
         LOG.debug("Virtman: delete cache according to multipath %s completed" %
                   base_image.multipath_path)
 
@@ -282,8 +282,9 @@ class BlockDeviceBaseImage(BaseImage):
         """
         LOG.debug("Virtman: start to remove origin %s " %
                   base_image.origin_name)
-        dmsetup.remove_table(base_image.origin_name)
-        base_image.origin_path = None
+        if base_image.origin_path:
+            dmsetup.remove_table(base_image.origin_name)
+            base_image.origin_path = None
         LOG.debug("Virtman: remove origin %s completed" %
                   base_image.origin_name)
 
@@ -314,8 +315,10 @@ class BlockDeviceBaseImage(BaseImage):
         """
         LOG.debug("Virtman: start to remove target %s (%s)" %
                   (base_image.target_id, base_image.image_name))
-        iscsi.remove_iscsi_target(base_image.image_name, base_image.image_name)
-        base_image.has_target = False
+        if base_image.has_target:
+            iscsi.remove_iscsi_target(base_image.image_name,
+                                      base_image.image_name)
+            base_image.has_target = False
         LOG.debug("Virtman: successful remove target %s (%s)" %
                   (base_image.target_id, base_image.image_name))
 
@@ -383,101 +386,124 @@ class Qcow2BaseImage(BaseImage):
 
 class Cache(object):
     @staticmethod
-    def create_cache(multipath_path):
-        LOG.debug("Virtman: create cache for baseimage according to "
-                  "multipath %s" % multipath_path)
-        try:
-            cached_path = fcg.add_disk(multipath_path)
-        except Exception:
-            raise
-        LOG.debug("Virtman: create cache completed, cache path = %s" %
-                  cached_path)
-        return cached_path
+    def create_cache(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        if not base_image.cached_path:
+            LOG.debug("Virtman: create cache for base image %s according to "
+                      "multipath %s" %
+                      (base_image.image_name, base_image.multipath_path))
+            base_image.cached_path = fcg.add_disk(base_image.multipath_path)
+            LOG.debug("Virtman: create cache completed, cache path = %s" %
+                      base_image.cached_path)
+        return base_image.cached_path
 
     @staticmethod
-    def delete_cache(multipath_path):
+    def delete_cache(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
         LOG.debug("Virtman: start to delete cache according to multipath %s " %
-                  multipath_path)
-        try:
-            fcg.rm_disk(multipath_path)
-        except Exception:
-            raise
+                  base_image.multipath_path)
+        if base_image.multipath_path:
+            fcg.rm_disk(base_image.multipath_path)
+            base_image.cached_path = None
         LOG.debug("Virtman: delete cache according to multipath %s completed" %
-                  multipath_path)
+                  base_image.multipath_path)
 
 
 class Origin(object):
     @staticmethod
-    def create_origin(origin_name, cached_path):
-        LOG.debug("Virtman: start to create origin, cache path = %s" %
-                  cached_path)
-        try:
-            origin_path = dmsetup.origin(origin_name,
-                                         cached_path)
-        except Exception:
-            raise
-        LOG.debug("Virtman: create origin complete, origin path = %s" %
-                  origin_path)
-        return origin_path
+    def create_origin(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        if not base_image.origin_path:
+            LOG.debug("Virtman: start to create origin, cache path = %s" %
+                      base_image.cached_path)
+            base_image.origin_path = dmsetup.origin(base_image.origin_name,
+                                                    base_image.cached_path)
+            LOG.debug("Virtman: create origin complete, origin path = %s" %
+                      base_image.origin_path)
+        return base_image.origin_path
 
     @staticmethod
-    def delete_origin(origin_name):
-        LOG.debug("Virtman: start to remove origin %s " % origin_name)
-        try:
-            dmsetup.remove_table(origin_name)
-        except Exception:
-            raise
-        LOG.debug("Virtman: remove origin %s completed" % origin_name)
+    def delete_origin(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        LOG.debug("Virtman: start to remove origin %s " %
+                  base_image.origin_name)
+        if base_image.origin_path:
+            dmsetup.remove_table(base_image.origin_name)
+            base_image.origin_path = None
+        LOG.debug("Virtman: remove origin %s completed" %
+                  base_image.origin_name)
 
 
 class Target(object):
     @staticmethod
-    def create_target(iqn, cached_path):
-        LOG.debug("Virtman: start to create target, cache path = %s" %
-                  cached_path)
-        if iscsi.exists(iqn):
+    def create_target(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        if base_image.is_local_has_image:
             return
-        else:
-            try:
-                target_id = iscsi.create_iscsi_target(iqn, cached_path)
-            except Exception:
-                raise
-        LOG.debug("Virtman: create target complete, target id = %s" %
-                  target_id)
-        return target_id
+        if not base_image.has_target:
+            LOG.debug("Virtman: start to create target, cache path = %s" %
+                      base_image.cached_path)
+            if iscsi.exists(base_image.iqn):
+                base_image.has_target = True
+            else:
+                base_image.target_id = \
+                    iscsi.create_iscsi_target(base_image.iqn,
+                                              base_image.cached_path)
+                base_image.has_target = True
+                LOG.debug("Virtman: create target complete, target id = %s" %
+                          base_image.target_id)
 
     @staticmethod
-    def delete_target(target_id, image_name):
+    def delete_target(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
         LOG.debug("Virtman: start to remove target %s (%s)" %
-                  (target_id, image_name))
-        try:
-            iscsi.remove_iscsi_target(image_name, image_name)
-        except Exception:
-            raise
+                  (base_image.target_id, base_image.image_name))
+        if base_image.has_target:
+            iscsi.remove_iscsi_target(base_image.image_name,
+                                      base_image.image_name)
+            base_image.has_target = False
         LOG.debug("Virtman: successful remove target %s (%s)" %
-                  (target_id, image_name))
+                  (base_image.target_id, base_image.image_name))
 
 
-class Master(object):
+class Register(object):
     @staticmethod
-    def login_master(image_name, peer_id, iqn):
+    def login_master(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        if base_image.is_local_has_image:
+            return
         LOG.debug("Virtman: try to login to master server")
-        try:
-            info = volt.login(session_name=image_name,
-                              peer_id=peer_id,
+        if not base_image.is_login:
+            info = volt.login(session_name=base_image.image_name,
+                              peer_id=base_image.peer_id,
                               host=CONF.host_ip,
                               port='3260',
-                              iqn=iqn,
+                              iqn=base_image.iqn,
                               lun='1')
-        except Exception:
-            raise
-        LOG.debug("Virtman: login to master server %s" % info)
+            LOG.debug("Virtman: login to master server %s" % info)
+            base_image.is_login = True
 
     @staticmethod
-    def logout_master(image_name, peer_id):
-        LOG.debug("Virtman: logout master session = %s, peer_id = %s" %
-                  (image_name, peer_id))
-        try:
-            volt.logout(session_name=image_name, peer_id=peer_id)
-        except Exception:
-            raise
+    def logout_master(base_image):
+        """
+        :type base_image: BlockDeviceBaseImage
+        """
+        if base_image.is_login:
+            volt.logout(base_image.image_name, peer_id=base_image.peer_id)
+            base_image.is_login = False
+            LOG.debug("Virtman: logout master session = %s, peer_id = %s" %
+                      (base_image.image_name, base_image.peer_id))

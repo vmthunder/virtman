@@ -31,9 +31,9 @@ class TestLocalSnapshot(base.TestCase):
         self.assertEqual(expected_result, result)
 
     def test_destroy_snapshot(self):
-         self.mock_object(blockservice, 'unlinkloop', mock.Mock())
-         result = self.snapshot.destroy_snapshot()
-         self.assertEqual(True, result)
+        self.mock_object(blockservice, 'unlinkloop', mock.Mock())
+        result = self.snapshot.destroy_snapshot()
+        self.assertEqual(True, result)
 
 class TestBlockDeviceSnapshot(base.TestCase):
     def setUp(self):

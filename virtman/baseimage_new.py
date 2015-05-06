@@ -216,7 +216,7 @@ class BlockDeviceBaseImage(BaseImage):
                                         base_image.peer_id))
             return True
         except Exception as ex:
-            LOG.debug("Virtman: destroy base image base %s fail, due to %s" %
+            LOG.debug("Virtman: destroy base image %s fail, due to %s" %
                       (base_image.image_name, ex))
             return False
 

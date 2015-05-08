@@ -82,18 +82,18 @@ class LocalImage(Image):
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        # origin_path = self.base_image.deploy_base_image()
-        origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
+        origin_path = self.base_image.deploy_base_image()
+        # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        # return self.base_image.destroy_base_image()
-        return BlockDeviceBaseImage.destroy_base_image(self.base_image)
+        return self.base_image.destroy_base_image()
+        # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
-        # self.base_image.adjust_for_heartbeat(parents)
-        BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
+        self.base_image.adjust_for_heartbeat(parents)
+        # BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
 
 class BlockDeviceImage(Image):
@@ -128,18 +128,18 @@ class BlockDeviceImage(Image):
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
-        # origin_path = self.base_image.deploy_base_image()
-        origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
+        origin_path = self.base_image.deploy_base_image()
+        # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        # return self.base_image.destroy_base_image()
-        return BlockDeviceBaseImage.destroy_base_image(self.base_image)
+        return self.base_image.destroy_base_image()
+        # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
-        # self.base_image.adjust_for_heartbeat(parents)
-        BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
+        self.base_image.adjust_for_heartbeat(parents)
+        # BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
 
 class QCOW2Image(Image):

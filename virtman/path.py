@@ -51,7 +51,6 @@ class Path(object):
 
 
 class Paths(object):
-
     @staticmethod
     def _find_paths_to_remove(paths, parent_connections):
         """

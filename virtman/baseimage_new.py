@@ -49,82 +49,75 @@ class BlockDeviceBaseImage(BaseImage):
         LOG.debug("Virtman: initialize base image of image_name %s" %
                   self.image_name)
 
-    @staticmethod
-    def adjust_for_heartbeat(base_image, parents):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
+    def adjust_for_heartbeat(self, parents):
         LOG.debug('Virtman: adjust_for_heartbeat according to '
                   'connections: %s ' % parents)
         parent_connections = utils.reform_connections(parents)
-        if base_image.is_local_has_image or len(parent_connections) == 0:
-            parent_connections = base_image.image_connections
-        BlockDeviceBaseImage.rebuild_multipath(base_image, parent_connections)
+        if self.is_local_has_image or len(parent_connections) == 0:
+            parent_connections = self.image_connections
+        self.rebuild_multipath(parent_connections)
 
-    @staticmethod
-    def deploy_base_image(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
+    def deploy_base_image(self):
         try:
-            BlockDeviceBaseImage.deploy(base_image)
+            self.deploy()
         except Exception as ex:
             LOG.error('Virtman: fail to deploy base image, duo to %s' % ex)
             raise
         else:
-            return base_image.origin_path
+            return self.origin_path
 
-    @staticmethod
-    def check_local_image(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
+    def check_local_image(self):
         found = None
-        for connection in base_image.image_connections:
+        for connection in self.image_connections:
             if connection['target_portal'].find(CONF.host_ip) >= 0:
                 found = connection
                 break
         if found is not None:
-            base_image.image_connections = [found]
-            base_image.is_local_has_image = True
+            self.image_connections = [found]
+            self.is_local_has_image = True
+        else:
+            self.is_local_has_image = False
         LOG.debug("Virtman: my host_ip = %s, is_local_has_image = %s!,"
                   " now image_connections = %s" %
-                  (CONF.host_ip, base_image.is_local_has_image,
-                   base_image.image_connections))
+                  (CONF.host_ip, self.is_local_has_image,
+                   self.image_connections))
 
-    @staticmethod
-    def deploy(base_image):
+    def modify_parent_connection(self):
+        if self.is_local_has_image:
+            parent_connections = self.image_connections
+        else:
+            parent_connections = \
+                utils.reform_connections(self.get_parent()) or \
+                self.image_connections
+
+        return parent_connections
+
+    def deploy(self):
         """
         deploy image in compute node, return the origin path to create snapshot
-        :type base_image: BlockDeviceBaseImage
         :returns origin_path: origin path to create snapshot
         """
         LOG.debug("Virtman: in deploy_base_image, image name = %s, "
                   "multipath_path = %s, origin_path = %s, cached_path = %s, "
                   "is_login = %s" %
-                  (base_image.image_name, base_image.multipath_path,
-                   base_image.origin_path, base_image.cached_path,
-                   base_image.is_login))
+                  (self.image_name, self.multipath_path,
+                   self.origin_path, self.cached_path,
+                   self.is_login))
 
         # Check if it had origin or not!
-        if base_image.origin_path:
-            return base_image.origin_path
+        if self.origin_path:
+            return self.origin_path
 
         # check local image and save the image connections
-        BlockDeviceBaseImage.check_local_image(base_image)
+        self.check_local_image()
 
         # Reform connections
         # If it has image on the local node or no path to connect, connect to
         # root
-        if base_image.is_local_has_image:
-            parent_connections = base_image.image_connections
-        else:
-            parent_connections = \
-                utils.reform_connections(BlockDeviceBaseImage.get_parent(
-                    base_image)) or base_image.image_connections
+        parent_connections = self.modify_parent_connection()
 
         # rebuild multipath
-        BlockDeviceBaseImage.rebuild_multipath(base_image, parent_connections)
+        self.rebuild_multipath(parent_connections)
 
         # build_chain = Chain()
         # build_chain.add_step(
@@ -147,112 +140,98 @@ class BlockDeviceBaseImage(BaseImage):
                LoginMasterTask()
                )
 
-        dict_for_task = dict(base_image=base_image)
+        dict_for_task = dict(base_image=self)
         en = engines.load(wf, store=dict_for_task)
         en.run()
 
         LOG.debug("Virtman: baseimage OK!\n"
                   "target_id =  %s, origin_path = %s, origin_name = %s, "
                   "cached_path = %s, multipath_path = %s, multipath_name = %s" %
-                  (base_image.target_id, base_image.origin_path,
-                   base_image.origin_name, base_image.cached_path,
-                   base_image.multipath_path, base_image.multipath_name))
+                  (self.target_id, self.origin_path,
+                   self.origin_name, self.cached_path,
+                   self.multipath_path, self.multipath_name))
 
-    @staticmethod
-    def destroy_base_image(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
+    def destroy_base_image(self):
         LOG.debug("Virtman: destroy base_image = %s, peer_id = %s" %
-                  (base_image.image_name, base_image.peer_id))
+                  (self.image_name, self.peer_id))
         # if base_image.is_local_has_image:
         #     return False
-        if base_image.is_login:
-            Register.logout_master(base_image)
+        if self.is_login:
+            Volt.logout_master(self)
 
-        if base_image.has_target:
-            if iscsi.is_connected(base_image.target_id):
+        if self.has_target:
+            if iscsi.is_connected(self.target_id):
                 LOG.debug("Virtman: destroy base image Failed! iscsi target "
                           "for this base image is connected.")
                 return False
             try:
-                Target.delete_target(base_image)
+                Target.delete_target(self)
             except Exception as ex:
                 LOG.debug("Virtman: delete target for base image %s fail, "
-                          "due to %s" % (base_image.image_name, ex))
+                          "due to %s" % (self.image_name, ex))
                 return False
 
-        if base_image.origin_path:
+        if self.origin_path:
             try:
-                Origin.delete_origin(base_image)
+                Origin.delete_origin(self)
             except Exception as ex:
                 LOG.debug("Virtman: delete origin for base image %s fail, "
-                          "due to %s" % (base_image.image_name, ex))
+                          "due to %s" % (self.image_name, ex))
                 return False
 
         time.sleep(1)
 
-        if base_image.cached_path:
+        if self.cached_path:
             try:
-                Cache.delete_cache(base_image)
+                Cache.delete_cache(self)
             except Exception as ex:
                 LOG.debug("Virtman: delete cache for base image %s fail, "
-                          "due to %s" % (base_image.image_name, ex))
+                          "due to %s" % (self.image_name, ex))
                 return False
 
-        if base_image.multipath_path:
+        if self.multipath_path:
             try:
-                BlockDeviceBaseImage.delete_multipath(base_image)
+                self.delete_multipath()
             except Exception as ex:
                 LOG.debug("Virtman: delete multipath for base image %s fail, "
-                          "due to %s" % (base_image.image_name, ex))
+                          "due to %s" % (self.image_name, ex))
                 return False
         try:
-            for key in base_image.paths.keys():
-                base_image.paths[key].disconnect()
-                del base_image.paths[key]
+            for key in self.paths.keys():
+                self.paths[key].disconnect()
+                del self.paths[key]
             LOG.debug("Virtman: destroy base image SUCCESS! base_image = %s, "
-                      "peer_id = %s" % (base_image.image_name,
-                                        base_image.peer_id))
+                      "peer_id = %s" % (self.image_name,
+                                        self.peer_id))
             return True
         except Exception as ex:
             LOG.debug("Virtman: destroy base image %s fail, due to %s" %
-                      (base_image.image_name, ex))
+                      (self.image_name, ex))
             return False
 
-    @staticmethod
-    def rebuild_multipath(base_image, parent_connections):
+    def rebuild_multipath(self, parent_connections):
         """
-        :type base_image: BlockDeviceBaseImage
         :type parent_connections: list
         """
-        base_image.multipath_path = \
-            Paths.rebuild_multipath(base_image.paths, parent_connections,
-                                    base_image.multipath_name,
-                                    base_image.multipath_path)
+        self.multipath_path = \
+            Paths.rebuild_multipath(self.paths, parent_connections,
+                                    self.multipath_name,
+                                    self.multipath_path)
 
-    @staticmethod
-    def delete_multipath(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
-        if base_image.multipath_path:
-            Paths.delete_multipath(base_image.multipath_name)
+    def delete_multipath(self):
+        if self.multipath_path:
+            Paths.delete_multipath(self.multipath_name)
 
-    @staticmethod
-    def get_parent(base_image):
-        """
-        :type base_image: BlockDeviceBaseImage
-        """
+    def get_parent(self):
         max_try_count = 120
         host_ip = CONF.host_ip
         try_times = 0
         while True:
             try:
-                base_image.peer_id, parent_list = \
-                    volt.get(session_name=base_image.image_name, host=host_ip)
+                self.peer_id, parent_list = \
+                    volt.get(session_name=self.image_name, host=host_ip)
                 LOG.debug("Virtman: in get_parent function, peer_id = %s, "
-                          "parent_list = %s:" % (base_image.peer_id,
+                          "parent_list = %s:" % (self.peer_id,
                                                  parent_list))
                 if len(parent_list) == 1 and parent_list[0].peer_id is None:
                     raise Exception("parents is in pending")
@@ -366,7 +345,7 @@ class Target(object):
                   (base_image.target_id, base_image.image_name))
 
 
-class Register(object):
+class Volt(object):
     @staticmethod
     def login_master(base_image):
         """
@@ -429,9 +408,9 @@ class CreateTargetTask(task.Task):
 
 class LoginMasterTask(task.Task):
     def execute(self, base_image, **kwargs):
-        Register.login_master(base_image)
+        Volt.login_master(base_image)
 
     def revert(self, base_image, result, **kwargs):
         if isinstance(result, ft.Failure):
             print result.exception_str
-        Register.logout_master(base_image)
+        Volt.logout_master(base_image)

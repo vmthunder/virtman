@@ -9,14 +9,6 @@ class FunDemo():
     def show(self):
         print 'funDemo'
 
-    def add(self, a, b):
-        return a + b
-
-    def cmd(self, *cmd, **kwargs):
-        (out, err) = putils.execute(*cmd, **kwargs)
-        print out, err
-        return out
-
 
 class FakeDemo():
     def show(self):

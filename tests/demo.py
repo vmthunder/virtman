@@ -35,4 +35,4 @@ with mock.patch('__main__.MyDemo', FakeDemo):
 def test():
     tests.test_demo.FunDemo().show()
 
-test()
+print "hello"

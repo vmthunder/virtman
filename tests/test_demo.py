@@ -1,5 +1,6 @@
 import os
 import mock
+import testtools
 from tests import base
 from oslo_concurrency import processutils as putils
 from virtman.utils import exception
@@ -8,6 +9,13 @@ from virtman.utils import exception
 class FunDemo():
     def show(self):
         print 'funDemo'
+
+    def add(self, a, b):
+        return a + b
+
+    @staticmethod
+    def cmd():
+        return putils.execute()
 
 
 class FakeDemo():
@@ -26,10 +34,11 @@ class TestDemo(base.TestCase):
 
     def test_fun_cmd(self):
         self.mock_object(putils, 'execute',
-                         mock.Mock(side_effect=lambda: (1, None)))
+                         mock.Mock(return_value=1))
         result = self.fun.cmd()
         self.assertEqual(1, result)
 
     def test_exception(self):
-        raise exception.CreateBaseImageFailed(baseimage='test_image')
+        with testtools.ExpectedException(exception.CreateBaseImageFailed):
+            raise exception.CreateBaseImageFailed(baseimage='test_image')
 

@@ -220,7 +220,11 @@ class BlockDeviceBaseImage(BaseImage):
 
     def delete_multipath(self):
         if self.multipath_path:
+            LOG.debug("Virtman: delete multipath path '%s'" %
+                      self.multipath_path)
             Paths.delete_multipath(self.multipath_name)
+            self.multipath_path = None
+
 
     def get_parent(self):
         max_try_count = 120
@@ -341,6 +345,7 @@ class Target(object):
             iscsi.remove_iscsi_target(base_image.image_name,
                                       base_image.image_name)
             base_image.has_target = False
+            base_image.target_id = 0
         LOG.debug("Virtman: successful remove target %s (%s)" %
                   (base_image.target_id, base_image.image_name))
 

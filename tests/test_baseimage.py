@@ -140,8 +140,6 @@ class TestBlockDeviceBaseImage(base.TestCase):
                          mock.Mock(return_value=False))
         self.mock_object(iscsi, 'create_iscsi_target',
                          mock.Mock(return_value='1'))
-        self.mock_object(iscsi, 'create_iscsi_target',
-                         mock.Mock(return_value='1'))
         self.mock_object(volt, 'login',
                          mock.Mock(return_value=CONF.master_ip))
         excepted_result = '/dev/mapper/test_origin'
@@ -155,6 +153,32 @@ class TestBlockDeviceBaseImage(base.TestCase):
                          self.baseimage.multipath_path)
         self.assertEqual('multipath_test_baseimage',
                          self.baseimage.multipath_name)
+
+    def test_destroy_base_image(self):
+        self.baseimage.target_id = '1'
+        self.baseimage.has_target = True
+        self.baseimage.origin_path = '/dev/mapper/test_origin'
+        self.baseimage.origin_name = 'origin_test_baseimage'
+        self.baseimage.cached_path = '/dev/mapper/test_cached'
+        self.baseimage.multipath_path = '/dev/mapper/test_multipath'
+        self.baseimage.multipath_name = 'multipath_test_baseimage'
+        self.baseimage.peer_id = 'test_peer_id'
+
+        self.mock_object(iscsi, 'is_connected',
+                         mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(True, result)
+        self.assertEqual(False, self.baseimage.has_target)
+        self.assertEqual(0, self.baseimage.target_id)
+        self.assertEqual(None, self.baseimage.origin_path)
+        self.assertEqual(None, self.baseimage.cached_path)
+        self.assertEqual(None, self.baseimage.multipath_path)
+
 
 
 

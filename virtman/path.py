@@ -51,7 +51,6 @@ class Path(object):
 
 
 class Paths(object):
-
     @staticmethod
     def _find_paths_to_remove(paths, parent_connections):
         """
@@ -108,6 +107,7 @@ class Paths(object):
             if not has_multipath:
                 multipath_path = Paths.create_multipath(multipath_name, disks)
             else:
+                multipath_path = has_multipath
                 Paths.reload_multipath(multipath_name, disks)
             # TODO:fix here, wait for multipath device ready
             time.sleep(2)
@@ -117,7 +117,7 @@ class Paths(object):
             if paths[key].connected:
                 Path.disconnect(paths[key])
             del paths[key]
-
+        LOG.debug("Virtman: now multipath is %s" % multipath_path)
         return multipath_path
 
     @staticmethod
@@ -127,9 +127,9 @@ class Paths(object):
         :type disks: list
         :rtype : str
         """
-        multipath_path = dmsetup.multipath(multipath_name, disks)
         LOG.debug("Virtman: create multipath according connection %s:" %
                   disks)
+        multipath_path = dmsetup.multipath(multipath_name, disks)
         return multipath_path
 
     @staticmethod
@@ -138,6 +138,8 @@ class Paths(object):
         :type multipath_name: str
         :type disks: list
         """
+        LOG.debug("Virtman: reload multipath according connection %s:" %
+                  disks)
         dmsetup.reload_multipath(multipath_name, disks)
 
     @staticmethod

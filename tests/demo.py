@@ -1,26 +1,38 @@
 # -*- coding: utf-8 -*-
 import os
 import mock
-from test_demo import FunDemo
+import tests
+from tests import test_demo
+from tests.test_demo import FunDemo
 from tests import base
 from oslo_concurrency import processutils as putils
+
+
+class MyDemo():
+    def show(self):
+        print 'funDemo'
+
 
 class FakeDemo():
     def show(self):
         print 'FakeDemo'
 
-with mock.patch('test_demo.FunDemo', FakeDemo, spec=False):
+fun = FunDemo()
+print fun
+
+with mock.patch('tests.test_demo.FunDemo', FakeDemo):
     fun = FunDemo()
-    assert isinstance(fun, FunDemo)
+    print fun
     fun.show()
-    # print fun.add(1, 3)
+
+with mock.patch('__main__.MyDemo', FakeDemo):
+    fun = MyDemo()
+    print fun
+    fun.show()
 
 
-@mock.patch('test_demo.FunDemo', FakeDemo)
-def test(aa):
-    print aa
-    mm = FunDemo()
-    mm.show()
+@mock.patch('tests.test_demo.FunDemo', FakeDemo)
+def test():
+    tests.test_demo.FunDemo().show()
 
-test(aa=1111)
-
+test()

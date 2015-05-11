@@ -104,12 +104,16 @@ class TestPaths(base.TestCase):
         super(TestPaths, self).setUp()
         self.paths = test_paths
 
-    @mock.patch('virtman.path.Path', FakePath)
+    # @mock.patch('virtman.path.Path', FakePath)
     def test_rebuild_multipath(self):
         self.mock_object(dmsetup, 'multipath',
                          mock.Mock(side_effect=lambda x, y: '/dev/mapper/'+x))
         self.mock_object(dmsetup, 'reload_multipath', mock.Mock())
         self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(path.Path, 'connect',
+                         mock.Mock(side_effect=FakePath.connect))
+        self.mock_object(path.Path, 'disconnect',
+                         mock.Mock(side_effect=FakePath.disconnect))
         test_connection2_str = path.Path.connection_to_str(test_connection2)
         test_connection3_str = path.Path.connection_to_str(test_connection3)
         expected_result1 = '/dev/mapper/multipath_test'
@@ -118,12 +122,13 @@ class TestPaths(base.TestCase):
             has_multipath=False)
         self.assertEqual(expected_result1, result1)
         self.assertIn(test_connection3_str, self.paths.keys())
+
         # for reload multipath
-        expected_result2 = None
+        multipath_path = '/dev/mapper/multipath_test_for_reload'
         result2 = path.Paths.rebuild_multipath(
             self.paths, [test_connection2, test_connection3], 'multipath_test',
-            has_multipath=True)
-        self.assertEqual(expected_result2, result2)
+            has_multipath=multipath_path)
+        self.assertEqual(multipath_path, result2)
         self.assertEqual(2, len(self.paths))
         self.assertIn(test_connection2_str, self.paths.keys())
         self.assertIn(test_connection3_str, self.paths.keys())

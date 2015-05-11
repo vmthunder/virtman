@@ -15,10 +15,10 @@ LOG = logging.getLogger(__name__)
 
 class Image(object):
 
-    def __init__(self, image_name, image_connections):
+    def __init__(self, image_name, image_connections, base_image):
         self.image_name = image_name
         self.image_connections = image_connections
-        self.base_image = None
+        self.base_image = base_image(self.image_name, self.image_connections)
         self.instances = {}
         self.has_instance = None
         self.lock = threading.Lock()
@@ -31,6 +31,7 @@ class Image(object):
     def destroy_instance(self, instance_name):
         return NotImplementedError()
 
+    @lockutils.synchronized('deploy_image')
     def deploy_image(self):
         try:
             origin_path = self._deploy_image()
@@ -43,6 +44,7 @@ class Image(object):
     def _deploy_image(self):
         return NotImplementedError()
 
+    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return NotImplementedError()
 
@@ -53,7 +55,8 @@ class Image(object):
 class LocalImage(Image):
 
     def __init__(self, image_name, image_connections):
-        super(LocalImage, self).__init__(image_name, image_connections)
+        super(LocalImage, self).__init__(image_name, image_connections,
+                                         base_image=BlockDeviceBaseImage)
 
     def create_instance(self, instance_name, snapshot_dev):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
@@ -78,15 +81,11 @@ class LocalImage(Image):
                   ret)
         return ret
 
-    @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
-        self.base_image = BlockDeviceBaseImage(self.image_name,
-                                               self.image_connections)
         origin_path = self.base_image.deploy_base_image()
         # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
-    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
@@ -124,7 +123,6 @@ class BlockDeviceImage(Image):
                   ret)
         return ret
 
-    @lockutils.synchronized('deploy_image')
     def _deploy_image(self):
         self.base_image = BlockDeviceBaseImage(self.image_name,
                                                self.image_connections)
@@ -132,7 +130,6 @@ class BlockDeviceImage(Image):
         # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
         return origin_path
 
-    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)

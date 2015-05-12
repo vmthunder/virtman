@@ -20,10 +20,15 @@ class Image(object):
         self.image_connections = image_connections
         self.base_image = base_image(self.image_name, self.image_connections)
         self.instances = {}
-        self.has_instance = None
         self.lock = threading.Lock()
         # deploy image only once
         self.origin_path = self.deploy_image()
+
+    def has_instance(self):
+        if len(self.instances) > 0:
+            return True
+        else:
+            return False
 
     def create_instance(self, instance_name, snapshot):
         return NotImplementedError()
@@ -54,9 +59,10 @@ class Image(object):
 
 class LocalImage(Image):
 
-    def __init__(self, image_name, image_connections):
+    def __init__(self, image_name, image_connections,
+                 base_image=BlockDeviceBaseImage):
         super(LocalImage, self).__init__(image_name, image_connections,
-                                         base_image=BlockDeviceBaseImage)
+                                         base_image)
 
     def create_instance(self, instance_name, snapshot_dev):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
@@ -75,8 +81,6 @@ class LocalImage(Image):
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
-            if len(self.instances) <= 0:
-                self.has_instance = False
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret
@@ -97,8 +101,10 @@ class LocalImage(Image):
 
 class BlockDeviceImage(Image):
 
-    def __init__(self, image_name, image_connections):
-        super(BlockDeviceImage, self).__init__(image_name, image_connections)
+    def __init__(self, image_name, image_connections,
+                 base_image=BlockDeviceBaseImage):
+        super(BlockDeviceImage, self).__init__(image_name, image_connections,
+                                               base_image)
 
     def create_instance(self, instance_name, snapshot_connection):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %

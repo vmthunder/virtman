@@ -83,6 +83,16 @@ class TestBlockDeviceBaseImage(base.TestCase):
             baseimage_new.BlockDeviceBaseImage('test_baseimage',
                                                test_image_connections)
 
+    def fake_deploy(self):
+        self.baseimage.target_id = '1'
+        self.baseimage.has_target = True
+        self.baseimage.origin_path = '/dev/mapper/test_origin'
+        self.baseimage.origin_name = 'origin_test_baseimage'
+        self.baseimage.cached_path = '/dev/mapper/test_cached'
+        self.baseimage.multipath_path = '/dev/mapper/test_multipath'
+        self.baseimage.multipath_name = 'multipath_test_baseimage'
+        self.baseimage.peer_id = 'test_peer_id'
+
     def test_check_local_image(self):
         CONF.host_ip = '10.0.0.1'
         self.baseimage.check_local_image()
@@ -155,20 +165,13 @@ class TestBlockDeviceBaseImage(base.TestCase):
                          self.baseimage.multipath_name)
 
     def test_destroy_base_image(self):
-        self.baseimage.target_id = '1'
-        self.baseimage.has_target = True
-        self.baseimage.origin_path = '/dev/mapper/test_origin'
-        self.baseimage.origin_name = 'origin_test_baseimage'
-        self.baseimage.cached_path = '/dev/mapper/test_cached'
-        self.baseimage.multipath_path = '/dev/mapper/test_multipath'
-        self.baseimage.multipath_name = 'multipath_test_baseimage'
-        self.baseimage.peer_id = 'test_peer_id'
-
         self.mock_object(iscsi, 'is_connected',
                          mock.Mock(return_value=False))
         self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
         self.mock_object(dmsetup, 'remove_table', mock.Mock())
         self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        self.fake_deploy()
 
         result = self.baseimage.destroy_base_image()
 

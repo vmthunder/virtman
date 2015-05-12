@@ -20,6 +20,7 @@ device_info = {'path': '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.2010-10'
                        '.org.openstack:volume-snapshot1',
                'type': 'block'}
 
+
 class TestLocalInstance(base.TestCase):
     def setUp(self):
         super(TestLocalInstance, self).setUp()

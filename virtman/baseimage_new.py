@@ -225,7 +225,6 @@ class BlockDeviceBaseImage(BaseImage):
             Paths.delete_multipath(self.multipath_name)
             self.multipath_path = None
 
-
     def get_parent(self):
         max_try_count = 120
         host_ip = CONF.host_ip
@@ -419,3 +418,43 @@ class LoginMasterTask(task.Task):
         if isinstance(result, ft.Failure):
             print result.exception_str
         Volt.logout_master(base_image)
+
+
+class FakeBaseImage(BaseImage):
+    def __init__(self, image_name, image_connections):
+        super(FakeBaseImage, self).__init__()
+        self.image_name = image_name
+        self.multipath_name = 'multipath_' + self.image_name
+        self.origin_name = 'origin_' + self.image_name
+        self.image_connections = utils.reform_connections(image_connections)
+        self.is_local_has_image = False
+        self.paths = {}
+        self.has_target = False
+        self.is_login = False
+        self.iqn = self.image_connections[0]['target_iqn']
+        self.multipath_path = None
+        self.cached_path = None
+        self.origin_path = None
+        self.peer_id = ''
+        self.target_id = 0
+        LOG.debug("Virtman: initialize base image of image_name %s" %
+                  self.image_name)
+
+    def deploy_base_image(self):
+        self.target_id = '1'
+        self.has_target = True
+        self.origin_path = '/dev/mapper/test_origin'
+        self.origin_name = 'origin_test_baseimage'
+        self.cached_path = '/dev/mapper/test_cached'
+        self.multipath_path = '/dev/mapper/test_multipath'
+        self.multipath_name = 'multipath_test_baseimage'
+        self.peer_id = 'test_peer_id'
+        return self.origin_path
+
+    def destroy_base_image(self):
+        self.has_target = False
+        self.target_id = 0
+        self.origin_path = None
+        self.cached_path = None
+        self.multipath_path = None
+        return True

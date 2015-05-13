@@ -42,9 +42,9 @@ class SimpleCompute(object):
     def list_image_target():
         return imageservice.list_image_target()
 
-
-server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)
-server.register_introspection_functions()
-server.register_instance(SimpleCompute)
-print "Virtman Server Run ..."
-server.serve_forever()
+if __name__ == '__main__':
+    server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)
+    server.register_introspection_functions()
+    server.register_instance(SimpleCompute)
+    print "Virtman Server Run ..."
+    server.serve_forever()

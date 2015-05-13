@@ -22,7 +22,7 @@ class Image(object):
         self.instances = {}
         self.lock = threading.Lock()
         # deploy image only once
-        self.origin_path = self.deploy_image()
+        self.origin_path = None
 
     def has_instance(self):
         if len(self.instances) > 0:
@@ -31,30 +31,19 @@ class Image(object):
             return False
 
     def create_instance(self, instance_name, snapshot):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def destroy_instance(self, instance_name):
-        return NotImplementedError()
+        raise NotImplementedError()
 
-    @lockutils.synchronized('deploy_image')
     def deploy_image(self):
-        try:
-            origin_path = self._deploy_image()
-        except Exception as ex:
-            LOG.error("Virtman: create baseimage failed, due to %s" % ex)
-            raise exception.CreateBaseImageFailed(baseimage=self.image_name)
-        else:
-            return origin_path
+        raise NotImplementedError()
 
-    def _deploy_image(self):
-        return NotImplementedError()
-
-    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def adjust_for_heartbeat(self, parents):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
 class LocalImage(Image):
@@ -85,11 +74,16 @@ class LocalImage(Image):
                   ret)
         return ret
 
-    def _deploy_image(self):
-        origin_path = self.base_image.deploy_base_image()
-        # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
-        return origin_path
+    @lockutils.synchronized('deploy_image')
+    def deploy_image(self):
+        if self.origin_path is None:
+            try:
+                self.origin_path = self.base_image.deploy_base_image()
+            except Exception as ex:
+                LOG.error("Virtman: create baseimage failed, due to %s" % ex)
+                raise exception.CreateBaseImageFailed(baseimage=self.image_name)
 
+    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
@@ -123,19 +117,20 @@ class BlockDeviceImage(Image):
         ret = self.instances[instance_name].destroy()
         if ret:
             del self.instances[instance_name]
-            if len(self.instances) <= 0:
-                self.has_instance = False
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret
 
-    def _deploy_image(self):
-        self.base_image = BlockDeviceBaseImage(self.image_name,
-                                               self.image_connections)
-        origin_path = self.base_image.deploy_base_image()
-        # origin_path = BlockDeviceBaseImage.deploy_base_image(self.base_image)
-        return origin_path
+    @lockutils.synchronized('deploy_image')
+    def deploy_image(self):
+        if self.origin_path is None:
+            try:
+                self.origin_path = self.base_image.deploy_base_image()
+            except Exception as ex:
+                LOG.error("Virtman: create baseimage failed, due to %s" % ex)
+                raise exception.CreateBaseImageFailed(baseimage=self.image_name)
 
+    @lockutils.synchronized('deploy_image')
     def destroy_image(self):
         return self.base_image.destroy_base_image()
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)

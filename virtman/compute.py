@@ -163,9 +163,11 @@ class Virtman(Compute):
             if not self.openstack_compatible:
                 self.images[image_name] = LocalImage(image_name,
                                                      image_connections)
+                self.images[image_name].deploy_image()
             else:
                 self.images[image_name] = BlockDeviceImage(image_name,
                                                            image_connections)
+                self.images[image_name].deploy_image()
         if self.images[image_name].base_image.origin_path:
             self.images[image_name].has_instance = True
             LOG.info("Virtman: middle!")

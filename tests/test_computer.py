@@ -16,7 +16,7 @@ class TestComputer(base.TestCase):
         super(TestComputer, self).setUp()
         compute.LOG.logger.setLevel(logging.DEBUG)
         # self.mock_object(compute.Virtman, 'heartbeat_clock', mock.Mock())
-        self.test_computer = compute.Virtman()
+        # self.test_computer = compute.Virtman()
 
     def test_create(self):
         pass

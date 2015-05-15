@@ -15,7 +15,7 @@ CONF = cfg.CONF
 
 
 def start():
-    cn = compute.Compute()
+    cn = compute.Virtman()
 
     class HeartBeater(threading.Thread):
         def __init__(self, thread_name):

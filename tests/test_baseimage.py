@@ -6,6 +6,7 @@ import logging
 
 from oslo.config import cfg
 from tests import base
+from testtools import ExpectedException
 from virtman.path import Paths
 from virtman import baseimage_new
 from virtman.path import Path
@@ -184,6 +185,34 @@ class TestBlockDeviceBaseImage(base.TestCase):
                          self.baseimage.multipath_path)
         self.assertEqual('multipath_test_baseimage',
                          self.baseimage.multipath_name)
+
+    def test_deploy_base_image_with_exception(self):
+        CONF.master_ip = '10.0.0.1'
+        CONF.host_ip = '10.0.0.2'
+        self.mock_object(volt, 'get',
+                         mock.Mock(return_value=('test_peer_id', [new_parent])))
+        self.mock_object(connector, 'connect_volume',
+                         mock.Mock(side_effect=fake_connect))
+        self.mock_object(Paths, 'rebuild_multipath',
+                         mock.Mock(return_value='/dev/mapper/test_multipath'))
+        self.mock_object(fcg, 'add_disk',
+                         mock.Mock(return_value='/dev/mapper/test_cached'))
+        self.mock_object(dmsetup, 'origin',
+                         mock.Mock(return_value='/dev/mapper/test_origin'))
+        self.mock_object(iscsi, 'exists',
+                         mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'create_iscsi_target',
+                         mock.Mock(return_value='1'))
+        self.mock_object(volt, 'login',
+                         mock.Mock(side_effect=TestException))
+        self.mock_object(iscsi, 'is_connected',
+                         mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        with ExpectedException(TestException):
+            self.baseimage.deploy_base_image()
 
     def test_test_deploy_base_image_with_image_existed(self):
         self.fake_deploy()

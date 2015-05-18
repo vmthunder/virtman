@@ -14,6 +14,7 @@ from virtman.drivers import fcg
 from virtman.drivers import dmsetup
 from virtman.drivers import iscsi
 from virtman.drivers import volt
+from virtman.utils.exception import TestException
 
 CONF = cfg.CONF
 
@@ -73,6 +74,24 @@ parent_connection = {
     'target_lun': '1'
 }
 
+def exception_for_test(*args):
+    raise TestException
+
+class TestBaseImage(base.TestCase):
+    def setUp(self):
+        super(TestBaseImage, self).setUp()
+        self.base_image = baseimage_new.BaseImage()
+
+    def test_deploy_base_image(self):
+        self.assertRaises(NotImplementedError,
+                          self.base_image.deploy_base_image)
+
+    def test_destroy_base_image(self):
+        self.assertRaises(NotImplementedError,
+                          self.base_image.destroy_base_image)
+
+
+
 
 class TestBlockDeviceBaseImage(base.TestCase):
     def setUp(self):
@@ -92,6 +111,7 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.baseimage.multipath_path = '/dev/mapper/test_multipath'
         self.baseimage.multipath_name = 'multipath_test_baseimage'
         self.baseimage.peer_id = 'test_peer_id'
+        self.baseimage.is_login = True
 
     def test_check_local_image(self):
         CONF.host_ip = '10.0.0.1'
@@ -105,7 +125,8 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.mock_object(Paths, 'rebuild_multipath',
                          mock.Mock(return_value='/dev/mapper/test_multipath'))
         self.baseimage.adjust_for_heartbeat([parent_connection])
-        print self.baseimage.multipath_path
+        self.assertEqual('/dev/mapper/test_multipath',
+                         self.baseimage.multipath_path)
 
     def test_get_parent(self):
         CONF.host_ip = '10.0.0.2'
@@ -164,7 +185,13 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.assertEqual('multipath_test_baseimage',
                          self.baseimage.multipath_name)
 
+    def test_test_deploy_base_image_with_image_existed(self):
+        self.fake_deploy()
+        result = self.baseimage.deploy_base_image()
+        self.assertEqual('/dev/mapper/test_origin', result)
+
     def test_destroy_base_image(self):
+        self.mock_object(volt, 'logout', mock.Mock())
         self.mock_object(iscsi, 'is_connected',
                          mock.Mock(return_value=False))
         self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
@@ -182,6 +209,66 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.assertEqual(None, self.baseimage.cached_path)
         self.assertEqual(None, self.baseimage.multipath_path)
 
+    def test_destroy_base_image_with_iscsi_is_connected(self):
+        self.mock_object(volt, 'logout', mock.Mock())
+        self.mock_object(iscsi, 'is_connected', mock.Mock(return_value=True))
 
+        self.fake_deploy()
 
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(False, result)
+
+    def test_destroy_base_image_with_delete_target_exception(self):
+        self.mock_object(volt, 'logout', mock.Mock())
+        self.mock_object(iscsi, 'is_connected', mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target',
+                         mock.Mock(side_effect=TestException))
+
+        self.fake_deploy()
+
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(False, result)
+
+    def test_destroy_base_image_with_delete_origin_exception(self):
+        self.mock_object(volt, 'logout', mock.Mock())
+        self.mock_object(iscsi, 'is_connected', mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table',
+                         mock.Mock(side_effect=TestException))
+
+        self.fake_deploy()
+
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(False, result)
+
+    def test_destroy_base_image_with_delete_cache_exception(self):
+        self.mock_object(volt, 'logout', mock.Mock())
+        self.mock_object(iscsi, 'is_connected', mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock(side_effect=TestException))
+
+        self.fake_deploy()
+
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(False, result)
+
+    def test_destroy_base_image_with_delete_multipath_exception(self):
+        self.mock_object(volt, 'logout', mock.Mock())
+        self.mock_object(iscsi, 'is_connected', mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+        self.mock_object(Paths, 'delete_multipath',
+                         mock.Mock(side_effect=TestException))
+
+        self.fake_deploy()
+
+        result = self.baseimage.destroy_base_image()
+
+        self.assertEqual(False, result)
 

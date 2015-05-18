@@ -21,6 +21,18 @@ device_info = {'path': '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.2010-10'
                'type': 'block'}
 
 
+class TestInstance(base.TestCase):
+    def setUp(self):
+        super(TestInstance, self).setUp()
+        self.instance = instance.Instance()
+
+    def test_create(self):
+        self.assertRaises(NotImplementedError, self.instance.create)
+
+    def test_destroy(self):
+        self.assertRaises(NotImplementedError, self.instance.destroy)
+
+
 class TestLocalInstance(base.TestCase):
     def setUp(self):
         super(TestLocalInstance, self).setUp()

@@ -17,16 +17,19 @@ from virtman.openstack.common import log as logging
 CONF = cfg.CONF
 LOG = logging.getLogger(__name__)
 
+MAX_COUNT = 120
+WAIT_TIME = 5
+
 
 class BaseImage(object):
     def __init__(self):
         pass
 
     def deploy_base_image(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def destroy_base_image(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
 class BlockDeviceBaseImage(BaseImage):
@@ -226,7 +229,7 @@ class BlockDeviceBaseImage(BaseImage):
             self.multipath_path = None
 
     def get_parent(self):
-        max_try_count = 120
+        max_try_count = MAX_COUNT
         host_ip = CONF.host_ip
         try_times = 0
         while True:
@@ -243,7 +246,7 @@ class BlockDeviceBaseImage(BaseImage):
                 LOG.warn("Virtman: get parent info from volt server failed "
                          "due to %s, tried %d times" % (e, try_times))
                 if try_times < max_try_count:
-                    time.sleep(5)
+                    time.sleep(WAIT_TIME)
                     try_times += 1
                     continue
                 else:

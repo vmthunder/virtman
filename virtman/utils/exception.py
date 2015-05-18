@@ -56,3 +56,6 @@ class CreateBaseImageFailed(VirtmanException):
 
 class CreateInstanceFailed(VirtmanException):
     message = _("create instance(snapshot) \'%(instance)s\' failed.")
+
+class TestException(VirtmanException):
+    message = _("test exception")

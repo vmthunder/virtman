@@ -50,6 +50,10 @@ class TestImage(base.TestCase):
         self.assertRaises(NotImplementedError, self.test_image.destroy_instance,
                           None)
 
+    def test_adjust_for_heartbeat(self):
+        self.assertRaises(NotImplementedError,
+                          self.test_image.adjust_for_heartbeat, None)
+
 
 class TestLocalImage(base.TestCase):
     def setUp(self):

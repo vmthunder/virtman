@@ -27,19 +27,19 @@ class Instance(object):
         pass
 
     def create(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def destroy(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
     @staticmethod
-    def _create_cache(snapshot):
-        cached_path = fcg.add_disk(snapshot)
+    def _create_cache(snapshot_dev):
+        cached_path = fcg.add_disk(snapshot_dev)
         return cached_path
 
     @staticmethod
-    def _delete_cache(snapshot):
-        fcg.rm_disk(snapshot)
+    def _delete_cache(snapshot_dev):
+        fcg.rm_disk(snapshot_dev)
         return True
 
 

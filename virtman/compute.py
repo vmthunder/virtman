@@ -99,7 +99,7 @@ class Virtman(Compute):
     def _heartbeat(self):
         LOG.debug("Virtman: heartbeat start @ %s" % time.asctime())
         for name in self.images.keys():
-            if not self.images[name].has_instance:
+            if not self.images[name].has_instance():
                 if self.images[name].destroy_image():
                     del self.images[name]
         info = volt.heartbeat()
@@ -169,7 +169,6 @@ class Virtman(Compute):
                                                            image_connections)
                 self.images[image_name].deploy_image()
         if self.images[image_name].base_image.origin_path:
-            self.images[image_name].has_instance = True
             LOG.info("Virtman: middle!")
             try:
                 instance_path = self.images[image_name].create_instance(

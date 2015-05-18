@@ -43,7 +43,8 @@ class SimpleCompute(object):
         return imageservice.list_image_target()
 
 if __name__ == '__main__':
-    server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler, allow_none=True)
+    server = SimpleXMLRPCServer(("0.0.0.0", 7774), RequestHandler,
+                                allow_none=True)
     server.register_introspection_functions()
     server.register_instance(SimpleCompute)
     print "Virtman Server Run ..."

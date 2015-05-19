@@ -111,6 +111,7 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.baseimage.cached_path = '/dev/mapper/test_cached'
         self.baseimage.multipath_path = '/dev/mapper/test_multipath'
         self.baseimage.multipath_name = 'multipath_test_baseimage'
+        self.baseimage.paths['test_path'] = FakePath('test_path')
         self.baseimage.peer_id = 'test_peer_id'
         self.baseimage.is_login = True
 
@@ -186,7 +187,7 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.assertEqual('multipath_test_baseimage',
                          self.baseimage.multipath_name)
 
-    def test_deploy_base_image_with_exception(self):
+    def test_deploy_base_image_with_login_failed(self):
         CONF.master_ip = '10.0.0.1'
         CONF.host_ip = '10.0.0.2'
         self.mock_object(volt, 'get',
@@ -213,6 +214,87 @@ class TestBlockDeviceBaseImage(base.TestCase):
 
         with ExpectedException(TestException):
             self.baseimage.deploy_base_image()
+            self.assertEqual(False, self.baseimage.has_target)
+            self.assertEqual(0, self.baseimage.target_id)
+            self.assertEqual(None, self.baseimage.origin_path)
+            self.assertEqual(None, self.baseimage.cached_path)
+            self.assertEqual(None, self.baseimage.multipath_path)
+
+    def test_deploy_base_image_with_create_target_failed(self):
+        CONF.master_ip = '10.0.0.1'
+        CONF.host_ip = '10.0.0.2'
+        self.mock_object(volt, 'get',
+                         mock.Mock(return_value=('test_peer_id', [new_parent])))
+        self.mock_object(connector, 'connect_volume',
+                         mock.Mock(side_effect=fake_connect))
+        self.mock_object(Paths, 'rebuild_multipath',
+                         mock.Mock(return_value='/dev/mapper/test_multipath'))
+        self.mock_object(fcg, 'add_disk',
+                         mock.Mock(return_value='/dev/mapper/test_cached'))
+        self.mock_object(dmsetup, 'origin',
+                         mock.Mock(return_value='/dev/mapper/test_origin'))
+        self.mock_object(iscsi, 'exists',
+                         mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'create_iscsi_target',
+                         mock.Mock(side_effect=TestException))
+        self.mock_object(iscsi, 'is_connected',
+                         mock.Mock(return_value=False))
+        self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        with ExpectedException(TestException):
+            self.baseimage.deploy_base_image()
+            self.assertEqual(False, self.baseimage.has_target)
+            self.assertEqual(0, self.baseimage.target_id)
+            self.assertEqual(None, self.baseimage.origin_path)
+            self.assertEqual(None, self.baseimage.cached_path)
+            self.assertEqual(None, self.baseimage.multipath_path)
+
+    def test_deploy_base_image_with_create_origin_failed(self):
+        CONF.master_ip = '10.0.0.1'
+        CONF.host_ip = '10.0.0.2'
+        self.mock_object(volt, 'get',
+                         mock.Mock(return_value=('test_peer_id', [new_parent])))
+        self.mock_object(connector, 'connect_volume',
+                         mock.Mock(side_effect=fake_connect))
+        self.mock_object(Paths, 'rebuild_multipath',
+                         mock.Mock(return_value='/dev/mapper/test_multipath'))
+        self.mock_object(fcg, 'add_disk',
+                         mock.Mock(return_value='/dev/mapper/test_cached'))
+        self.mock_object(dmsetup, 'origin',
+                         mock.Mock(side_effect=TestException))
+        self.mock_object(dmsetup, 'remove_table', mock.Mock())
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        with ExpectedException(TestException):
+            self.baseimage.deploy_base_image()
+            self.assertEqual(False, self.baseimage.has_target)
+            self.assertEqual(0, self.baseimage.target_id)
+            self.assertEqual(None, self.baseimage.origin_path)
+            self.assertEqual(None, self.baseimage.cached_path)
+            self.assertEqual(None, self.baseimage.multipath_path)
+
+    def test_deploy_base_image_with_create_cache_failed(self):
+        CONF.master_ip = '10.0.0.1'
+        CONF.host_ip = '10.0.0.2'
+        self.mock_object(volt, 'get',
+                         mock.Mock(return_value=('test_peer_id', [new_parent])))
+        self.mock_object(connector, 'connect_volume',
+                         mock.Mock(side_effect=fake_connect))
+        self.mock_object(Paths, 'rebuild_multipath',
+                         mock.Mock(return_value='/dev/mapper/test_multipath'))
+        self.mock_object(fcg, 'add_disk',
+                         mock.Mock(side_effect=TestException))
+        self.mock_object(fcg, 'rm_disk', mock.Mock())
+
+        with ExpectedException(TestException):
+            self.baseimage.deploy_base_image()
+            self.assertEqual(False, self.baseimage.has_target)
+            self.assertEqual(0, self.baseimage.target_id)
+            self.assertEqual(None, self.baseimage.origin_path)
+            self.assertEqual(None, self.baseimage.cached_path)
+            self.assertEqual(None, self.baseimage.multipath_path)
 
     def test_test_deploy_base_image_with_image_existed(self):
         self.fake_deploy()

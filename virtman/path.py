@@ -80,12 +80,12 @@ class Paths(object):
 
     @staticmethod
     def rebuild_multipath(paths, parent_connections, multipath_name,
-                          has_multipath):
+                          multipath_path):
         """
         :type paths: dict
         :type parent_connections: list
         :type multipath_name: str
-        :type has_multipath: bool
+        :type multipath_path: str
         """
         LOG.debug("Virtman: begin to rebuild multipath...")
 
@@ -102,12 +102,11 @@ class Paths(object):
         disks = [paths[key].device_path for key in paths.keys()
                  if key not in paths_to_remove and paths[key].connected]
 
-        multipath_path = None
         if len(disks) > 0:
-            if not has_multipath:
+            if not multipath_path:
                 multipath_path = Paths.create_multipath(multipath_name, disks)
             else:
-                multipath_path = has_multipath
+                multipath_path = multipath_path
                 Paths.reload_multipath(multipath_name, disks)
             # TODO:fix here, wait for multipath device ready
             time.sleep(2)

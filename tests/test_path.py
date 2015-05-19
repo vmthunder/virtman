@@ -119,7 +119,7 @@ class TestPaths(base.TestCase):
         expected_result1 = '/dev/mapper/multipath_test'
         result1 = path.Paths.rebuild_multipath(
             self.paths, [test_connection3], 'multipath_test',
-            has_multipath=False)
+            multipath_path=False)
         self.assertEqual(expected_result1, result1)
         self.assertIn(test_connection3_str, self.paths.keys())
 
@@ -127,7 +127,7 @@ class TestPaths(base.TestCase):
         multipath_path = '/dev/mapper/multipath_test_for_reload'
         result2 = path.Paths.rebuild_multipath(
             self.paths, [test_connection2, test_connection3], 'multipath_test',
-            has_multipath=multipath_path)
+            multipath_path=multipath_path)
         self.assertEqual(multipath_path, result2)
         self.assertEqual(2, len(self.paths))
         self.assertIn(test_connection2_str, self.paths.keys())

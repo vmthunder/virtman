@@ -64,7 +64,8 @@ class BlockDeviceBaseImage(BaseImage):
         try:
             self.deploy()
         except Exception as ex:
-            LOG.error('Virtman: fail to deploy base image, duo to %s' % ex)
+            LOG.error("Virtman: fail to deploy base image '%s', duo to %s" %
+                      (self.image_name, ex))
             raise
         else:
             return self.origin_path
@@ -136,6 +137,7 @@ class BlockDeviceBaseImage(BaseImage):
         #     partial(Register.login_master, base_image),
         #     partial(Register.logout_master, base_image))
         # build_chain.do()
+
         wf = linear_flow.Flow("base_image_flow")
         wf.add(CreateCacheTask(),
                CreateOriginTask(),
@@ -277,13 +279,14 @@ class Cache(object):
         """
         :type base_image: BlockDeviceBaseImage
         """
-        LOG.debug("Virtman: start to delete cache according to multipath %s " %
-                  base_image.multipath_path)
-        if base_image.multipath_path:
+        if base_image.cached_path:
+            LOG.debug("Virtman: start to delete cache according to multipath %s " %
+                      base_image.multipath_path)
             fcg.rm_disk(base_image.multipath_path)
             base_image.cached_path = None
-        LOG.debug("Virtman: delete cache according to multipath %s completed" %
-                  base_image.multipath_path)
+            LOG.debug("Virtman: delete cache according to multipath %s "
+                      "completed" %
+                      base_image.multipath_path)
 
 
 class Origin(object):
@@ -306,13 +309,13 @@ class Origin(object):
         """
         :type base_image: BlockDeviceBaseImage
         """
-        LOG.debug("Virtman: start to remove origin %s " %
-                  base_image.origin_name)
         if base_image.origin_path:
+            LOG.debug("Virtman: start to remove origin %s " %
+                      base_image.origin_name)
             dmsetup.remove_table(base_image.origin_name)
             base_image.origin_path = None
-        LOG.debug("Virtman: remove origin %s completed" %
-                  base_image.origin_name)
+            LOG.debug("Virtman: remove origin %s completed" %
+                      base_image.origin_name)
 
 
 class Target(object):
@@ -333,23 +336,24 @@ class Target(object):
                     iscsi.create_iscsi_target(base_image.iqn,
                                               base_image.cached_path)
                 base_image.has_target = True
-                LOG.debug("Virtman: create target complete, target id = %s" %
-                          base_image.target_id)
+            LOG.debug("Virtman: create target complete, target id = %s" %
+                      base_image.target_id)
 
     @staticmethod
     def delete_target(base_image):
         """
         :type base_image: BlockDeviceBaseImage
         """
-        LOG.debug("Virtman: start to remove target %s (%s)" %
-                  (base_image.target_id, base_image.image_name))
         if base_image.has_target:
+            LOG.debug("Virtman: start to remove target %s (%s)" %
+                      (base_image.target_id, base_image.image_name))
             iscsi.remove_iscsi_target(base_image.image_name,
                                       base_image.image_name)
+            LOG.debug("Virtman: successful remove target %s (%s)" %
+                      (base_image.target_id, base_image.image_name))
             base_image.has_target = False
             base_image.target_id = 0
-        LOG.debug("Virtman: successful remove target %s (%s)" %
-                  (base_image.target_id, base_image.image_name))
+
 
 
 class Volt(object):
@@ -389,7 +393,9 @@ class CreateCacheTask(task.Task):
 
     def revert(self, base_image, result, **kwargs):
         if isinstance(result, ft.Failure):
-            print result.exception_str
+            LOG.exception("Virtman: base image '%s' create caceh failed, "
+                          "due to %s" %
+                          (base_image.image_name, result.exception_str))
         Cache.delete_cache(base_image)
 
 
@@ -399,7 +405,9 @@ class CreateOriginTask(task.Task):
 
     def revert(self, base_image, result, **kwargs):
         if isinstance(result, ft.Failure):
-            print result.exception_str
+            LOG.exception("Virtman: base image '%s' create origin failed, "
+                          "due to %s" %
+                          (base_image.image_name, result.exception_str))
         Origin.delete_origin(base_image)
 
 
@@ -409,7 +417,9 @@ class CreateTargetTask(task.Task):
 
     def revert(self, base_image, result, **kwargs):
         if isinstance(result, ft.Failure):
-            print result.exception_str
+            LOG.exception("Virtman: base image '%s' create target failed, "
+                          "due to %s" %
+                          (base_image.image_name, result.exception_str))
         Target.delete_target(base_image)
 
 
@@ -419,7 +429,8 @@ class LoginMasterTask(task.Task):
 
     def revert(self, base_image, result, **kwargs):
         if isinstance(result, ft.Failure):
-            print result.exception_str
+            LOG.exception("Virtman: base image '%s' login failed, due to %s" %
+                          (base_image.image_name, result.exception_str))
         Volt.logout_master(base_image)
 
 
@@ -444,7 +455,7 @@ class FakeBaseImage(BaseImage):
                   self.image_name)
 
     def deploy_base_image(self):
-        self.target_id = '1'
+        self.target_id = 1
         self.has_target = True
         self.origin_path = '/dev/mapper/test_origin'
         self.origin_name = 'origin_test_baseimage'

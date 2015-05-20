@@ -7,8 +7,8 @@ import logging
 from tests import base
 from virtman import image
 from virtman.baseimage_new import FakeBaseImage
-from virtman.instance import LocalInstance
-from virtman.instance import BlockDeviceInstance
+from virtman.snapshot import LocalSnapshot
+from virtman.snapshot import BlockDeviceSnapshot
 
 
 test_image_connections = [{
@@ -42,12 +42,12 @@ class TestImage(base.TestCase):
     def test_destroy_image(self):
         self.assertRaises(NotImplementedError, self.test_image.destroy_image)
 
-    def test_create_instance(self):
-        self.assertRaises(NotImplementedError, self.test_image.create_instance,
+    def test_create_snapshot(self):
+        self.assertRaises(NotImplementedError, self.test_image.create_snapshot,
                           None, None)
 
-    def test_destroy_instance(self):
-        self.assertRaises(NotImplementedError, self.test_image.destroy_instance,
+    def test_destroy_snapshot(self):
+        self.assertRaises(NotImplementedError, self.test_image.destroy_snapshot,
                           None)
 
     def test_adjust_for_heartbeat(self):
@@ -73,32 +73,32 @@ class TestLocalImage(base.TestCase):
         result = self.test_image.destroy_image()
         self.assertEqual(True, result)
 
-    def test_create_instance(self):
-        self.mock_object(LocalInstance, 'create',
+    def test_create_snapshot(self):
+        self.mock_object(LocalSnapshot, 'create',
                          mock.Mock(return_value='/test_path'))
         self.test_image.deploy_image()
-        self.test_image.create_instance('test_instance1', '/blocks/snapshot1')
+        self.test_image.create_snapshot('test_instance1', '/blocks/snapshot1')
 
         self.assertEqual('/dev/mapper/test_origin', self.test_image.origin_path)
         self.assertEqual(True, self.test_image.has_instance())
-        self.assertEqual(1, len(self.test_image.instances))
+        self.assertEqual(1, len(self.test_image.snapshots))
 
-        self.test_image.create_instance('test_instance2', '/blocks/snapshot2')
+        self.test_image.create_snapshot('test_instance2', '/blocks/snapshot2')
 
-        self.assertEqual(2, len(self.test_image.instances))
+        self.assertEqual(2, len(self.test_image.snapshots))
 
-    def test_destroy_instance(self):
-        self.mock_object(LocalInstance, 'create',
+    def test_destroy_snapshot(self):
+        self.mock_object(LocalSnapshot, 'create',
                          mock.Mock(return_value='/test_path'))
-        self.mock_object(LocalInstance, 'destroy',
+        self.mock_object(LocalSnapshot, 'destroy',
                          mock.Mock(return_value=True))
 
         self.test_image.deploy_image()
-        self.test_image.create_instance('test_instance1', '/blocks/snapshot1')
-        self.test_image.destroy_instance('test_instance1')
+        self.test_image.create_snapshot('test_instance1', '/blocks/snapshot1')
+        self.test_image.destroy_snapshot('test_instance1')
 
         self.assertEqual(False, self.test_image.has_instance())
-        self.assertEqual(0, len(self.test_image.instances))
+        self.assertEqual(0, len(self.test_image.snapshots))
 
 
 class TestBlockDeviceImage(base.TestCase):
@@ -119,32 +119,32 @@ class TestBlockDeviceImage(base.TestCase):
         result = self.test_image.destroy_image()
         self.assertEqual(True, result)
 
-    def test_create_instance(self):
-        self.mock_object(BlockDeviceInstance, 'create',
+    def test_create_snapshot(self):
+        self.mock_object(BlockDeviceSnapshot, 'create',
                          mock.Mock(return_value='/dev/mappper/test_path'))
         self.test_image.deploy_image()
-        self.test_image.create_instance('test_instance1',
+        self.test_image.create_snapshot('test_instance1',
                                         test_snapshot_connection1)
 
         self.assertEqual('/dev/mapper/test_origin', self.test_image.origin_path)
         self.assertEqual(True, self.test_image.has_instance())
-        self.assertEqual(1, len(self.test_image.instances))
+        self.assertEqual(1, len(self.test_image.snapshots))
 
-        self.test_image.create_instance('test_instance2',
+        self.test_image.create_snapshot('test_instance2',
                                         test_snapshot_connection2)
 
-        self.assertEqual(2, len(self.test_image.instances))
+        self.assertEqual(2, len(self.test_image.snapshots))
 
-    def test_destroy_instance(self):
-        self.mock_object(BlockDeviceInstance, 'create',
+    def test_destroy_snapshot(self):
+        self.mock_object(BlockDeviceSnapshot, 'create',
                          mock.Mock(return_value='/dev/mappper/test_path'))
-        self.mock_object(BlockDeviceInstance, 'destroy',
+        self.mock_object(BlockDeviceSnapshot, 'destroy',
                          mock.Mock(return_value=True))
 
         self.test_image.deploy_image()
-        self.test_image.create_instance('test_instance1',
+        self.test_image.create_snapshot('test_instance1',
                                         test_snapshot_connection1)
-        self.test_image.destroy_instance('test_instance1')
+        self.test_image.destroy_snapshot('test_instance1')
 
         self.assertEqual(False, self.test_image.has_instance())
-        self.assertEqual(0, len(self.test_image.instances))
+        self.assertEqual(0, len(self.test_image.snapshots))

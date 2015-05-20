@@ -3,8 +3,8 @@
 import threading
 
 from virtman.baseimage_new import BlockDeviceBaseImage
-from virtman.instance import LocalInstance
-from virtman.instance import BlockDeviceInstance
+from virtman.snapshot import LocalSnapshot
+from virtman.snapshot import BlockDeviceSnapshot
 from virtman.utils import exception
 from oslo.concurrency import lockutils
 
@@ -19,21 +19,21 @@ class Image(object):
         self.image_name = image_name
         self.image_connections = image_connections
         self.base_image = base_image(self.image_name, self.image_connections)
-        self.instances = {}
+        self.snapshots = {}
         self.lock = threading.Lock()
         # deploy image only once
         self.origin_path = None
 
     def has_instance(self):
-        if len(self.instances) > 0:
+        if len(self.snapshots) > 0:
             return True
         else:
             return False
 
-    def create_instance(self, instance_name, snapshot):
+    def create_snapshot(self, instance_name, snapshot):
         raise NotImplementedError()
 
-    def destroy_instance(self, instance_name):
+    def destroy_snapshot(self, instance_name):
         raise NotImplementedError()
 
     def deploy_image(self):
@@ -53,23 +53,23 @@ class LocalImage(Image):
         super(LocalImage, self).__init__(image_name, image_connections,
                                          base_image)
 
-    def create_instance(self, instance_name, snapshot_dev):
+    def create_snapshot(self, instance_name, snapshot_dev):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
                   instance_name)
-        self.instances[instance_name] = LocalInstance(self.origin_path,
+        self.snapshots[instance_name] = LocalSnapshot(self.origin_path,
                                                       instance_name,
                                                       snapshot_dev)
-        instance_path = self.instances[instance_name].create()
+        instance_path = self.snapshots[instance_name].create()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
 
-    def destroy_instance(self, instance_name):
+    def destroy_snapshot(self, instance_name):
         LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
                   instance_name)
-        ret = self.instances[instance_name].destroy()
+        ret = self.snapshots[instance_name].destroy()
         if ret:
-            del self.instances[instance_name]
+            del self.snapshots[instance_name]
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret
@@ -100,23 +100,23 @@ class BlockDeviceImage(Image):
         super(BlockDeviceImage, self).__init__(image_name, image_connections,
                                                base_image)
 
-    def create_instance(self, instance_name, snapshot_connection):
+    def create_snapshot(self, instance_name, snapshot_connection):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
                   instance_name)
-        self.instances[instance_name] = BlockDeviceInstance(self.origin_path,
+        self.snapshots[instance_name] = BlockDeviceSnapshot(self.origin_path,
                                                             instance_name,
                                                             snapshot_connection)
-        instance_path = self.instances[instance_name].create()
+        instance_path = self.snapshots[instance_name].create()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
 
-    def destroy_instance(self, instance_name):
+    def destroy_snapshot(self, instance_name):
         LOG.debug("Virtman: destroy VM instance started, instance_name = %s" %
                   instance_name)
-        ret = self.instances[instance_name].destroy()
+        ret = self.snapshots[instance_name].destroy()
         if ret:
-            del self.instances[instance_name]
+            del self.snapshots[instance_name]
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret

@@ -21,7 +21,7 @@ CONF.register_opts(snapshot_opts)
 LOG = logging.getLogger(__name__)
 
 
-class Instance(object):
+class Snapshot(object):
 
     def __init__(self):
         pass
@@ -43,22 +43,22 @@ class Instance(object):
         return True
 
 
-class LocalInstance(Instance):
+class LocalSnapshot(Snapshot):
     def __init__(self, origin_path, instance_name, snapshot_dev=None):
-        super(LocalInstance, self).__init__()
+        super(LocalSnapshot, self).__init__()
         self.instance_path = None
         self.instance_name = instance_name
         self.origin_path = origin_path
         self.snapshot_with_cache = CONF.snapshot_with_cache
         self.snapshot_dev = snapshot_dev
-        self.snapshot_name = "snapshot_" + instance_name
+        self.snapshot_dev_name = "snapshot_" + instance_name
 
     def create(self):
         LOG.debug("Virtman: start VM instance %s according origin_path %s" %
                   (self.instance_name, self.origin_path))
         snapshot_path = self._create_snap_dev()
         self.instance_path = dmsetup.snapshot(self.origin_path,
-                                              self.snapshot_name, snapshot_path)
+                                              self.snapshot_dev_name, snapshot_path)
         LOG.debug("Virtman: success! instance_path = %s" % self.instance_path)
         return self.instance_path
 
@@ -76,8 +76,8 @@ class LocalInstance(Instance):
 
     def destroy(self):
         LOG.debug("Virtman: destroy VM instance %s according "
-                  "snapshot_name %s" % (self.instance_name, self.snapshot_name))
-        dmsetup.remove_table(self.snapshot_name)
+                  "snapshot_name %s" % (self.instance_name, self.snapshot_dev_name))
+        dmsetup.remove_table(self.snapshot_dev_name)
         self._destroy_snap_dev()
         LOG.debug("Virtman: succeed to destroy the VM instance!")
         return True
@@ -91,19 +91,19 @@ class LocalInstance(Instance):
         return True
 
 
-class BlockDeviceInstance(Instance):
+class BlockDeviceSnapshot(Snapshot):
     """
-    Block device instance for OpenStack
+    Block device snapshot for OpenStack
     """
     def __init__(self, origin_path, instance_name, snapshot_connection):
-        super(BlockDeviceInstance, self).__init__()
+        super(BlockDeviceSnapshot, self).__init__()
         self.instance_path = None
         self.instance_name = instance_name
         self.origin_path = origin_path
         self.snapshot_with_cache = CONF.snapshot_with_cache
         self.snapshot_connection = snapshot_connection
         self.snapshot_dev = None
-        self.snapshot_name = "snapshot_" + instance_name
+        self.snapshot_dev_name = "snapshot_" + instance_name
         self.device_info = None
         self.snapshot_link = None
 
@@ -112,7 +112,7 @@ class BlockDeviceInstance(Instance):
                   (self.instance_name, self.origin_path))
         snapshot_path, self.snapshot_link = self._create_snap_dev()
         self.instance_path = dmsetup.snapshot(self.origin_path,
-                                              self.snapshot_name,
+                                              self.snapshot_dev_name,
                                               snapshot_path)
         # change link for OpenStack
         commands.unlink(self.snapshot_link)
@@ -146,11 +146,11 @@ class BlockDeviceInstance(Instance):
 
     def destroy(self):
         LOG.debug("Virtman: destroy VM instance %s according "
-                  "snapshot_name %s" % (self.instance_name, self.snapshot_name))
+                  "snapshot_name %s" % (self.instance_name, self.snapshot_dev_name))
         # unlink snapshot
         if os.path.exists(self.snapshot_link):
             commands.unlink(self.snapshot_link)
-        dmsetup.remove_table(self.snapshot_name)
+        dmsetup.remove_table(self.snapshot_dev_name)
         self._destroy_snap_dev()
         LOG.debug("Virtman: success!")
         return True

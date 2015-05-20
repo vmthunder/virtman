@@ -205,9 +205,9 @@ class Virtman(Compute):
         LOG.debug("Virtman: destroy VM started, instance_name = %s" %
                   instance_name)
         if instance_name not in self.instance_names:
-            LOG.warn("Virtman: the instance_name '%s' does not exist!" %
+            LOG.warn("Virtman: the instance_name \'%s\' does not exist!" %
                       instance_name)
-            return "1:" + "Virtman: the instance_name '%s' does not exist!" \
+            return "1:" + "Virtman: the instance_name \'%s\' does not exist!" \
                           % instance_name
         else:
             image_name = self.instance_names[instance_name]

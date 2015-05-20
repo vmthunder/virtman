@@ -5,7 +5,7 @@ import string
 import logging
 
 from tests import base
-from virtman import instance
+from virtman import snapshot
 from virtman import blockservice
 from virtman.drivers import connector
 from virtman.drivers import dmsetup
@@ -21,25 +21,25 @@ device_info = {'path': '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.2010-10'
                'type': 'block'}
 
 
-class TestInstance(base.TestCase):
+class TestSnapshot(base.TestCase):
     def setUp(self):
-        super(TestInstance, self).setUp()
-        self.instance = instance.Instance()
+        super(TestSnapshot, self).setUp()
+        self.snapshot = snapshot.Snapshot()
 
     def test_create(self):
-        self.assertRaises(NotImplementedError, self.instance.create)
+        self.assertRaises(NotImplementedError, self.snapshot.create)
 
     def test_destroy(self):
-        self.assertRaises(NotImplementedError, self.instance.destroy)
+        self.assertRaises(NotImplementedError, self.snapshot.destroy)
 
 
-class TestLocalInstance(base.TestCase):
+class TestLocalSnapshot(base.TestCase):
     def setUp(self):
-        super(TestLocalInstance, self).setUp()
-        self.instance = instance.LocalInstance(origin_path='/dev/mapper/origin',
+        super(TestLocalSnapshot, self).setUp()
+        self.instance = snapshot.LocalSnapshot(origin_path='/dev/mapper/origin',
                                                instance_name='vm_test',
                                                snapshot_dev='/blocks/snapshot')
-        instance.LOG.logger.setLevel(logging.DEBUG)
+        snapshot.LOG.logger.setLevel(logging.DEBUG)
 
     def test_create(self):
         self.mock_object(blockservice, 'findloop',
@@ -62,17 +62,17 @@ class TestLocalInstance(base.TestCase):
         self.assertEqual(True, result)
 
 
-class TestBlockDeviceInstance(base.TestCase):
+class TestBlockDeviceSnapshot(base.TestCase):
     def setUp(self):
-        super(TestBlockDeviceInstance, self).setUp()
-        self.instance = instance.BlockDeviceInstance(
+        super(TestBlockDeviceSnapshot, self).setUp()
+        self.snapshot = snapshot.BlockDeviceSnapshot(
             origin_path='/dev/mapper/origin',
             instance_name='vm_test',
             snapshot_connection=test_snapshot_connection)
         self.cmds = []
         self.mock_object(putils, 'execute',
                          mock.Mock(side_effect=self.fake_execute))
-        instance.LOG.logger.setLevel(logging.DEBUG)
+        snapshot.LOG.logger.setLevel(logging.DEBUG)
 
     def fake_execute(self, *cmd, **kwargs):
         self.cmds.append(string.join(cmd))
@@ -108,7 +108,7 @@ class TestBlockDeviceInstance(base.TestCase):
                          'ip-10.0.0.1:3260-iscsi-iqn.2010-10.org.openstack:'
                          'volume-snapshot1']
 
-        result = self.instance.create()
+        result = self.snapshot.create()
 
         self.assertEqual(expected_result, result)
         self.assertEqual(expected_cmds, self.cmds)
@@ -118,14 +118,14 @@ class TestBlockDeviceInstance(base.TestCase):
         self.mock_object(dmsetup, 'remove_table', mock.Mock())
         self.mock_object(connector, 'disconnect_volume', mock.Mock())
 
-        self.instance.snapshot_link = \
+        self.snapshot.snapshot_link = \
             '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.' \
             '2010-10.org.openstack:volume-snapshot1'
         expected_cmds = ['rm -f '
                           '/dev/disk/by-path/ip-10.0.0.1:3260-iscsi-iqn.'
                           '2010-10.org.openstack:volume-snapshot1']
 
-        result = self.instance.destroy()
+        result = self.snapshot.destroy()
 
         self.assertEqual(True, result)
         self.assertEqual(expected_cmds, self.cmds)

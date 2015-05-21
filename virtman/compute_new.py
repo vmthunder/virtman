@@ -55,7 +55,6 @@ class Compute(object):
         return NotImplementedError()
 
 
-@singleton
 class Virtman(Compute):
     def __init__(self, openstack_compatible=True):
         LOG.info("Virtman: start to create a Virtman Compute_node")
@@ -64,13 +63,14 @@ class Virtman(Compute):
         self.instance_names = {}
         self.lock = threading.Lock()
 
-        if self.openstack_compatible:
-            config_files = ['/etc/nova/nova.conf', '/etc/virtman/virtman.conf']
-        else:
-            config_files = ['/etc/virtman/virtman.conf']
-        CONF(sys.argv[1:], project='virtman', default_config_files=config_files)
+        # if self.openstack_compatible:
+        #     config_files = ['/etc/nova/nova.conf', '/etc/virtman/virtman.conf']
+        # else:
+        #     config_files = ['/etc/virtman/virtman.conf']
+        # CONF(sys.argv[1:], project='virtman', default_config_files=config_files)
+        #
+        # logging.setup('virtman')
 
-        logging.setup('virtman')
         if not fcg.is_valid():
             fcg.create_group()
 

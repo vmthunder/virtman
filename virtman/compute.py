@@ -129,13 +129,8 @@ class Virtman(Compute):
         # multiple roots for creating
         LOG.debug("Virtman: create wait for unlock")
         with self.lock:
-            try:
-                ret = self._create(instance_name, image_name, image_connections,
-                                   snapshot)
-            except Exception as e:
-                LOG.error("Virtman: create VM instance failed, due to %s" % e)
-                return "2:" + "Virtman: create instance failed"
-            return ret
+            return self._create(instance_name, image_name, image_connections,
+                                snapshot)
 
     def _create(self, instance_name, image_name, image_connections, snapshot):
         LOG.info("Virtman: Begin! ----- PID = %s" % os.getpid())
@@ -154,36 +149,41 @@ class Virtman(Compute):
                       instance_name)
             return "1:" + "Virtman: the instance_name \'%s\' already exists!" % \
                           instance_name
-        else:
+        try:
+            LOG.debug("Virtman: create VM started, instance_name = %s, "
+                      "image_name = %s" % (instance_name, image_name))
             self.instance_names[instance_name] = image_name
-        LOG.debug("Virtman: create VM started, instance_name = %s, "
-                  "image_name = %s" % (instance_name, image_name))
-        if image_name not in self.images:
-            LOG.debug("Virtman: now need to create image first!")
-            if not self.openstack_compatible:
-                self.images[image_name] = LocalImage(image_name,
-                                                     image_connections)
-                self.images[image_name].deploy_image()
-            else:
-                self.images[image_name] = BlockDeviceImage(image_name,
-                                                           image_connections)
-                self.images[image_name].deploy_image()
-        if self.images[image_name].base_image.origin_path:
-            LOG.info("Virtman: middle!")
-            try:
+            # deploy base image
+            if image_name not in self.images:
+                LOG.debug("Virtman: now need to create image first!")
+                if not self.openstack_compatible:
+                    self.images[image_name] = LocalImage(image_name,
+                                                         image_connections)
+                    self.images[image_name].deploy_image()
+                else:
+                    self.images[image_name] = BlockDeviceImage(image_name,
+                                                               image_connections)
+                    self.images[image_name].deploy_image()
+
+            # create snapshot
+            if self.images[image_name].base_image.origin_path:
+                LOG.info("Virtman: middle!")
                 instance_path = self.images[image_name].create_snapshot(
                     instance_name, snapshot)
-            except exception as ex:
-                LOG.error("Virtman: create instance(snapshot) failed, due to "
-                          "%s" % ex)
-                raise exception.CreateInstanceFailed(
-                    instance=self.instance_names)
-            LOG.debug("Virtman: create VM completed, instance_name = %s, "
-                      "image_name = %s, instance_path = %s" %
-                      (instance_name, image_name, instance_path))
-            # instance_path is like '/dev/mapper/snapshot_vm1'
-            LOG.info("Virtman: end!  instance_path = %s" % instance_path)
-            return "0:" + instance_path
+                LOG.debug("Virtman: create VM completed, instance_name = %s, "
+                          "image_name = %s, instance_path = %s" %
+                          (instance_name, image_name, instance_path))
+                # instance_path is like '/dev/mapper/snapshot_vm1'
+        except Exception as ex:
+            LOG.error("Virtman: create image failed, due to %s" % ex)
+            if ex is exception.CreateBaseImageFailed:
+                del self.images[image_name]
+            if instance_name in self.instance_names:
+                del self.instance_names[instance_name]
+            return "2:" + "Virtman: create image failed"
+
+        LOG.info("Virtman: end!  instance_path = %s" % instance_path)
+        return "0:" + instance_path
 
     def destroy(self, instance_name):
         """
@@ -194,12 +194,7 @@ class Virtman(Compute):
         """
         LOG.debug("Virtman: destroy wait for unlock")
         with self.lock:
-            try:
-                ret = self._destroy(instance_name)
-            except Exception as e:
-                LOG.error("Virtman: destroy instance failed, due to %s" % e)
-                return "2:" + "Virtman: destroy VM instance failed"
-            return ret
+            return self._destroy(instance_name)
 
     def _destroy(self, instance_name):
         LOG.debug("Virtman: destroy VM started, instance_name = %s" %
@@ -209,14 +204,18 @@ class Virtman(Compute):
                       instance_name)
             return "1:" + "Virtman: the instance_name '%s' does not exist!" \
                           % instance_name
-        else:
+        try:
             image_name = self.instance_names[instance_name]
             if self.images[image_name].destroy_snapshot(instance_name):
                 # with self.lock:
                 del self.instance_names[instance_name]
-            LOG.debug("Virtman: destroy VM completed, instance_name = %s" %
-                      instance_name)
-            return "0:"
+        except Exception as ex:
+            LOG.error("Virtman: destroy instance failed, due to %s" % ex)
+            return "2:" + "Virtman: destroy VM instance failed"
+
+        LOG.debug("Virtman: destroy VM completed, instance_name = %s" %
+                  instance_name)
+        return "0:"
 
     def list(self):
         instance_list = []

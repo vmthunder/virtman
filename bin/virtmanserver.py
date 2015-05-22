@@ -20,6 +20,7 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 class SimpleCompute(object):
     def __init__(self):
         self.cn = Virtman(openstack_compatible=False)
+        self.cn.heartbeat_thread.start()
 
     def create(self, instance_name, image_name, image_connection, snapshot_dev):
         return self.cn.create(instance_name, image_name, image_connection,

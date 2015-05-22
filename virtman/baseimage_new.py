@@ -9,6 +9,7 @@ from virtman.drivers import fcg
 from virtman.drivers import dmsetup
 from virtman.drivers import iscsi
 from virtman.drivers import volt
+from virtman.path import Path
 from virtman.path import Paths
 from virtman.utils import utils
 
@@ -203,7 +204,7 @@ class BlockDeviceBaseImage(BaseImage):
                 return False
         try:
             for key in self.paths.keys():
-                self.paths[key].disconnect()
+                Path.disconnect(self.paths[key])
                 del self.paths[key]
             LOG.debug("Virtman: destroy base image SUCCESS! base_image = %s, "
                       "peer_id = %s" % (self.image_name,

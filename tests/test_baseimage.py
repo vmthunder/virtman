@@ -114,6 +114,7 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.baseimage.paths['test_path'] = FakePath('test_path')
         self.baseimage.peer_id = 'test_peer_id'
         self.baseimage.is_login = True
+        # self.paths = {'test_path': }
 
     def test_check_local_image(self):
         CONF.host_ip = '10.0.0.1'
@@ -308,6 +309,7 @@ class TestBlockDeviceBaseImage(base.TestCase):
         self.mock_object(iscsi, 'remove_iscsi_target', mock.Mock())
         self.mock_object(dmsetup, 'remove_table', mock.Mock())
         self.mock_object(fcg, 'rm_disk', mock.Mock())
+        self.mock_object(Path, 'disconnect', mock.Mock())
 
         self.fake_deploy()
 

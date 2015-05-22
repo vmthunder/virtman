@@ -3,10 +3,10 @@ import mock
 import logging
 from tests import base
 
-from virtman import compute
+from virtman import compute_new
 from virtman.drivers import fcg
 from virtman.drivers import volt
-from virtman.image import LocalImage
+from virtman import image
 from virtman.image import BlockDeviceImage
 from virtman.utils import exception
 
@@ -14,9 +14,10 @@ from virtman.utils import exception
 class TestComputer(base.TestCase):
     def setUp(self):
         super(TestComputer, self).setUp()
-        compute.LOG.logger.setLevel(logging.DEBUG)
-        # self.mock_object(compute.Virtman, 'heartbeat_clock', mock.Mock())
-        # self.test_computer = compute.Virtman()
+        compute_new.LOG.logger.setLevel(logging.DEBUG)
+        self.mock_object(fcg, 'create_group',
+                         mock.Mock())
+        self.test_computer = compute_new.Virtman()
 
     def test_create(self):
         pass

@@ -56,10 +56,17 @@ class LocalImage(Image):
     def create_snapshot(self, instance_name, snapshot_dev):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
                   instance_name)
-        self.snapshots[instance_name] = LocalSnapshot(self.origin_path,
-                                                      instance_name,
-                                                      snapshot_dev)
-        instance_path = self.snapshots[instance_name].create()
+        if self.origin_path is None:
+            raise IOError("origin path can't be None")
+        try:
+            self.snapshots[instance_name] = \
+                LocalSnapshot(self.origin_path,
+                              instance_name,
+                              snapshot_dev)
+            instance_path = self.snapshots[instance_name].create()
+        except Exception as ex:
+            LOG.error("Virtman: create snapshot failed, due to %s" % ex)
+            raise exception.CreateSnapshotFailed(instance=instance_name)
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
@@ -85,7 +92,9 @@ class LocalImage(Image):
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        return self.base_image.destroy_base_image()
+        ret = self.base_image.destroy_base_image()
+        self.origin_path = None
+        return ret
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
@@ -103,10 +112,17 @@ class BlockDeviceImage(Image):
     def create_snapshot(self, instance_name, snapshot_connection):
         LOG.debug("Virtman: create VM instance started, instance_name = %s" %
                   instance_name)
-        self.snapshots[instance_name] = BlockDeviceSnapshot(self.origin_path,
-                                                            instance_name,
-                                                            snapshot_connection)
-        instance_path = self.snapshots[instance_name].create()
+        if self.origin_path is None:
+            raise IOError("origin path can't be None")
+        try:
+            self.snapshots[instance_name] = \
+                BlockDeviceSnapshot(self.origin_path,
+                                    instance_name,
+                                    snapshot_connection)
+            instance_path = self.snapshots[instance_name].create()
+        except Exception as ex:
+            LOG.error("Virtman: create snapshot failed, due to %s" % ex)
+            raise exception.CreateSnapshotFailed(instance=instance_name)
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
@@ -132,13 +148,32 @@ class BlockDeviceImage(Image):
 
     @lockutils.synchronized('deploy_image')
     def destroy_image(self):
-        return self.base_image.destroy_base_image()
+        ret = self.base_image.destroy_base_image()
+        self.origin_path = None
+        return ret
         # return BlockDeviceBaseImage.destroy_base_image(self.base_image)
 
     def adjust_for_heartbeat(self, parents):
         self.base_image.adjust_for_heartbeat(parents)
         # BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
+class FakeImage(Image):
+    def create_snapshot(self, instance_name, snapshot):
+        self.snapshots[instance_name] = instance_name
+
+    def destroy_snapshot(self, instance_name):
+        del self.snapshots[instance_name]
+
+    def deploy_image(self):
+        if self.origin_path is None:
+            self.origin_path = '/dev/mapper/origin_' + self.image_name
+
+    def destroy_image(self):
+        self.origin_path = None
+        return True
+
+    def adjust_for_heartbeat(self, parents):
+        pass
 
 class QCOW2Image(Image):
     """

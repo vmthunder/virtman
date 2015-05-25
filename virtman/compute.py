@@ -87,8 +87,8 @@ class Virtman(Compute):
         while not self.heartbeat_event.wait(CONF.heartbeat_interval):
             try:
                 self.heartbeat()
-            except Exception, e:
-                LOG.error("Virtman: heartbeat failed due to %s" % e)
+            except Exception as ex:
+                LOG.error("Virtman: heartbeat failed due to %s" % ex)
                 LOG.error("Virtman: traceback is : %s" % traceback.print_exc())
         LOG.debug("Virtman: stop heartbeat timer")
 
@@ -145,9 +145,9 @@ class Virtman(Compute):
             image_connections = [image_connections]
         # with self.lock:
         if instance_name in self.instance_names:
-            LOG.warn("Virtman: the instance_name \'%s\' already exists!" %
+            LOG.warn("Virtman: the instance_name '%s' already exists!" %
                       instance_name)
-            return "1:" + "Virtman: the instance_name \'%s\' already exists!" % \
+            return "1:" + "Virtman: the instance_name '%s' already exists!" % \
                           instance_name
         try:
             LOG.debug("Virtman: create VM started, instance_name = %s, "
@@ -166,7 +166,8 @@ class Virtman(Compute):
                     self.images[image_name].deploy_image()
 
             # create snapshot
-            if self.images[image_name].base_image.origin_path:
+            instance_path = None
+            if self.images[image_name].origin_path:
                 LOG.info("Virtman: middle!")
                 instance_path = self.images[image_name].create_snapshot(
                     instance_name, snapshot)
@@ -176,6 +177,7 @@ class Virtman(Compute):
                 # instance_path is like '/dev/mapper/snapshot_vm1'
         except Exception as ex:
             LOG.error("Virtman: create image failed, due to %s" % ex)
+            LOG.error("Virtman: traceback is : %s" % traceback.print_exc())
             if ex is exception.CreateBaseImageFailed:
                 del self.images[image_name]
             if instance_name in self.instance_names:
@@ -211,6 +213,7 @@ class Virtman(Compute):
                 del self.instance_names[instance_name]
         except Exception as ex:
             LOG.error("Virtman: destroy instance failed, due to %s" % ex)
+            LOG.error("Virtman: traceback is : %s" % traceback.print_exc())
             return "2:" + "Virtman: destroy VM instance failed"
 
         LOG.debug("Virtman: destroy VM completed, instance_name = %s" %

@@ -164,7 +164,8 @@ class Virtman(Compute):
                 self.images[image_name].deploy_image()
 
             # create snapshot
-            if self.images[image_name].base_image.origin_path:
+            instance_path = None
+            if self.images[image_name].origin_path:
                 LOG.info("Virtman: middle!")
                 instance_path = self.images[image_name].create_snapshot(
                     instance_name, snapshot)
@@ -174,14 +175,15 @@ class Virtman(Compute):
                 # instance_path is like '/dev/mapper/snapshot_vm1'
         except Exception as ex:
             LOG.error("Virtman: create image failed, due to %s" % ex)
-            if ex is exception.CreateBaseImageFailed:
+            LOG.error("Virtman: traceback is : %s" % traceback.print_exc())
+            if isinstance(ex, exception.CreateBaseImageFailed):
                 del self.images[image_name]
             if instance_name in self.instance_names:
                 del self.instance_names[instance_name]
             return "2:" + "Virtman: create image failed"
-
-        LOG.info("Virtman: end!  instance_path = %s" % instance_path)
-        return "0:" + instance_path
+        else:
+            LOG.info("Virtman: end!  instance_path = %s" % instance_path)
+            return "0:" + instance_path
 
     def destroy(self, instance_name):
         """
@@ -209,6 +211,7 @@ class Virtman(Compute):
                 del self.instance_names[instance_name]
         except Exception as ex:
             LOG.error("Virtman: destroy instance failed, due to %s" % ex)
+            LOG.error("Virtman: traceback is : %s" % traceback.print_exc())
             return "2:" + "Virtman: destroy VM instance failed"
 
         LOG.debug("Virtman: destroy VM completed, instance_name = %s" %

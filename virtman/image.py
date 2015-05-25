@@ -158,11 +158,18 @@ class BlockDeviceImage(Image):
         # BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
 class FakeImage(Image):
+    def __init__(self, image_name, image_connections,
+                 base_image=BlockDeviceBaseImage):
+        super(FakeImage, self).__init__(image_name, image_connections,
+                                        base_image)
+
     def create_snapshot(self, instance_name, snapshot):
         self.snapshots[instance_name] = instance_name
+        return '/dev/mapper/snapshot_' + instance_name
 
     def destroy_snapshot(self, instance_name):
         del self.snapshots[instance_name]
+        return True
 
     def deploy_image(self):
         if self.origin_path is None:

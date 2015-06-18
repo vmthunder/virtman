@@ -1,4 +1,4 @@
-pbr>=0.8.0,<1.0
+pbr>=0.11,<2.0
 babel>=1.0
 eventlet>=0.13.0
 pastedeploy>=1.5.0
@@ -15,4 +15,4 @@ oslo.config>=1.2.0
 taskflow>=0.6
 pydm>=0.3.3
 flashcachegroup>=0.6.7
-oslo.concurrency>=1.4.1
+oslo.concurrency>=2.0.0

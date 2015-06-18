@@ -6,7 +6,7 @@ from virtman.baseimage_new import BlockDeviceBaseImage
 from virtman.snapshot import LocalSnapshot
 from virtman.snapshot import BlockDeviceSnapshot
 from virtman.utils import exception
-from oslo.concurrency import lockutils
+from oslo_concurrency import lockutils
 
 from virtman.openstack.common import log as logging
 
@@ -14,7 +14,6 @@ LOG = logging.getLogger(__name__)
 
 
 class Image(object):
-
     def __init__(self, image_name, image_connections, base_image):
         self.image_name = image_name
         self.image_connections = image_connections
@@ -47,7 +46,6 @@ class Image(object):
 
 
 class LocalImage(Image):
-
     def __init__(self, image_name, image_connections,
                  base_image=BlockDeviceBaseImage):
         super(LocalImage, self).__init__(image_name, image_connections,
@@ -103,7 +101,6 @@ class LocalImage(Image):
 
 
 class BlockDeviceImage(Image):
-
     def __init__(self, image_name, image_connections,
                  base_image=BlockDeviceBaseImage):
         super(BlockDeviceImage, self).__init__(image_name, image_connections,
@@ -157,6 +154,7 @@ class BlockDeviceImage(Image):
         self.base_image.adjust_for_heartbeat(parents)
         # BlockDeviceBaseImage.adjust_for_heartbeat(self.base_image, parents)
 
+
 class FakeImage(Image):
     def __init__(self, image_name, image_connections,
                  base_image=BlockDeviceBaseImage):
@@ -181,6 +179,7 @@ class FakeImage(Image):
 
     def adjust_for_heartbeat(self, parents):
         pass
+
 
 class QCOW2Image(Image):
     """

@@ -34,10 +34,10 @@ class Path(object):
         """
         :type path: Path
         """
+        LOG.debug("Virtman: connect to path: %s", str(path))
         path.device_info = connector.connect_volume(path.connection)
         path.device_path = path.device_info['path']
         path.connected = True
-        LOG.debug("Virtman: connect to path: %s", str(path))
         return path.device_path
 
     @staticmethod

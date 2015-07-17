@@ -182,7 +182,7 @@ class Virtman(Compute):
                 del self.images[image_name]
             if instance_name in self.instance_names:
                 del self.instance_names[instance_name]
-            return "2:" + "Virtman: create image failed"
+            raise
 
         LOG.info("Virtman: end!  instance_path = %s" % instance_path)
         return "0:" + instance_path

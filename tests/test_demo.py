@@ -2,7 +2,7 @@ import os
 import mock
 import testtools
 from tests import base
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 from virtman.utils import exception
 
 

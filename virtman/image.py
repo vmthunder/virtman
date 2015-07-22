@@ -64,7 +64,6 @@ class LocalImage(Image):
                 LocalSnapshot(self.origin_path,
                               instance_name,
                               snapshot_dev)
-            self.update_instance_status()
             instance_path = self.snapshots[instance_name].create()
         except Exception as ex:
             LOG.error("Virtman: create snapshot failed, due to %s" % ex)

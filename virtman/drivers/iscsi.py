@@ -4,7 +4,7 @@ from brick.iscsi.iscsi import TgtAdm
 from virtman.utils import rootwrap
 from virtman.utils import singleton
 
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 
 
 class TgtExecutor(TgtAdm):

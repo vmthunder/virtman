@@ -1,6 +1,6 @@
 import time
 from oslo.config import cfg
-from taskflow.types import failure as ft
+from taskflow.utils.misc import Failure as ft
 from taskflow import engines
 from taskflow.patterns import linear_flow
 from taskflow import task

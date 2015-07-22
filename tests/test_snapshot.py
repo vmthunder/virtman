@@ -9,7 +9,7 @@ from virtman import snapshot
 from virtman import blockservice
 from virtman.drivers import connector
 from virtman.drivers import dmsetup
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 
 test_snapshot_connection = {
     'target_portal': '10.0.0.1:3260',

@@ -5,7 +5,7 @@ import tests
 from tests import test_demo
 from tests.test_demo import FunDemo
 from tests import base
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 
 
 class MyDemo():

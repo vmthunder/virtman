@@ -4,7 +4,7 @@ import os
 import string
 
 from tests import base
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 from virtman import blockservice
 
 

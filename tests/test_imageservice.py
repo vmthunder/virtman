@@ -7,7 +7,7 @@ from tests import base
 from virtman import imageservice
 from virtman import blockservice
 from virtman.drivers import iscsi
-from oslo_concurrency import processutils as putils
+from virtman.openstack.common import processutils as putils
 
 
 test_iqn_prefix = 'iqn.2010-10.org.test:'

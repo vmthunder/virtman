@@ -5,10 +5,13 @@ import os
 import string
 import logging
 from tests import base
+from testtools import ExpectedException
 from virtman import image
 from virtman.baseimage_new import FakeBaseImage
 from virtman.snapshot import LocalSnapshot
 from virtman.snapshot import BlockDeviceSnapshot
+from virtman.utils.exception import TestException
+from virtman.utils.exception import CreateSnapshotFailed
 
 
 test_image_connections = [{
@@ -27,6 +30,8 @@ test_snapshot_connection2 = {
     'target_iqn': 'iqn.2010-10.org.openstack:volume-shanpshot2',
     'target_lun': '1'}
 
+def exception_for_test(*args):
+    raise TestException
 
 class TestImage(base.TestCase):
     def setUp(self):
@@ -67,6 +72,7 @@ class TestLocalImage(base.TestCase):
         self.test_image.deploy_image()
         self.assertEqual('/dev/mapper/test_origin',
                          self.test_image.origin_path)
+        self.assertEqual(True, self.test_image.has_instance)
 
     def test_destroy_image(self):
         self.test_image.deploy_image()
@@ -80,12 +86,22 @@ class TestLocalImage(base.TestCase):
         self.test_image.create_snapshot('test_instance1', '/blocks/snapshot1')
 
         self.assertEqual('/dev/mapper/test_origin', self.test_image.origin_path)
-        self.assertEqual(True, self.test_image.has_instance())
+        self.assertEqual(True, self.test_image.has_instance)
         self.assertEqual(1, len(self.test_image.snapshots))
 
         self.test_image.create_snapshot('test_instance2', '/blocks/snapshot2')
 
         self.assertEqual(2, len(self.test_image.snapshots))
+
+    def test_create_snapshot_with_exception(self):
+        self.mock_object(LocalSnapshot, 'create',
+                         mock.Mock(side_effect=TestException))
+        with ExpectedException(CreateSnapshotFailed):
+            self.test_image.deploy_image()
+            self.test_image.create_snapshot('test_instance1',
+                                            '/blocks/snapshot1')
+        self.assertEqual(0, len(self.test_image.snapshots))
+        self.assertEqual(False, self.test_image.has_instance)
 
     def test_destroy_snapshot(self):
         self.mock_object(LocalSnapshot, 'create',
@@ -97,7 +113,7 @@ class TestLocalImage(base.TestCase):
         self.test_image.create_snapshot('test_instance1', '/blocks/snapshot1')
         self.test_image.destroy_snapshot('test_instance1')
 
-        self.assertEqual(False, self.test_image.has_instance())
+        self.assertEqual(False, self.test_image.has_instance)
         self.assertEqual(0, len(self.test_image.snapshots))
 
 
@@ -113,6 +129,7 @@ class TestBlockDeviceImage(base.TestCase):
         self.test_image.deploy_image()
         self.assertEqual('/dev/mapper/test_origin',
                          self.test_image.origin_path)
+        self.assertEqual(True, self.test_image.has_instance)
 
     def test_destroy_image(self):
         self.test_image.deploy_image()
@@ -127,13 +144,23 @@ class TestBlockDeviceImage(base.TestCase):
                                         test_snapshot_connection1)
 
         self.assertEqual('/dev/mapper/test_origin', self.test_image.origin_path)
-        self.assertEqual(True, self.test_image.has_instance())
+        self.assertEqual(True, self.test_image.has_instance)
         self.assertEqual(1, len(self.test_image.snapshots))
 
         self.test_image.create_snapshot('test_instance2',
                                         test_snapshot_connection2)
 
         self.assertEqual(2, len(self.test_image.snapshots))
+
+    def test_create_snapshot_with_exception(self):
+        self.mock_object(LocalSnapshot, 'create',
+                         mock.Mock(side_effect=TestException))
+        with ExpectedException(CreateSnapshotFailed):
+            self.test_image.deploy_image()
+            self.test_image.create_snapshot('test_instance1',
+                                            '/blocks/snapshot1')
+        self.assertEqual(0, len(self.test_image.snapshots))
+        self.assertEqual(False, self.test_image.has_instance)
 
     def test_destroy_snapshot(self):
         self.mock_object(BlockDeviceSnapshot, 'create',
@@ -146,5 +173,5 @@ class TestBlockDeviceImage(base.TestCase):
                                         test_snapshot_connection1)
         self.test_image.destroy_snapshot('test_instance1')
 
-        self.assertEqual(False, self.test_image.has_instance())
+        self.assertEqual(False, self.test_image.has_instance)
         self.assertEqual(0, len(self.test_image.snapshots))

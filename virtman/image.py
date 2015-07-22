@@ -6,7 +6,7 @@ from virtman.baseimage_new import BlockDeviceBaseImage
 from virtman.snapshot import LocalSnapshot
 from virtman.snapshot import BlockDeviceSnapshot
 from virtman.utils import exception
-from oslo_concurrency import lockutils
+from virtman.openstack.common import lockutils
 
 from virtman.openstack.common import log as logging
 
@@ -19,15 +19,18 @@ class Image(object):
         self.image_connections = image_connections
         self.base_image = base_image(self.image_name, self.image_connections)
         self.snapshots = {}
+        self.has_instance = None
         self.lock = threading.Lock()
         # deploy image only once
         self.origin_path = None
 
-    def has_instance(self):
-        if len(self.snapshots) > 0:
-            return True
-        else:
-            return False
+    # def has_instance(self):
+    #     if len(self.snapshots) > 0:
+    #         return True
+    #     else:
+    #         return False
+    def update_instance_status(self):
+        self.has_instance = len(self.snapshots) > 0
 
     def create_snapshot(self, instance_name, snapshot):
         raise NotImplementedError()
@@ -61,10 +64,14 @@ class LocalImage(Image):
                 LocalSnapshot(self.origin_path,
                               instance_name,
                               snapshot_dev)
+            self.update_instance_status()
             instance_path = self.snapshots[instance_name].create()
         except Exception as ex:
             LOG.error("Virtman: create snapshot failed, due to %s" % ex)
+            del self.snapshots[instance_name]
             raise exception.CreateSnapshotFailed(instance=instance_name)
+        finally:
+            self.update_instance_status()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
@@ -75,6 +82,7 @@ class LocalImage(Image):
         ret = self.snapshots[instance_name].destroy()
         if ret:
             del self.snapshots[instance_name]
+            self.update_instance_status()
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret
@@ -84,6 +92,7 @@ class LocalImage(Image):
         if self.origin_path is None:
             try:
                 self.origin_path = self.base_image.deploy_base_image()
+                self.has_instance = True
             except Exception as ex:
                 LOG.error("Virtman: create baseimage failed, due to %s" % ex)
                 raise exception.CreateBaseImageFailed(baseimage=self.image_name)
@@ -116,10 +125,14 @@ class BlockDeviceImage(Image):
                 BlockDeviceSnapshot(self.origin_path,
                                     instance_name,
                                     snapshot_connection)
+
             instance_path = self.snapshots[instance_name].create()
         except Exception as ex:
             LOG.error("Virtman: create snapshot failed, due to %s" % ex)
+            del self.snapshots[instance_name]
             raise exception.CreateSnapshotFailed(instance=instance_name)
+        finally:
+            self.update_instance_status()
         LOG.debug("Virtman: create VM instance completed, instance_path = %s" %
                   instance_path)
         return instance_path
@@ -130,6 +143,7 @@ class BlockDeviceImage(Image):
         ret = self.snapshots[instance_name].destroy()
         if ret:
             del self.snapshots[instance_name]
+            self.update_instance_status()
         LOG.debug("Virtman: destroy VM instance completed, result = %s" %
                   ret)
         return ret
@@ -139,6 +153,7 @@ class BlockDeviceImage(Image):
         if self.origin_path is None:
             try:
                 self.origin_path = self.base_image.deploy_base_image()
+                self.has_instance = True
             except Exception as ex:
                 LOG.error("Virtman: create baseimage failed, due to %s" % ex)
                 raise exception.CreateBaseImageFailed(baseimage=self.image_name)
@@ -163,10 +178,12 @@ class FakeImage(Image):
 
     def create_snapshot(self, instance_name, snapshot):
         self.snapshots[instance_name] = instance_name
+        self.update_instance_status()
         return '/dev/mapper/snapshot_' + instance_name
 
     def destroy_snapshot(self, instance_name):
         del self.snapshots[instance_name]
+        self.update_instance_status()
         return True
 
     def deploy_image(self):

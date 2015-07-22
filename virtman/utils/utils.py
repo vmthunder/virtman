@@ -30,10 +30,10 @@ def reform_connection(connection):
             'target_iqn': connection['target_iqn'],
             'target_lun': connection['target_lun'],
         }
-        if connection.get('auth_method'):
-            new_connection['auth_method'] = connection['auth_method']
-            new_connection['auth_username'] = connection['auth_username']
-            new_connection['auth_password'] = connection['auth_password']
+        # if connection.get('auth_method'):
+        #     new_connection['auth_method'] = connection['auth_method']
+        #     new_connection['auth_username'] = connection['auth_username']
+        #     new_connection['auth_password'] = connection['auth_password']
     else:
         new_connection = {
             'target_portal': "%s:%s" % (connection.host, connection.port),

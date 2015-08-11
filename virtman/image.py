@@ -2,7 +2,7 @@
 
 import threading
 
-from virtman.baseimage_new import BlockDeviceBaseImage
+from virtman.baseimage import BlockDeviceBaseImage
 from virtman.snapshot import LocalSnapshot
 from virtman.snapshot import BlockDeviceSnapshot
 from virtman.utils import exception

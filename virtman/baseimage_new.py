@@ -256,8 +256,6 @@ class BlockDeviceBaseImage(BaseImage):
                     raise Exception("get parent info timeout")
 
 
-class Qcow2BaseImage(BaseImage):
-    pass
 
 
 class Cache(object):
@@ -356,7 +354,6 @@ class Target(object):
             base_image.target_id = 0
 
 
-
 class Volt(object):
     @staticmethod
     def login_master(base_image):
@@ -433,6 +430,9 @@ class LoginMasterTask(task.Task):
             LOG.exception("Virtman: base image '%s' login failed, due to %s" %
                           (base_image.image_name, result.exception_str))
         Volt.logout_master(base_image)
+
+class Qcow2BaseImage(BaseImage):
+    pass
 
 
 class FakeBaseImage(BaseImage):
